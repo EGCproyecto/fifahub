@@ -106,7 +106,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Set up Python
-      - uses: actions/setup-python@v5
+        uses: actions/setup-python@v5
         with:
           python-version: ${{ env.PYTHON_VERSION }}
           cache: pip
@@ -129,9 +129,6 @@ jobs:
   deploy_staging_render:
     name: Deploy to Render (staging)
     runs-on: ubuntu-24.04
-    environment:
-      name: staging
-      url: ${{ secrets.RENDER_STAGING_URL || '' }}
     needs: [pytest]
     if: >
       ${{
@@ -143,7 +140,6 @@ jobs:
       - name: Trigger staging webhook
         env:
           WEBHOOK_DOMAIN: ${{ secrets.RENDER_STAGING_DOMAIN }}
-          WEBHOOK_TOKEN:  ${{ secrets.RENDER_STAGING_TOKEN }}
         run: |
           set -e
           curl -sS -X POST \
@@ -275,15 +271,11 @@ jobs:
   deploy_prod_render:
     name: Deploy to Render (production)
     runs-on: ubuntu-24.04
-    environment:
-      name: production
-      url: ${{ secrets.RENDER_PROD_URL || '' }}
     needs: [dockerhub_publish]
     steps:
       - name: Trigger production webhook
         env:
           WEBHOOK_DOMAIN: ${{ secrets.RENDER_PROD_DOMAIN }}
-          WEBHOOK_TOKEN:  ${{ secrets.RENDER_PROD_TOKEN }}
         run: |
           set -e
           curl -sS -X POST \
