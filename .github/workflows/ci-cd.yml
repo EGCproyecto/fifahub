@@ -1,0 +1,294 @@
+name: CI/CD
+
+on:
+  push:
+    branches:
+      - main
+      - trunk
+      - 'feature/**'
+  pull_request:
+    branches:
+      - trunk
+      - main
+  release:
+    types: [published]
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  PYTHON_VERSION: "3.12"
+  # Variables de test DB (MariaDB)
+  MARIADB_ROOT_PASSWORD: fifahub_root_password
+  MARIADB_DATABASE: fifahubdb_test
+  MARIADB_TEST_DATABASE: fifahubdb_test
+  MARIADB_USER: fifahub_user
+  MARIADB_PASSWORD: fifahub_password
+  MARIADB_HOSTNAME: 127.0.0.1
+  MARIADB_PORT: "3306"
+
+jobs:
+  # --------------------------------------------------------------------------
+  # 0) Conventional commits
+  # --------------------------------------------------------------------------
+  commits:
+    name: Conventional Commits
+    runs-on: ubuntu-24.04
+    if: ${{ github.event_name == 'push' || github.event_name == 'pull_request' }}
+    steps:
+      - name: Validate commit messages
+        uses: webiny/action-conventional-commits@v1.3.0
+
+  # --------------------------------------------------------------------------
+  # 1) Estilo y formato (Black + isort) — siempre en push/PR
+  # --------------------------------------------------------------------------
+  style:
+    name: Style (black/isort)
+    runs-on: ubuntu-24.04
+    needs: [commits]
+    if: ${{ github.event_name == 'push' || github.event_name == 'pull_request' }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
+      - name: Install formatters
+        run: |
+          python -m pip install --upgrade pip
+          pip install black isort
+      - name: Check formatting with black
+        run: black --check app rosemary core
+      - name: Check import order with isort
+        run: isort --check-only --profile black app rosemary core
+
+  # --------------------------------------------------------------------------
+  # 2) Tests (pytest + MariaDB)
+  #    - PR a trunk/main
+  #    - push a trunk/main
+  #    - push a feature/**
+  # --------------------------------------------------------------------------
+  pytest:
+    name: Tests (pytest + MariaDB)
+    runs-on: ubuntu-24.04
+    needs: [style]
+    if: >
+      ${{
+        (github.event_name == 'pull_request' && (github.base_ref == 'trunk' || github.base_ref == 'main')) ||
+        (github.event_name == 'push' && (
+            github.ref == 'refs/heads/trunk' ||
+            github.ref == 'refs/heads/main'  ||
+            startsWith(github.ref, 'refs/heads/feature/')
+        ))
+      }}
+    services:
+      mariadb:
+        image: mariadb:12.0.2
+        env:
+          MARIADB_ROOT_PASSWORD: ${{ env.MARIADB_ROOT_PASSWORD }}
+          MARIADB_DATABASE: ${{ env.MARIADB_DATABASE }}
+          MARIADB_USER: ${{ env.MARIADB_USER }}
+          MARIADB_PASSWORD: ${{ env.MARIADB_PASSWORD }}
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mariadb-admin ping -h 127.0.0.1 -u root -p${MARIADB_ROOT_PASSWORD}"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
+      
+      - name: Delete rosemary editable mode (si procede)
+        run: sed -i '/rosemary @ file:\/\/\/app/d' requirements.txt
+        
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Run pytest
+        run: pytest app/modules/ --ignore-glob='*selenium*'
+
+
+  # --------------------------------------------------------------------------
+  # 3) Deploy STAGING (Render) en push a trunk si tests OK
+  # --------------------------------------------------------------------------
+  deploy_staging_render:
+    name: Deploy to Render (staging)
+    runs-on: ubuntu-24.04
+    environment:
+      name: staging
+      url: ${{ secrets.RENDER_STAGING_URL || '' }}
+    needs: [pytest]
+    if: >
+      ${{
+        needs.pytest.result == 'success' &&
+        github.event_name == 'push' &&
+        github.ref == 'refs/heads/trunk'
+      }}
+    steps:
+      - name: Trigger staging webhook
+        env:
+          WEBHOOK_DOMAIN: ${{ secrets.RENDER_STAGING_DOMAIN }}
+          WEBHOOK_TOKEN:  ${{ secrets.RENDER_STAGING_TOKEN }}
+        run: |
+          set -e
+          curl -sS -X POST \
+            "https://${WEBHOOK_DOMAIN}/webhook/deploy" \
+            -H "Authorization: Bearer ${WEBHOOK_TOKEN}" \
+            -H "Content-Type: application/json" \
+            -d "{\"env\":\"staging\",\"repo\":\"${GITHUB_REPOSITORY}\",\"commit\":\"${GITHUB_SHA}\",\"ref\":\"${GITHUB_REF}\"}"
+
+  # --------------------------------------------------------------------------
+  # 4) Release Automation (push a main, tras tests OK)
+  #    Detecta tipo de release con Conventional Commits y crea vX.Y.Z
+  # --------------------------------------------------------------------------
+  release_automation:
+    name: Create Release (SemVer from commits)
+    runs-on: ubuntu-24.04
+    needs: [pytest]
+    if: >
+      ${{
+        needs.pytest.result == 'success' &&
+        github.event_name == 'push' &&
+        github.ref == 'refs/heads/main'
+      }}
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout repository (full history)
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Ensure tags are fetched
+        run: git fetch --tags --force
+      - name: Determine release type from commits (Conventional Commits)
+        id: reltype
+        shell: bash
+        run: |
+          set -euo pipefail
+          LAST_TAG=$(git describe --tags --abbrev=0 --match "v[0-9]*.[0-9]*.[0-9]*" 2>/dev/null || echo "")
+          if [ -z "${LAST_TAG}" ]; then
+            FIRST_COMMIT=$(git rev-list --max-parents=0 HEAD | tail -n1)
+            RANGE="${FIRST_COMMIT}..HEAD"
+          else
+            RANGE="${LAST_TAG}..HEAD"
+          fi
+          COMMITS=$(git log ${RANGE} --pretty=format:'%s%n%b')
+
+          RELEASE_TYPE="none"
+          BREAKING=$(echo "${COMMITS}" | grep -E 'BREAKING CHANGE' -ci || true)
+          BANG=$(echo "${COMMITS}" | grep -E '^[a-z]+(\([^)]+\))?!:' -ci || true)
+          FEAT=$(echo "${COMMITS}" | grep -E '^feat(\(|:)' -ci || true)
+          PATCH=$(echo "${COMMITS}" | grep -E '^(fix|perf|refactor|test|ci|build|chore|docs)(\(|:)' -ci || true)
+
+          if [ "${BREAKING}" -gt 0 ] || [ "${BANG}" -gt 0 ]; then
+            RELEASE_TYPE="major"
+          elif [ "${FEAT}" -gt 0 ]; then
+            RELEASE_TYPE="minor"
+          elif [ "${PATCH}" -gt 0 ]; then
+            RELEASE_TYPE="patch"
+          fi
+
+          echo "release_type=${RELEASE_TYPE}" >> "$GITHUB_OUTPUT"
+
+      - name: Determine new version
+        id: newver
+        shell: bash
+        run: |
+          set -euo pipefail
+          RT="${{ steps.reltype.outputs.release_type }}"
+          if [ "${RT}" = "none" ]; then
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          LAST_TAG=$(git describe --tags --abbrev=0 --match "v[0-9]*.[0-9]*.[0-9]*" 2>/dev/null || echo "v0.0.0")
+          MAJOR=$(echo $LAST_TAG | sed -E 's/v([0-9]+)\.([0-9]+)\.([0-9]+)/\1/')
+          MINOR=$(echo $LAST_TAG | sed -E 's/v([0-9]+)\.([0-9]+)\.([0-9]+)/\2/')
+          PATCH=$(echo $LAST_TAG | sed -E 's/v([0-9]+)\.([0-9]+)\.([0-9]+)/\3/')
+
+          case "${RT}" in
+            major) MAJOR=$((MAJOR + 1)); MINOR=0; PATCH=0;;
+            minor) MINOR=$((MINOR + 1)); PATCH=0;;
+            patch) PATCH=$((PATCH + 1));;
+          esac
+
+          NEW_VERSION="v${MAJOR}.${MINOR}.${PATCH}"
+          echo "new_version=${NEW_VERSION}" >> "$GITHUB_OUTPUT"
+          echo "skip=false" >> "$GITHUB_OUTPUT"
+
+      - name: Create GitHub Release
+        if: steps.newver.outputs.skip == 'false'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.newver.outputs.new_version }}
+          name: Release ${{ steps.newver.outputs.new_version }}
+          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  # --------------------------------------------------------------------------
+  # 5) Docker Hub (build & push) cuando se publica la release
+  # --------------------------------------------------------------------------
+  dockerhub_publish:
+    name: Docker Hub Publish
+    runs-on: ubuntu-24.04
+    if: ${{ github.event_name == 'release' && github.event.action == 'published' }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USER }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+      - name: Build & Push
+        env:
+          TAG: ${{ github.event.release.tag_name }}
+          IMAGE: ${{ secrets.DOCKER_USER }}/fifahub
+        run: |
+          docker build \
+            --build-arg VERSION_TAG="$TAG" \
+            -t "$IMAGE:$TAG" \
+            -f docker/images/Dockerfile.prod \
+            .
+          docker push "$IMAGE:$TAG"
+          docker tag "$IMAGE:$TAG" "$IMAGE:latest"
+          docker push "$IMAGE:latest"
+
+  # --------------------------------------------------------------------------
+  # 6) Deploy PRODUCCIÓN (Render) tras publicar imagen
+  # --------------------------------------------------------------------------
+  deploy_prod_render:
+    name: Deploy to Render (production)
+    runs-on: ubuntu-24.04
+    environment:
+      name: production
+      url: ${{ secrets.RENDER_PROD_URL || '' }}
+    needs: [dockerhub_publish]
+    steps:
+      - name: Trigger production webhook
+        env:
+          WEBHOOK_DOMAIN: ${{ secrets.RENDER_PROD_DOMAIN }}
+          WEBHOOK_TOKEN:  ${{ secrets.RENDER_PROD_TOKEN }}
+        run: |
+          set -e
+          curl -sS -X POST \
+            "https://${WEBHOOK_DOMAIN}/webhook/deploy" \
+            -H "Authorization: Bearer ${WEBHOOK_TOKEN}" \
+            -H "Content-Type: application/json" \
+            -d "{\"env\":\"production\",\"repo\":\"${GITHUB_REPOSITORY}\",\"tag\":\"${{ github.event.release.tag_name }}\"}"
+
