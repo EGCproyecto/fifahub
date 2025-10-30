@@ -1,7 +1,6 @@
 import sys
 
 import autocommand
-
 from jaraco.text import Stripper
 
 

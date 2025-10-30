@@ -89,9 +89,7 @@ class Timestamp:
         elif len(b) == 12:
             nanoseconds, seconds = struct.unpack("!Iq", b)
         else:
-            raise ValueError(
-                "Timestamp type can only be created from 32, 64, or 96-bit byte objects"
-            )
+            raise ValueError("Timestamp type can only be created from 32, 64, or 96-bit byte objects")
         return Timestamp(seconds, nanoseconds)
 
     def to_bytes(self):

@@ -1,8 +1,7 @@
 from io import BytesIO
 
-import pytest
-
 import networkx as nx
+import pytest
 from networkx.utils import edges_equal, nodes_equal
 
 

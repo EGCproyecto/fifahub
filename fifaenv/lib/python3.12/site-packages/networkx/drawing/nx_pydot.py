@@ -213,9 +213,7 @@ def to_pydot(N):
     if name == "":
         P = pydot.Dot("", graph_type=graph_type, strict=strict, **graph_defaults)
     else:
-        P = pydot.Dot(
-            f'"{name}"', graph_type=graph_type, strict=strict, **graph_defaults
-        )
+        P = pydot.Dot(f'"{name}"', graph_type=graph_type, strict=strict, **graph_defaults)
     try:
         P.set_node_defaults(**N.graph["node"])
     except KeyError:

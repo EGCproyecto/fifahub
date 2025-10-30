@@ -1,5 +1,6 @@
-import pytest
 from unittest.mock import patch
+
+import pytest
 from bs4.builder import DetectsXMLParsedAsHTML
 
 

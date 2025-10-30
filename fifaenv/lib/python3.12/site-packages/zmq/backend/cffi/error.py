@@ -13,4 +13,4 @@ def strerror(errno):
 
 zmq_errno = C.zmq_errno
 
-__all__ = ['strerror', 'zmq_errno']
+__all__ = ["strerror", "zmq_errno"]

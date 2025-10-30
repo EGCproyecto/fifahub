@@ -10,7 +10,6 @@ from mako.template import Template
 
 
 class TGPlugin:
-
     """TurboGears compatible Template Plugin."""
 
     def __init__(self, extra_vars_func=None, options=None, extension="mak"):
@@ -41,16 +40,12 @@ class TGPlugin:
             return Template(template_string, **self.tmpl_options)
         # Translate TG dot notation to normal / template path
         if "/" not in templatename:
-            templatename = (
-                "/" + templatename.replace(".", "/") + "." + self.extension
-            )
+            templatename = "/" + templatename.replace(".", "/") + "." + self.extension
 
         # Lookup template
         return self.lookup.get_template(templatename)
 
-    def render(
-        self, info, format="html", fragment=False, template=None  # noqa
-    ):
+    def render(self, info, format="html", fragment=False, template=None):  # noqa
         if isinstance(template, str):
             template = self.load_template(template)
 

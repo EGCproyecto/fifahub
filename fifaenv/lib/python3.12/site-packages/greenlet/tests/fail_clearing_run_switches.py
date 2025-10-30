@@ -13,24 +13,25 @@ main = greenlet.getcurrent()
 
 results = []
 
+
 class RunCallable:
 
     def __del__(self):
-        results.append(('RunCallable', '__del__'))
-        main.switch('from RunCallable')
+        results.append(("RunCallable", "__del__"))
+        main.switch("from RunCallable")
 
 
 class G(greenlet.greenlet):
 
     def __getattribute__(self, name):
-        if name == 'run':
-            results.append(('G.__getattribute__', 'run'))
+        if name == "run":
+            results.append(("G.__getattribute__", "run"))
             return run_func
         return object.__getattribute__(self, name)
 
 
 def run_func():
-    results.append(('run_func', 'enter'))
+    results.append(("run_func", "enter"))
 
 
 g = G(RunCallable())
@@ -39,9 +40,9 @@ g = G(RunCallable())
 # the __del__ method, which switches back to main before g
 # actually even starts running.
 x = g.switch()
-results.append(('main: g.switch()', x))
+results.append(("main: g.switch()", x))
 # In the C++ code, this results in g->g_switch() appearing to return, even though
 # it has yet to run.
-print('In main with', x, flush=True)
+print("In main with", x, flush=True)
 g.switch()
-print('RESULTS', results)
+print("RESULTS", results)

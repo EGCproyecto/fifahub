@@ -20,7 +20,6 @@ _beaker_cache = None
 
 
 class BeakerCacheImpl(CacheImpl):
-
     """A :class:`.CacheImpl` provided for the Beaker caching system.
 
     This plugin is used by default, based on the default
@@ -31,9 +30,7 @@ class BeakerCacheImpl(CacheImpl):
 
     def __init__(self, cache):
         if not has_beaker:
-            raise exceptions.RuntimeException(
-                "Can't initialize Beaker plugin; Beaker is not installed."
-            )
+            raise exceptions.RuntimeException("Can't initialize Beaker plugin; Beaker is not installed.")
         global _beaker_cache
         if _beaker_cache is None:
             if "manager" in cache.template.cache_args:

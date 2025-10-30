@@ -1,6 +1,5 @@
-import pytest
-
 import networkx as nx
+import pytest
 from networkx.algorithms.traversal.edgedfs import FORWARD, REVERSE
 
 

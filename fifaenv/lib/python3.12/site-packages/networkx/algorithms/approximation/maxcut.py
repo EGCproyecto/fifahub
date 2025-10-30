@@ -125,9 +125,7 @@ def one_exchange(G, initial_cut=None, seed=None, weight=None):
         seed.shuffle(nodes)
         best_node_to_swap = max(
             nodes,
-            key=lambda v: nx.algorithms.cut_size(
-                G, _swap_node_partition(cut, v), weight=weight
-            ),
+            key=lambda v: nx.algorithms.cut_size(G, _swap_node_partition(cut, v), weight=weight),
             default=None,
         )
         potential_cut = _swap_node_partition(cut, best_node_to_swap)

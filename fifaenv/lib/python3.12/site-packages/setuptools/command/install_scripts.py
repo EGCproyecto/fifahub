@@ -1,13 +1,12 @@
 from __future__ import annotations
 
+import distutils.command.install_scripts as orig
 import os
 import sys
+from distutils import log
 
 from .._path import ensure_directory
 from ..dist import Distribution
-
-import distutils.command.install_scripts as orig
-from distutils import log
 
 
 class install_scripts(orig.install_scripts):
@@ -37,8 +36,8 @@ class install_scripts(orig.install_scripts):
 
         ei_cmd = self.get_finalized_command("egg_info")
         dist = metadata.Distribution.at(path=ei_cmd.egg_info)
-        bs_cmd = self.get_finalized_command('build_scripts')
-        exec_param = getattr(bs_cmd, 'executable', None)
+        bs_cmd = self.get_finalized_command("build_scripts")
+        exec_param = getattr(bs_cmd, "executable", None)
         writer = _scripts.ScriptWriter
         if exec_param == sys.executable:
             # In case the path to the Python executable contains a space, wrap
@@ -52,7 +51,8 @@ class install_scripts(orig.install_scripts):
 
     def write_script(self, script_name, contents, mode: str = "t", *ignored) -> None:
         """Write an executable file to the scripts directory"""
-        from .._shutil import attempt_chmod_verbose as chmod, current_umask
+        from .._shutil import attempt_chmod_verbose as chmod
+        from .._shutil import current_umask
 
         log.info("Installing %s script to %s", script_name, self.install_dir)
         target = os.path.join(self.install_dir, script_name)

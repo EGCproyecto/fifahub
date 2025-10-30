@@ -1,5 +1,4 @@
 import pytest
-
 from networkx.utils.mapped_queue import MappedQueue, _HeapElement
 
 

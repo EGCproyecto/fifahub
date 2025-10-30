@@ -113,9 +113,7 @@ def configuration_model(aseq, bseq, create_using=None, seed=None):
     sumb = sum(bseq)
 
     if not suma == sumb:
-        raise nx.NetworkXError(
-            f"invalid degree sequences, sum(aseq)!=sum(bseq),{suma},{sumb}"
-        )
+        raise nx.NetworkXError(f"invalid degree sequences, sum(aseq)!=sum(bseq),{suma},{sumb}")
 
     G = _add_nodes_with_bipartite_label(G, lena, lenb)
 
@@ -184,9 +182,7 @@ def havel_hakimi_graph(aseq, bseq, create_using=None):
     sumb = sum(bseq)
 
     if not suma == sumb:
-        raise nx.NetworkXError(
-            f"invalid degree sequences, sum(aseq)!=sum(bseq),{suma},{sumb}"
-        )
+        raise nx.NetworkXError(f"invalid degree sequences, sum(aseq)!=sum(bseq),{suma},{sumb}")
 
     G = _add_nodes_with_bipartite_label(G, naseq, nbseq)
 
@@ -258,9 +254,7 @@ def reverse_havel_hakimi_graph(aseq, bseq, create_using=None):
     sumb = sum(bseq)
 
     if not suma == sumb:
-        raise nx.NetworkXError(
-            f"invalid degree sequences, sum(aseq)!=sum(bseq),{suma},{sumb}"
-        )
+        raise nx.NetworkXError(f"invalid degree sequences, sum(aseq)!=sum(bseq),{suma},{sumb}")
 
     G = _add_nodes_with_bipartite_label(G, lena, lenb)
 
@@ -333,9 +327,7 @@ def alternating_havel_hakimi_graph(aseq, bseq, create_using=None):
     sumb = sum(bseq)
 
     if not suma == sumb:
-        raise nx.NetworkXError(
-            f"invalid degree sequences, sum(aseq)!=sum(bseq),{suma},{sumb}"
-        )
+        raise nx.NetworkXError(f"invalid degree sequences, sum(aseq)!=sum(bseq),{suma},{sumb}")
 
     G = _add_nodes_with_bipartite_label(G, naseq, nbseq)
 

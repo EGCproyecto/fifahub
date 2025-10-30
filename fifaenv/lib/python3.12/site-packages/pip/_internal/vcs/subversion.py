@@ -71,9 +71,7 @@ class Subversion(VersionControl):
         return str(revision)
 
     @classmethod
-    def get_netloc_and_auth(
-        cls, netloc: str, scheme: str
-    ) -> Tuple[str, Tuple[Optional[str], Optional[str]]]:
+    def get_netloc_and_auth(cls, netloc: str, scheme: str) -> Tuple[str, Tuple[Optional[str], Optional[str]]]:
         """
         This override allows the auth information to be passed to svn via the
         --username and --password options instead of via the URL.
@@ -94,9 +92,7 @@ class Subversion(VersionControl):
         return url, rev, user_pass
 
     @staticmethod
-    def make_rev_args(
-        username: Optional[str], password: Optional[HiddenText]
-    ) -> CommandArgs:
+    def make_rev_args(username: Optional[str], password: Optional[HiddenText]) -> CommandArgs:
         extra_args: CommandArgs = []
         if username:
             extra_args += ["--username", username]
@@ -117,8 +113,7 @@ class Subversion(VersionControl):
                 # We've traversed up to the root of the filesystem without
                 # finding a Python project.
                 logger.warning(
-                    "Could not find Python project for directory %s (tried all "
-                    "parent directories)",
+                    "Could not find Python project for directory %s (tried all " "parent directories)",
                     orig_location,
                 )
                 raise RemoteNotFoundError
@@ -277,9 +272,7 @@ class Subversion(VersionControl):
 
         return []
 
-    def fetch_new(
-        self, dest: str, url: HiddenText, rev_options: RevOptions, verbosity: int
-    ) -> None:
+    def fetch_new(self, dest: str, url: HiddenText, rev_options: RevOptions, verbosity: int) -> None:
         rev_display = rev_options.to_display()
         logger.info(
             "Checking out %s%s to %s",

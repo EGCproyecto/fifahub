@@ -2,6 +2,7 @@
 An implementation of a bitwise prefix tree specially built for decoding
 Huffman-coded content where we already know the Huffman table.
 """
+
 from __future__ import annotations
 
 
@@ -32,9 +33,7 @@ class HuffmanEncoder:
         # handle this cleanly, just use a single giant integer.
         for byte in bytes_to_encode:
             bin_int_len = self.huffman_code_list_lengths[byte]
-            bin_int = self.huffman_code_list[byte] & (
-                2 ** (bin_int_len + 1) - 1
-            )
+            bin_int = self.huffman_code_list[byte] & (2 ** (bin_int_len + 1) - 1)
             final_num <<= bin_int_len
             final_num |= bin_int
             final_int_len += bin_int_len

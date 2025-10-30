@@ -30,9 +30,7 @@ class IssuerParameter:
             # an authorization server supporting this specification MUST indicate
             # its identity by including the iss parameter in the response.
 
-            new_location = add_params_to_uri(
-                response.location, {"iss": self.get_issuer()}
-            )
+            new_location = add_params_to_uri(response.location, {"iss": self.get_issuer()})
             response.location = new_location
 
     def get_issuer(self) -> Optional[str]:

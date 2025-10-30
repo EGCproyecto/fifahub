@@ -78,9 +78,7 @@ def line(content: str, line_separator: str, config: Config = DEFAULT_CONFIG) -> 
             line_without_comment, comment = content.split("#", 1)
         for splitter in ("import ", "cimport ", ".", "as "):
             exp = r"\b" + re.escape(splitter) + r"\b"
-            if re.search(exp, line_without_comment) and not line_without_comment.strip().startswith(
-                splitter
-            ):
+            if re.search(exp, line_without_comment) and not line_without_comment.strip().startswith(splitter):
                 line_parts = re.split(exp, line_without_comment)
                 if comment and not (config.use_parentheses and "noqa" in comment):
                     _comma_maybe = (
@@ -92,13 +90,9 @@ def line(content: str, line_separator: str, config: Config = DEFAULT_CONFIG) -> 
                         )
                         else ""
                     )
-                    line_parts[-1] = (
-                        f"{line_parts[-1].strip()}{_comma_maybe}{config.comment_prefix}{comment}"
-                    )
+                    line_parts[-1] = f"{line_parts[-1].strip()}{_comma_maybe}{config.comment_prefix}{comment}"
                 next_line = []
-                while (len(content) + 2) > (
-                    config.wrap_length or config.line_length
-                ) and line_parts:
+                while (len(content) + 2) > (config.wrap_length or config.line_length) and line_parts:
                     next_line.append(line_parts.pop())
                     content = splitter.join(line_parts)
                 if not content:
@@ -128,8 +122,7 @@ def line(content: str, line_separator: str, config: Config = DEFAULT_CONFIG) -> 
                             cont_line = cont_line.rstrip()
                             _comma = "," if config.include_trailing_comma else ""
                         output = (
-                            f"{content}{splitter}({noqa_comment}"
-                            f"{line_separator}{cont_line}{_comma}{_separator})"
+                            f"{content}{splitter}({noqa_comment}" f"{line_separator}{cont_line}{_comma}{_separator})"
                         )
                         lines = output.split(line_separator)
                         if config.comment_prefix in lines[-1] and lines[-1].endswith(")"):

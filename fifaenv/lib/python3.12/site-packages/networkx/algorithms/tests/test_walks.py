@@ -1,8 +1,7 @@
 """Unit tests for the :mod:`networkx.algorithms.walks` module."""
 
-import pytest
-
 import networkx as nx
+import pytest
 
 pytest.importorskip("numpy")
 pytest.importorskip("scipy")

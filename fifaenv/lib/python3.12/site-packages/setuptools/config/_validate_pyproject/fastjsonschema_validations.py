@@ -11,10 +11,10 @@
 
 
 VERSION = "2.20.0"
-from decimal import Decimal
 import re
-from .fastjsonschema_exceptions import JsonSchemaValueException
+from decimal import Decimal
 
+from .fastjsonschema_exceptions import JsonSchemaValueException
 
 REGEX_PATTERNS = {
     '^([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9._-]*[a-zA-Z0-9])$': re.compile('^([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9._-]*[a-zA-Z0-9])\\Z'),

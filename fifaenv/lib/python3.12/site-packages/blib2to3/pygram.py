@@ -172,9 +172,7 @@ def initialize(cache_dir: Union[str, "os.PathLike[str]", None] = None) -> None:
 
     # The grammar file
     _GRAMMAR_FILE = os.path.join(os.path.dirname(__file__), "Grammar.txt")
-    _PATTERN_GRAMMAR_FILE = os.path.join(
-        os.path.dirname(__file__), "PatternGrammar.txt"
-    )
+    _PATTERN_GRAMMAR_FILE = os.path.join(os.path.dirname(__file__), "PatternGrammar.txt")
 
     python_grammar = driver.load_packaged_grammar("blib2to3", _GRAMMAR_FILE, cache_dir)
     assert "print" not in python_grammar.keywords
@@ -198,7 +196,5 @@ def initialize(cache_dir: Union[str, "os.PathLike[str]", None] = None) -> None:
     python_grammar_soft_keywords.soft_keywords = soft_keywords
     python_grammar_soft_keywords.version = (3, 10)
 
-    pattern_grammar = driver.load_packaged_grammar(
-        "blib2to3", _PATTERN_GRAMMAR_FILE, cache_dir
-    )
+    pattern_grammar = driver.load_packaged_grammar("blib2to3", _PATTERN_GRAMMAR_FILE, cache_dir)
     pattern_symbols = _pattern_symbols(pattern_grammar)

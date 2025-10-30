@@ -70,16 +70,12 @@ class QoiDecoder(ImageFile.PyDecoder):
                 op = byte >> 6
                 if op == 0:  # QOI_OP_INDEX
                     op_index = byte & 0b00111111
-                    value = self._previously_seen_pixels.get(
-                        op_index, bytearray((0, 0, 0, 0))
-                    )
+                    value = self._previously_seen_pixels.get(op_index, bytearray((0, 0, 0, 0)))
                 elif op == 1 and self._previous_pixel:  # QOI_OP_DIFF
                     value = bytearray(
                         (
-                            (self._previous_pixel[0] + ((byte & 0b00110000) >> 4) - 2)
-                            % 256,
-                            (self._previous_pixel[1] + ((byte & 0b00001100) >> 2) - 2)
-                            % 256,
+                            (self._previous_pixel[0] + ((byte & 0b00110000) >> 4) - 2) % 256,
+                            (self._previous_pixel[1] + ((byte & 0b00001100) >> 2) - 2) % 256,
                             (self._previous_pixel[2] + (byte & 0b00000011) - 2) % 256,
                             self._previous_pixel[3],
                         )
@@ -187,28 +183,15 @@ class QoiEncoder(ImageFile.PyEncoder):
                             delta_g = self._delta(g, prev_g)
                             delta_b = self._delta(b, prev_b)
 
-                            if (
-                                -2 <= delta_r < 2
-                                and -2 <= delta_g < 2
-                                and -2 <= delta_b < 2
-                            ):
+                            if -2 <= delta_r < 2 and -2 <= delta_g < 2 and -2 <= delta_b < 2:
                                 data += o8(
-                                    0b01000000
-                                    | (delta_r + 2) << 4
-                                    | (delta_g + 2) << 2
-                                    | (delta_b + 2)
+                                    0b01000000 | (delta_r + 2) << 4 | (delta_g + 2) << 2 | (delta_b + 2)
                                 )  # QOI_OP_DIFF
                             else:
                                 delta_gr = self._delta(delta_r, delta_g)
                                 delta_gb = self._delta(delta_b, delta_g)
-                                if (
-                                    -8 <= delta_gr < 8
-                                    and -32 <= delta_g < 32
-                                    and -8 <= delta_gb < 8
-                                ):
-                                    data += o8(
-                                        0b10000000 | (delta_g + 32)
-                                    )  # QOI_OP_LUMA
+                                if -8 <= delta_gr < 8 and -32 <= delta_g < 32 and -8 <= delta_gb < 8:
+                                    data += o8(0b10000000 | (delta_g + 32))  # QOI_OP_LUMA
                                     data += o8((delta_gr + 8) << 4 | (delta_gb + 8))
                                 else:
                                     data += o8(0b11111110)  # QOI_OP_RGB

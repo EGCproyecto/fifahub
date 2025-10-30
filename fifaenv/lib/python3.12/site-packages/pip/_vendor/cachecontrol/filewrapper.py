@@ -30,9 +30,7 @@ class CallbackFileWrapper:
     performance impact.
     """
 
-    def __init__(
-        self, fp: HTTPResponse, callback: Callable[[bytes], None] | None
-    ) -> None:
+    def __init__(self, fp: HTTPResponse, callback: Callable[[bytes], None] | None) -> None:
         self.__buf = NamedTemporaryFile("rb+", delete=True)
         self.__fp = fp
         self.__callback = callback
@@ -78,9 +76,7 @@ class CallbackFileWrapper:
                 # a view directly into the filesystem's memory cache, so it
                 # doesn't result in duplicate memory use.
                 self.__buf.seek(0, 0)
-                result = memoryview(
-                    mmap.mmap(self.__buf.fileno(), 0, access=mmap.ACCESS_READ)
-                )
+                result = memoryview(mmap.mmap(self.__buf.fileno(), 0, access=mmap.ACCESS_READ))
             self.__callback(result)
 
         # We assign this to None here, because otherwise we can get into

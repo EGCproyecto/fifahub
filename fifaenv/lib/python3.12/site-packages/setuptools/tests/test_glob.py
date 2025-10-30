@@ -1,14 +1,13 @@
 import pytest
 from jaraco import path
-
 from setuptools.glob import glob
 
 
 @pytest.mark.parametrize(
-    ('tree', 'pattern', 'matches'),
+    ("tree", "pattern", "matches"),
     (
-        ('', b'', []),
-        ('', '', []),
+        ("", b"", []),
+        ("", "", []),
         (
             """
      appveyor.yml
@@ -20,8 +19,8 @@ from setuptools.glob import glob
      setup.cfg
      setup.py
      """,
-            '*.rst',
-            ('CHANGES.rst', 'README.rst'),
+            "*.rst",
+            ("CHANGES.rst", "README.rst"),
         ),
         (
             """
@@ -34,12 +33,12 @@ from setuptools.glob import glob
      setup.cfg
      setup.py
      """,
-            b'*.rst',
-            (b'CHANGES.rst', b'README.rst'),
+            b"*.rst",
+            (b"CHANGES.rst", b"README.rst"),
         ),
     ),
 )
 def test_glob(monkeypatch, tmpdir, tree, pattern, matches):
     monkeypatch.chdir(tmpdir)
-    path.build({name: '' for name in tree.split()})
+    path.build({name: "" for name in tree.split()})
     assert list(sorted(glob(pattern))) == list(sorted(matches))

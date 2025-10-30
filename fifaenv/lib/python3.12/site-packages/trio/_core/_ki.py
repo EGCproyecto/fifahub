@@ -248,10 +248,7 @@ class KIManager:
         restrict_keyboard_interrupt_to_checkpoints: bool,
     ) -> None:
         assert self.handler is None
-        if (
-            not is_main_thread()
-            or signal.getsignal(signal.SIGINT) != signal.default_int_handler
-        ):
+        if not is_main_thread() or signal.getsignal(signal.SIGINT) != signal.default_int_handler:
             return
 
         def handler(signum: int, frame: types.FrameType | None) -> None:

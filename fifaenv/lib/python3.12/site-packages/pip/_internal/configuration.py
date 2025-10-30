@@ -58,17 +58,14 @@ def _normalize_name(name: str) -> str:
 def _disassemble_key(name: str) -> List[str]:
     if "." not in name:
         error_message = (
-            "Key does not contain dot separated section and key. "
-            f"Perhaps you wanted to use 'global.{name}' instead?"
+            "Key does not contain dot separated section and key. " f"Perhaps you wanted to use 'global.{name}' instead?"
         )
         raise ConfigurationError(error_message)
     return name.split(".", 1)
 
 
 def get_configuration_files() -> Dict[Kind, List[str]]:
-    global_config_files = [
-        os.path.join(path, CONFIG_BASENAME) for path in appdirs.site_config_dirs("pip")
-    ]
+    global_config_files = [os.path.join(path, CONFIG_BASENAME) for path in appdirs.site_config_dirs("pip")]
 
     site_config_file = os.path.join(sys.prefix, CONFIG_BASENAME)
     legacy_config_file = os.path.join(
@@ -103,20 +100,14 @@ class Configuration:
 
         if load_only is not None and load_only not in VALID_LOAD_ONLY:
             raise ConfigurationError(
-                "Got invalid value for load_only - should be one of {}".format(
-                    ", ".join(map(repr, VALID_LOAD_ONLY))
-                )
+                "Got invalid value for load_only - should be one of {}".format(", ".join(map(repr, VALID_LOAD_ONLY)))
             )
         self.isolated = isolated
         self.load_only = load_only
 
         # Because we keep track of where we got the data from
-        self._parsers: Dict[Kind, List[Tuple[str, RawConfigParser]]] = {
-            variant: [] for variant in OVERRIDE_ORDER
-        }
-        self._config: Dict[Kind, Dict[str, Any]] = {
-            variant: {} for variant in OVERRIDE_ORDER
-        }
+        self._parsers: Dict[Kind, List[Tuple[str, RawConfigParser]]] = {variant: [] for variant in OVERRIDE_ORDER}
+        self._config: Dict[Kind, Dict[str, Any]] = {variant: {} for variant in OVERRIDE_ORDER}
         self._modified_parsers: List[Tuple[str, RawConfigParser]] = []
 
     def load(self) -> None:
@@ -185,13 +176,9 @@ class Configuration:
 
         if parser is not None:
             section, name = _disassemble_key(key)
-            if not (
-                parser.has_section(section) and parser.remove_option(section, name)
-            ):
+            if not (parser.has_section(section) and parser.remove_option(section, name)):
                 # The option was not removed.
-                raise ConfigurationError(
-                    "Fatal Internal error [id=1]. Please report as a bug."
-                )
+                raise ConfigurationError("Fatal Internal error [id=1]. Please report as a bug.")
 
             # The section may be empty after the option was removed.
             if not parser.items(section):
@@ -216,8 +203,7 @@ class Configuration:
                     parser.write(f)
             except OSError as error:
                 raise ConfigurationError(
-                    f"An error occurred while writing to the configuration file "
-                    f"{fname}: {error}"
+                    f"An error occurred while writing to the configuration file " f"{fname}: {error}"
                 )
 
     #
@@ -246,8 +232,7 @@ class Configuration:
         config_files = dict(self.iter_config_files())
         if config_files[kinds.ENV][0:1] == [os.devnull]:
             logger.debug(
-                "Skipping loading configuration files due to "
-                "environment's PIP_CONFIG_FILE being os.devnull"
+                "Skipping loading configuration files due to " "environment's PIP_CONFIG_FILE being os.devnull"
             )
             return
 
@@ -297,13 +282,9 @@ class Configuration:
 
     def _load_environment_vars(self) -> None:
         """Loads configuration from environment variables"""
-        self._config[kinds.ENV_VAR].update(
-            self._normalized_keys(":env:", self.get_environ_vars())
-        )
+        self._config[kinds.ENV_VAR].update(self._normalized_keys(":env:", self.get_environ_vars()))
 
-    def _normalized_keys(
-        self, section: str, items: Iterable[Tuple[str, Any]]
-    ) -> Dict[str, Any]:
+    def _normalized_keys(self, section: str, items: Iterable[Tuple[str, Any]]) -> Dict[str, Any]:
         """Normalizes items to construct a dictionary with normalized keys.
 
         This routine is where the names become keys and are made the same
@@ -341,9 +322,7 @@ class Configuration:
         yield kinds.GLOBAL, config_files[kinds.GLOBAL]
 
         # per-user config is not loaded when env_config_file exists
-        should_load_user_config = not self.isolated and not (
-            env_config_file and os.path.exists(env_config_file)
-        )
+        should_load_user_config = not self.isolated and not (env_config_file and os.path.exists(env_config_file))
         if should_load_user_config:
             # The legacy config file is overridden by the new config file
             yield kinds.USER, config_files[kinds.USER]
@@ -366,9 +345,7 @@ class Configuration:
         parsers = self._parsers[self.load_only]
         if not parsers:
             # This should not happen if everything works correctly.
-            raise ConfigurationError(
-                "Fatal Internal error [id=2]. Please report as a bug."
-            )
+            raise ConfigurationError("Fatal Internal error [id=2]. Please report as a bug.")
 
         # Use the highest priority parser.
         return parsers[-1]

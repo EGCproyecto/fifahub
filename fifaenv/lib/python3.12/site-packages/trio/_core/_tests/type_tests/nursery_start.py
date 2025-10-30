@@ -69,9 +69,7 @@ def check_start_soon(nursery: Nursery) -> None:
     nursery.start_soon(task_2c, "abc", 12, True)
 
     nursery.start_soon(task_2c, "abc", 12)
-    task_2c_cast: Callable[[str, int], Awaitable[object]] = (
-        task_2c  # The assignment makes it work.
-    )
+    task_2c_cast: Callable[[str, int], Awaitable[object]] = task_2c  # The assignment makes it work.
     nursery.start_soon(task_2c_cast, "abc", 12)
 
     nursery.start_soon(task_requires_kw, 12, True)  # type: ignore

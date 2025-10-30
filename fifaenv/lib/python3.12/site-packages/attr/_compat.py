@@ -4,10 +4,8 @@ import inspect
 import platform
 import sys
 import threading
-
 from collections.abc import Mapping, Sequence  # noqa: F401
 from typing import _GenericAlias
-
 
 PYPY = platform.python_implementation() == "PyPy"
 PY_3_9_PLUS = sys.version_info[:2] >= (3, 9)
@@ -63,10 +61,7 @@ class _AnnotationExtractor:
         """
         Return the return type if it's not empty.
         """
-        if (
-            self.sig
-            and self.sig.return_annotation is not inspect.Signature.empty
-        ):
+        if self.sig and self.sig.return_annotation is not inspect.Signature.empty:
             return self.sig.return_annotation
 
         return None

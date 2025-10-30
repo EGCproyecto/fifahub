@@ -69,22 +69,16 @@ class ModeWithAuthenticationTag(Mode, metaclass=abc.ABCMeta):
 
 def _check_aes_key_length(self: Mode, algorithm: CipherAlgorithm) -> None:
     if algorithm.key_size > 256 and algorithm.name == "AES":
-        raise ValueError(
-            "Only 128, 192, and 256 bit keys are allowed for this AES mode"
-        )
+        raise ValueError("Only 128, 192, and 256 bit keys are allowed for this AES mode")
 
 
-def _check_iv_length(
-    self: ModeWithInitializationVector, algorithm: BlockCipherAlgorithm
-) -> None:
+def _check_iv_length(self: ModeWithInitializationVector, algorithm: BlockCipherAlgorithm) -> None:
     iv_len = len(self.initialization_vector)
     if iv_len * 8 != algorithm.block_size:
         raise ValueError(f"Invalid IV size ({iv_len}) for {self.name}.")
 
 
-def _check_nonce_length(
-    nonce: utils.Buffer, name: str, algorithm: CipherAlgorithm
-) -> None:
+def _check_nonce_length(nonce: utils.Buffer, name: str, algorithm: CipherAlgorithm) -> None:
     if not isinstance(algorithm, BlockCipherAlgorithm):
         raise UnsupportedAlgorithm(
             f"{name} requires a block cipher algorithm",
@@ -94,9 +88,7 @@ def _check_nonce_length(
         raise ValueError(f"Invalid nonce size ({len(nonce)}) for {name}.")
 
 
-def _check_iv_and_key_length(
-    self: ModeWithInitializationVector, algorithm: CipherAlgorithm
-) -> None:
+def _check_iv_and_key_length(self: ModeWithInitializationVector, algorithm: CipherAlgorithm) -> None:
     if not isinstance(algorithm, BlockCipherAlgorithm):
         raise UnsupportedAlgorithm(
             f"{self} requires a block cipher algorithm",
@@ -138,14 +130,12 @@ class XTS(ModeWithTweak):
     def validate_for_algorithm(self, algorithm: CipherAlgorithm) -> None:
         if isinstance(algorithm, (algorithms.AES128, algorithms.AES256)):
             raise TypeError(
-                "The AES128 and AES256 classes do not support XTS, please use "
-                "the standard AES class instead."
+                "The AES128 and AES256 classes do not support XTS, please use " "the standard AES class instead."
             )
 
         if algorithm.key_size not in (256, 512):
             raise ValueError(
-                "The XTS specification requires a 256-bit key for AES-128-XTS"
-                " and 512-bit key for AES-256-XTS"
+                "The XTS specification requires a 256-bit key for AES-128-XTS" " and 512-bit key for AES-256-XTS"
             )
 
 
@@ -228,20 +218,14 @@ class GCM(ModeWithInitializationVector, ModeWithAuthenticationTag):
         # This is a sane limit anyway so we'll enforce it here.
         utils._check_byteslike("initialization_vector", initialization_vector)
         if len(initialization_vector) < 8 or len(initialization_vector) > 128:
-            raise ValueError(
-                "initialization_vector must be between 8 and 128 bytes (64 "
-                "and 1024 bits)."
-            )
+            raise ValueError("initialization_vector must be between 8 and 128 bytes (64 " "and 1024 bits).")
         self._initialization_vector = initialization_vector
         if tag is not None:
             utils._check_bytes("tag", tag)
             if min_tag_length < 4:
                 raise ValueError("min_tag_length must be >= 4")
             if len(tag) < min_tag_length:
-                raise ValueError(
-                    f"Authentication tag must be {min_tag_length} bytes or "
-                    "longer."
-                )
+                raise ValueError(f"Authentication tag must be {min_tag_length} bytes or " "longer.")
         self._tag = tag
         self._min_tag_length = min_tag_length
 
@@ -262,7 +246,4 @@ class GCM(ModeWithInitializationVector, ModeWithAuthenticationTag):
             )
         block_size_bytes = algorithm.block_size // 8
         if self._tag is not None and len(self._tag) > block_size_bytes:
-            raise ValueError(
-                f"Authentication tag cannot be more than {block_size_bytes} "
-                "bytes."
-            )
+            raise ValueError(f"Authentication tag cannot be more than {block_size_bytes} " "bytes.")
