@@ -1,10 +1,12 @@
-
 from greenlet import greenlet
+
 from . import TestCase
 from .leakcheck import fails_leakcheck
 
+
 class genlet(greenlet):
     parent = None
+
     def __init__(self, *args, **kwds):
         self.args = args
         self.kwds = kwds
@@ -13,7 +15,7 @@ class genlet(greenlet):
     def run(self):
         # Note the function is packed in a tuple
         # to avoid creating a bound method for it.
-        fn, = self.fn
+        (fn,) = self.fn
         fn(*self.args, **self.kwds)
 
     def __iter__(self):
@@ -42,12 +44,13 @@ class genlet(greenlet):
 
     next = __next__
 
+
 def Yield(value, level=1):
     g = greenlet.getcurrent()
 
     while level != 0:
         if not isinstance(g, genlet):
-            raise RuntimeError('yield outside a genlet')
+            raise RuntimeError("yield outside a genlet")
         if level > 1:
             g.parent.set_child(g)
         g = g.parent
@@ -59,7 +62,9 @@ def Yield(value, level=1):
 def Genlet(func):
     class TheGenlet(genlet):
         fn = (func,)
+
     return TheGenlet
+
 
 # ____________________________________________________________
 
@@ -75,6 +80,7 @@ def g2(n, seen):
         seen.append(i + 1)
         Yield(i)
 
+
 g2 = Genlet(g2)
 
 
@@ -86,6 +92,8 @@ def g3(n, seen):
     for i in range(n):
         seen.append(i + 1)
         nested(i)
+
+
 g3 = Genlet(g3)
 
 
@@ -95,6 +103,8 @@ def a(n):
     for ii in ax(n - 1):
         Yield(ii)
     Yield(n)
+
+
 ax = Genlet(a)
 
 
@@ -106,6 +116,8 @@ def perms(l):
             assert x
     else:
         Yield(l)
+
+
 perms = Genlet(perms)
 
 
@@ -114,12 +126,14 @@ def gr1(n):
         Yield(ii)
         Yield(ii * ii, 2)
 
+
 gr1 = Genlet(gr1)
 
 
 def gr2(n, seen):
     for ii in gr1(n):
         seen.append(ii)
+
 
 gr2 = Genlet(gr2)
 
@@ -143,9 +157,15 @@ class NestedGeneratorTests(TestCase):
             res.append(ii)
         self.assertEqual(
             res,
-            [([0, 1, 2, 3], [0, 1, 2]), ([0, 1, 3, 2], [0, 2, 1]),
-             ([0, 2, 1, 3], [1, 0, 2]), ([0, 2, 3, 1], [1, 2, 0]),
-             ([0, 3, 1, 2], [2, 0, 1]), ([0, 3, 2, 1], [2, 1, 0])])
+            [
+                ([0, 1, 2, 3], [0, 1, 2]),
+                ([0, 1, 3, 2], [0, 2, 1]),
+                ([0, 2, 1, 3], [1, 0, 2]),
+                ([0, 2, 3, 1], [1, 2, 0]),
+                ([0, 3, 1, 2], [2, 0, 1]),
+                ([0, 3, 2, 1], [2, 1, 0]),
+            ],
+        )
         # XXX Test to make sure we are working as a generator expression
 
     def test_genlet_simple(self):

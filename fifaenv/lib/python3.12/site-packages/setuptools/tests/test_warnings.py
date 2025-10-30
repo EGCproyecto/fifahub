@@ -1,7 +1,6 @@
 from inspect import cleandoc
 
 import pytest
-
 from setuptools.warnings import SetuptoolsDeprecationWarning, SetuptoolsWarning
 
 _EXAMPLES = {

@@ -13,9 +13,7 @@ class CompareTable:
             return False
 
         for c1, c2 in zip_longest(self.table.c, other.c):
-            if (c1 is None and c2 is not None) or (
-                c2 is None and c1 is not None
-            ):
+            if (c1 is None and c2 is not None) or (c2 is None and c1 is not None):
                 return False
             if CompareColumn(c1) != c2:
                 return False
@@ -33,10 +31,7 @@ class CompareColumn:
         self.column = column
 
     def __eq__(self, other):
-        return (
-            self.column.name == other.name
-            and self.column.nullable == other.nullable
-        )
+        return self.column.name == other.name and self.column.nullable == other.nullable
         # TODO: datatypes etc
 
     def __ne__(self, other):
@@ -53,8 +48,7 @@ class CompareIndex:
             return self.index.name == other.name
         else:
             return (
-                str(schema.CreateIndex(self.index))
-                == str(schema.CreateIndex(other))
+                str(schema.CreateIndex(self.index)) == str(schema.CreateIndex(other))
                 and self.index.dialect_kwargs == other.dialect_kwargs
             )
 
@@ -101,9 +95,7 @@ class CompareForeignKey:
         if not r1:
             return False
         for c1, c2 in zip_longest(self.constraint.columns, other.columns):
-            if (c1 is None and c2 is not None) or (
-                c2 is None and c1 is not None
-            ):
+            if (c1 is None and c2 is not None) or (c2 is None and c1 is not None):
                 return False
             if CompareColumn(c1) != c2:
                 return False
@@ -128,9 +120,7 @@ class ComparePrimaryKey:
             return False
 
         for c1, c2 in zip_longest(self.constraint.columns, other.columns):
-            if (c1 is None and c2 is not None) or (
-                c2 is None and c1 is not None
-            ):
+            if (c1 is None and c2 is not None) or (c2 is None and c1 is not None):
                 return False
             if CompareColumn(c1) != c2:
                 return False
@@ -156,9 +146,7 @@ class CompareUniqueConstraint:
             return False
 
         for c1, c2 in zip_longest(self.constraint.columns, other.columns):
-            if (c1 is None and c2 is not None) or (
-                c2 is None and c1 is not None
-            ):
+            if (c1 is None and c2 is not None) or (c2 is None and c1 is not None):
                 return False
             if CompareColumn(c1) != c2:
                 return False

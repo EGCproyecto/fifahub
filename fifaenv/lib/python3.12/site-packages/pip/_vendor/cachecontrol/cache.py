@@ -19,9 +19,7 @@ class BaseCache:
     def get(self, key: str) -> bytes | None:
         raise NotImplementedError()
 
-    def set(
-        self, key: str, value: bytes, expires: int | datetime | None = None
-    ) -> None:
+    def set(self, key: str, value: bytes, expires: int | datetime | None = None) -> None:
         raise NotImplementedError()
 
     def delete(self, key: str) -> None:
@@ -39,9 +37,7 @@ class DictCache(BaseCache):
     def get(self, key: str) -> bytes | None:
         return self.data.get(key, None)
 
-    def set(
-        self, key: str, value: bytes, expires: int | datetime | None = None
-    ) -> None:
+    def set(self, key: str, value: bytes, expires: int | datetime | None = None) -> None:
         with self.lock:
             self.data.update({key: value})
 

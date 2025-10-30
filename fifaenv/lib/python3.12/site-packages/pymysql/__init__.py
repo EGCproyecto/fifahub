@@ -26,24 +26,24 @@ import sys
 
 from .constants import FIELD_TYPE
 from .err import (
-    Warning,
-    Error,
-    InterfaceError,
-    DataError,
     DatabaseError,
-    OperationalError,
+    DataError,
+    Error,
     IntegrityError,
+    InterfaceError,
     InternalError,
-    NotSupportedError,
-    ProgrammingError,
     MySQLError,
+    NotSupportedError,
+    OperationalError,
+    ProgrammingError,
+    Warning,
 )
 from .times import (
     Date,
-    Time,
-    Timestamp,
     DateFromTicks,
+    Time,
     TimeFromTicks,
+    Timestamp,
     TimestampFromTicks,
 )
 

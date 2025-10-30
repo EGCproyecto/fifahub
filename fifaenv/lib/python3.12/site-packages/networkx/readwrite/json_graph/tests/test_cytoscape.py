@@ -1,9 +1,8 @@
 import copy
 import json
 
-import pytest
-
 import networkx as nx
+import pytest
 from networkx.readwrite.json_graph import cytoscape_data, cytoscape_graph
 
 

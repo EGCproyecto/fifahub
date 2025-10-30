@@ -1,8 +1,7 @@
 from itertools import combinations
 
-import pytest
-
 import networkx as nx
+import pytest
 
 
 def test_overlapping_K5():

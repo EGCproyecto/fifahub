@@ -2,9 +2,8 @@
 
 import math
 
-import pytest
-
 import networkx as nx
+import pytest
 from networkx.generators.interval_graph import interval_graph
 from networkx.utils import edges_equal
 

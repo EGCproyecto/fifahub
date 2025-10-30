@@ -394,9 +394,7 @@ def assoc(inst, **changes):
     return new
 
 
-def resolve_types(
-    cls, globalns=None, localns=None, attribs=None, include_extras=True
-):
+def resolve_types(cls, globalns=None, localns=None, attribs=None, include_extras=True):
     """
     Resolve any strings and forward annotations in type annotations.
 

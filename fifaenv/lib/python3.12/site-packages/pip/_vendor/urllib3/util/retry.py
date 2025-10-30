@@ -23,9 +23,7 @@ log = logging.getLogger(__name__)
 
 
 # Data structure for representing the metadata of requests that result in a retry.
-RequestHistory = namedtuple(
-    "RequestHistory", ["method", "url", "error", "status", "redirect_location"]
-)
+RequestHistory = namedtuple("RequestHistory", ["method", "url", "error", "status", "redirect_location"])
 
 
 # TODO: In v2 we can remove this sentinel and metaclass with deprecated options.
@@ -227,17 +225,13 @@ class Retry(object):
     """
 
     #: Default methods to be used for ``allowed_methods``
-    DEFAULT_ALLOWED_METHODS = frozenset(
-        ["HEAD", "GET", "PUT", "DELETE", "OPTIONS", "TRACE"]
-    )
+    DEFAULT_ALLOWED_METHODS = frozenset(["HEAD", "GET", "PUT", "DELETE", "OPTIONS", "TRACE"])
 
     #: Default status codes to be used for ``status_forcelist``
     RETRY_AFTER_STATUS_CODES = frozenset([413, 429, 503])
 
     #: Default headers to be used for ``remove_headers_on_redirect``
-    DEFAULT_REMOVE_HEADERS_ON_REDIRECT = frozenset(
-        ["Cookie", "Authorization", "Proxy-Authorization"]
-    )
+    DEFAULT_REMOVE_HEADERS_ON_REDIRECT = frozenset(["Cookie", "Authorization", "Proxy-Authorization"])
 
     #: Maximum backoff time.
     DEFAULT_BACKOFF_MAX = 120
@@ -299,9 +293,7 @@ class Retry(object):
         self.raise_on_status = raise_on_status
         self.history = history or tuple()
         self.respect_retry_after_header = respect_retry_after_header
-        self.remove_headers_on_redirect = frozenset(
-            [h.lower() for h in remove_headers_on_redirect]
-        )
+        self.remove_headers_on_redirect = frozenset([h.lower() for h in remove_headers_on_redirect])
 
     def new(self, **kw):
         params = dict(
@@ -359,11 +351,7 @@ class Retry(object):
         :rtype: float
         """
         # We want to consider only the last consecutive errors sequence (Ignore redirects).
-        consecutive_errors_len = len(
-            list(
-                takewhile(lambda x: x.redirect_location is None, reversed(self.history))
-            )
-        )
+        consecutive_errors_len = len(list(takewhile(lambda x: x.redirect_location is None, reversed(self.history))))
         if consecutive_errors_len <= 1:
             return 0
 
@@ -576,9 +564,7 @@ class Retry(object):
                 cause = ResponseError.SPECIFIC_ERROR.format(status_code=response.status)
                 status = response.status
 
-        history = self.history + (
-            RequestHistory(method, url, error, status, redirect_location),
-        )
+        history = self.history + (RequestHistory(method, url, error, status, redirect_location),)
 
         new_retry = self.new(
             total=total,

@@ -1,6 +1,5 @@
-import pytest
-
 import networkx as nx
+import pytest
 
 
 class TestIntersectionGraph:

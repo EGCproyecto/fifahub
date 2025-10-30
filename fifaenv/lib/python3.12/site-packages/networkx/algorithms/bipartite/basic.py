@@ -148,9 +148,7 @@ def is_bipartite_node_set(G, nodes):
 
     for CC in (G.subgraph(c).copy() for c in connected_components(G)):
         X, Y = sets(CC)
-        if not (
-            (X.issubset(S) and Y.isdisjoint(S)) or (Y.issubset(S) and X.isdisjoint(S))
-        ):
+        if not ((X.issubset(S) and Y.isdisjoint(S)) or (Y.issubset(S) and X.isdisjoint(S))):
             return False
     return True
 

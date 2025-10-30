@@ -228,14 +228,10 @@ class IPAddress(GeneralName):
         return self._value
 
     def _packed(self) -> bytes:
-        if isinstance(
-            self.value, (ipaddress.IPv4Address, ipaddress.IPv6Address)
-        ):
+        if isinstance(self.value, (ipaddress.IPv4Address, ipaddress.IPv6Address)):
             return self.value.packed
         else:
-            return (
-                self.value.network_address.packed + self.value.netmask.packed
-            )
+            return self.value.network_address.packed + self.value.netmask.packed
 
     def __repr__(self) -> str:
         return f"<IPAddress(value={self.value})>"

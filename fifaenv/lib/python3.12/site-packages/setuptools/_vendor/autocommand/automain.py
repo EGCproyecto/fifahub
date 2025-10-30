@@ -16,6 +16,7 @@
 # along with autocommand.  If not, see <http://www.gnu.org/licenses/>.
 
 import sys
+
 from .errors import AutocommandError
 
 
@@ -24,7 +25,7 @@ class AutomainRequiresModuleError(AutocommandError, TypeError):
 
 
 def automain(module, *, args=(), kwargs=None):
-    '''
+    """
     This decorator automatically invokes a function if the module is being run
     as the "__main__" module. Optionally, provide args or kwargs with which to
     call the function. If `module` is "__main__", the function is called, and
@@ -40,13 +41,13 @@ def automain(module, *, args=(), kwargs=None):
 
     If __name__ is "__main__" here, the main function is called, and then
     sys.exit called with the return value.
-    '''
+    """
 
     # Check that @automain(...) was called, rather than @automain
     if callable(module):
         raise AutomainRequiresModuleError(module)
 
-    if module == '__main__' or module is True:
+    if module == "__main__" or module is True:
         if kwargs is None:
             kwargs = {}
 

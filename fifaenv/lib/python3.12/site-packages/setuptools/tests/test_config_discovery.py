@@ -1,3 +1,4 @@
+import distutils.core
 import os
 import sys
 from configparser import ConfigParser
@@ -6,9 +7,8 @@ from typing import cast
 
 import jaraco.path
 import pytest
-from path import Path
-
 import setuptools  # noqa: F401 # force distutils.core to be patched
+from path import Path
 from setuptools.command.sdist import sdist
 from setuptools.discovery import find_package_path, find_parent_package
 from setuptools.dist import Distribution
@@ -17,8 +17,6 @@ from setuptools.errors import PackageDiscoveryError
 from .contexts import quiet
 from .integration.helpers import get_sdist_members, get_wheel_members, run
 from .textwrap import DALS
-
-import distutils.core
 
 
 class TestFindParentPackage:
@@ -103,12 +101,12 @@ class TestDiscoverPackagesAndPyModules:
 
         sdist_files = get_sdist_members(next(tmp_path.glob("dist/*.tar.gz")))
         print("~~~~~ sdist_members ~~~~~")
-        print('\n'.join(sdist_files))
+        print("\n".join(sdist_files))
         assert sdist_files >= set(files)
 
         wheel_files = get_wheel_members(next(tmp_path.glob("dist/*.whl")))
         print("~~~~~ wheel_members ~~~~~")
-        print('\n'.join(wheel_files))
+        print("\n".join(wheel_files))
         orig_files = {f.replace("src/", "").replace("lib/", "") for f in files}
         assert wheel_files >= orig_files
 
@@ -499,12 +497,12 @@ class TestWithPackageData:
 
         sdist_files = get_sdist_members(next(tmp_path.glob("dist/*.tar.gz")))
         print("~~~~~ sdist_members ~~~~~")
-        print('\n'.join(sdist_files))
+        print("\n".join(sdist_files))
         assert sdist_files >= expected
 
         wheel_files = get_wheel_members(next(tmp_path.glob("dist/*.whl")))
         print("~~~~~ wheel_members ~~~~~")
-        print('\n'.join(wheel_files))
+        print("\n".join(wheel_files))
         orig_files = {f.replace("src/", "").replace("lib/", "") for f in expected}
         assert wheel_files >= orig_files
 
@@ -610,13 +608,13 @@ def _write_setupcfg(root, options):
 
 def _run_build(path, *flags):
     cmd = [sys.executable, "-m", "build", "--no-isolation", *flags, str(path)]
-    return run(cmd, env={'DISTUTILS_DEBUG': ''})
+    return run(cmd, env={"DISTUTILS_DEBUG": ""})
 
 
 def _get_dist(dist_path, attrs):
     root = "/".join(os.path.split(dist_path))  # POSIX-style
 
-    script = dist_path / 'setup.py'
+    script = dist_path / "setup.py"
     if script.exists():
         with Path(dist_path):
             dist = cast(

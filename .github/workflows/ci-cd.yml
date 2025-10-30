@@ -130,12 +130,9 @@ jobs:
     name: Deploy to Render (staging)
     runs-on: ubuntu-24.04
     needs: [pytest]
-    if: >
-      ${{
-        needs.pytest.result == 'success' &&
-        github.event_name == 'push' &&
-        github.ref == 'refs/heads/trunk'
-      }}
+
+    if: ${{ needs.pytest.result == 'success' && github.event_name == 'push' && github.ref == 'refs/heads/trunk' }}
+
     steps:
       - name: Trigger staging webhook
         env:

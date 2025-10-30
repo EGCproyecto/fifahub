@@ -80,16 +80,8 @@ def degree_assortativity_coefficient(G, x="out", y="in", weight=None, nodes=None
     degrees = None
 
     if G.is_directed():
-        indeg = (
-            {d for _, d in G.in_degree(nodes, weight=weight)}
-            if "in" in (x, y)
-            else set()
-        )
-        outdeg = (
-            {d for _, d in G.out_degree(nodes, weight=weight)}
-            if "out" in (x, y)
-            else set()
-        )
+        indeg = {d for _, d in G.in_degree(nodes, weight=weight)} if "in" in (x, y) else set()
+        outdeg = {d for _, d in G.out_degree(nodes, weight=weight)} if "out" in (x, y) else set()
         degrees = set.union(indeg, outdeg)
     else:
         degrees = {d for _, d in G.degree(nodes, weight=weight)}

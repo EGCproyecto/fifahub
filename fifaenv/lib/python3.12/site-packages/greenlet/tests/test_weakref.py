@@ -1,9 +1,10 @@
 import gc
 import weakref
 
-
 import greenlet
+
 from . import TestCase
+
 
 class WeakRefTests(TestCase):
     def test_dead_weakref(self):
@@ -11,6 +12,7 @@ class WeakRefTests(TestCase):
             g = greenlet.greenlet(lambda: None)
             g.switch()
             return g
+
         o = weakref.ref(_dead_greenlet())
         gc.collect()
         self.assertEqual(o(), None)
@@ -22,11 +24,13 @@ class WeakRefTests(TestCase):
 
     def test_dealloc_weakref(self):
         seen = []
+
         def worker():
             try:
                 greenlet.getcurrent().parent.switch()
             finally:
                 seen.append(g())
+
         g = greenlet.greenlet(worker)
         g.switch()
         g2 = greenlet.greenlet(lambda: None, g)

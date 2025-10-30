@@ -8,18 +8,18 @@ import platform
 
 from .select import public_api, select_backend
 
-if 'PYZMQ_BACKEND' in os.environ:
-    backend = os.environ['PYZMQ_BACKEND']
-    if backend in ('cython', 'cffi'):
-        backend = f'zmq.backend.{backend}'
+if "PYZMQ_BACKEND" in os.environ:
+    backend = os.environ["PYZMQ_BACKEND"]
+    if backend in ("cython", "cffi"):
+        backend = f"zmq.backend.{backend}"
     _ns = select_backend(backend)
 else:
     # default to cython, fallback to cffi
     # (reverse on PyPy)
-    if platform.python_implementation() == 'PyPy':
-        first, second = ('zmq.backend.cffi', 'zmq.backend.cython')
+    if platform.python_implementation() == "PyPy":
+        first, second = ("zmq.backend.cffi", "zmq.backend.cython")
     else:
-        first, second = ('zmq.backend.cython', 'zmq.backend.cffi')
+        first, second = ("zmq.backend.cython", "zmq.backend.cffi")
 
     try:
         _ns = select_backend(first)

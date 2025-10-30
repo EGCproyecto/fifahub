@@ -44,6 +44,4 @@ def test_spectral_graph_forge():
     assert is_isomorphic(G, H)
 
     # invalid transformation mode, checking the error raising
-    pytest.raises(
-        NetworkXError, spectral_graph_forge, G, 0.1, transformation="unknown", seed=seed
-    )
+    pytest.raises(NetworkXError, spectral_graph_forge, G, 0.1, transformation="unknown", seed=seed)

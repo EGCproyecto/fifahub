@@ -1,5 +1,4 @@
 import pytest
-
 from networkx.utils import (
     powerlaw_sequence,
     random_weighted_sample,

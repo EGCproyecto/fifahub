@@ -2,9 +2,8 @@
 
 from itertools import combinations
 
-import pytest
-
 import networkx as nx
+import pytest
 from networkx import convert_node_labels_to_integers as cnlti
 from networkx.utils import edges_equal
 

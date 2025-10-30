@@ -87,9 +87,7 @@ class ClientMetadataClaims(BaseClaims):
 
         for metadata_claim_name, request_claim_name in values_mapping.items():
             if metadata_claim_values := metadata.get(metadata_claim_name):
-                options[request_claim_name] = {
-                    "validate": make_validator(metadata_claim_values)
-                }
+                options[request_claim_name] = {"validate": make_validator(metadata_claim_values)}
 
         return options
 
@@ -159,9 +157,7 @@ class ClientMetadataClaims(BaseClaims):
         the JWK Set referenced by the jwks_uri element from OpenID Connect Discovery 1.0
         [OpenID.Discovery].
         """
-        if self.get(
-            "id_token_signed_response_alg"
-        ) == "none" and "id_token" in self.get("response_type", ""):
+        if self.get("id_token_signed_response_alg") == "none" and "id_token" in self.get("response_type", ""):
             raise InvalidClaimError("id_token_signed_response_alg")
 
         self.setdefault("id_token_signed_response_alg", "RS256")
@@ -186,9 +182,7 @@ class ClientMetadataClaims(BaseClaims):
         id_token_encrypted_response_enc is included, id_token_encrypted_response_alg
         MUST also be provided.
         """
-        if self.get("id_token_encrypted_response_enc") and not self.get(
-            "id_token_encrypted_response_alg"
-        ):
+        if self.get("id_token_encrypted_response_enc") and not self.get("id_token_encrypted_response_alg"):
             raise InvalidClaimError("id_token_encrypted_response_enc")
 
         if self.get("id_token_encrypted_response_alg"):
@@ -223,9 +217,7 @@ class ClientMetadataClaims(BaseClaims):
         userinfo_encrypted_response_enc is included, userinfo_encrypted_response_alg
         MUST also be provided.
         """
-        if self.get("userinfo_encrypted_response_enc") and not self.get(
-            "userinfo_encrypted_response_alg"
-        ):
+        if self.get("userinfo_encrypted_response_enc") and not self.get("userinfo_encrypted_response_alg"):
             raise InvalidClaimError("userinfo_encrypted_response_enc")
 
         if self.get("userinfo_encrypted_response_alg"):
@@ -241,9 +233,7 @@ class ClientMetadataClaims(BaseClaims):
         request parameter overrides this default value. If omitted, no default Maximum
         Authentication Age is specified.
         """
-        if self.get("default_max_age") is not None and not isinstance(
-            self["default_max_age"], (int, float)
-        ):
+        if self.get("default_max_age") is not None and not isinstance(self["default_max_age"], (int, float)):
             raise InvalidClaimError("default_max_age")
 
         self._validate_claim_value("default_max_age")
@@ -258,9 +248,7 @@ class ClientMetadataClaims(BaseClaims):
         1.0 [OpenID.Core].) If omitted, the default value is false.
         """
         self.setdefault("require_auth_time", False)
-        if self.get("require_auth_time") is not None and not isinstance(
-            self["require_auth_time"], bool
-        ):
+        if self.get("require_auth_time") is not None and not isinstance(self["require_auth_time"], bool):
             raise InvalidClaimError("require_auth_time")
 
         self._validate_claim_value("require_auth_time")
@@ -327,9 +315,7 @@ class ClientMetadataClaims(BaseClaims):
         request_object_encryption_enc is included, request_object_encryption_alg MUST
         also be provided.
         """
-        if self.get("request_object_encryption_enc") and not self.get(
-            "request_object_encryption_alg"
-        ):
+        if self.get("request_object_encryption_enc") and not self.get("request_object_encryption_alg"):
             raise InvalidClaimError("request_object_encryption_enc")
 
         if self.get("request_object_encryption_alg"):

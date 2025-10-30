@@ -2,9 +2,8 @@
 
 from itertools import cycle, islice
 
-import pytest
-
 import networkx as nx
+import pytest
 
 
 def cycles(seq):

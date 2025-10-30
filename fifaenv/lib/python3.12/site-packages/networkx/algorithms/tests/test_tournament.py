@@ -3,7 +3,6 @@
 from itertools import combinations
 
 import pytest
-
 from networkx import DiGraph
 from networkx.algorithms.tournament import (
     hamiltonian_path,

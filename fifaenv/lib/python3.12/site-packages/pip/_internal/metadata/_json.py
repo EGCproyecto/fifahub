@@ -63,9 +63,7 @@ def msg_to_json(msg: Message) -> Dict[str, Any]:
             continue
         key = json_name(field)
         if multi:
-            value: Union[str, List[str]] = [
-                sanitise_header(v) for v in msg.get_all(field)  # type: ignore
-            ]
+            value: Union[str, List[str]] = [sanitise_header(v) for v in msg.get_all(field)]  # type: ignore
         else:
             value = sanitise_header(msg.get(field))  # type: ignore
             if key == "keywords":

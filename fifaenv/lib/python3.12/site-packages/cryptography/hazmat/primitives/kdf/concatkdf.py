@@ -74,9 +74,7 @@ class ConcatKDFHash(KeyDerivationFunction):
         if self._used:
             raise AlreadyFinalized
         self._used = True
-        return _concatkdf_derive(
-            key_material, self._length, self._hash, self._otherinfo
-        )
+        return _concatkdf_derive(key_material, self._length, self._hash, self._otherinfo)
 
     def verify(self, key_material: bytes, expected_key: bytes) -> None:
         if not constant_time.bytes_eq(self.derive(key_material), expected_key):
@@ -116,9 +114,7 @@ class ConcatKDFHMAC(KeyDerivationFunction):
         if self._used:
             raise AlreadyFinalized
         self._used = True
-        return _concatkdf_derive(
-            key_material, self._length, self._hmac, self._otherinfo
-        )
+        return _concatkdf_derive(key_material, self._length, self._hmac, self._otherinfo)
 
     def verify(self, key_material: bytes, expected_key: bytes) -> None:
         if not constant_time.bytes_eq(self.derive(key_material), expected_key):

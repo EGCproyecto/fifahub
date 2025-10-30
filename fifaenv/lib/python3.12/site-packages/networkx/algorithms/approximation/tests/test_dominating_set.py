@@ -1,6 +1,5 @@
-import pytest
-
 import networkx as nx
+import pytest
 from networkx.algorithms.approximation import (
     min_edge_dominating_set,
     min_weighted_dominating_set,
