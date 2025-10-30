@@ -33,9 +33,7 @@ class Mercurial(VersionControl):
     def get_base_rev_args(rev: str) -> List[str]:
         return [f"--rev={rev}"]
 
-    def fetch_new(
-        self, dest: str, url: HiddenText, rev_options: RevOptions, verbosity: int
-    ) -> None:
+    def fetch_new(self, dest: str, url: HiddenText, rev_options: RevOptions, verbosity: int) -> None:
         rev_display = rev_options.to_display()
         logger.info(
             "Cloning hg %s%s to %s",
@@ -127,9 +125,7 @@ class Mercurial(VersionControl):
         Return None if the project root is in the repo root.
         """
         # find the repo root
-        repo_root = cls.run_command(
-            ["root"], show_stdout=False, stdout_only=True, cwd=location
-        ).strip()
+        repo_root = cls.run_command(["root"], show_stdout=False, stdout_only=True, cwd=location).strip()
         if not os.path.isabs(repo_root):
             repo_root = os.path.abspath(os.path.join(location, repo_root))
         return find_path_to_project_root_from_repo_root(location, repo_root)
@@ -150,8 +146,7 @@ class Mercurial(VersionControl):
             )
         except BadCommand:
             logger.debug(
-                "could not determine if %s is under hg control "
-                "because hg is not available",
+                "could not determine if %s is under hg control " "because hg is not available",
                 location,
             )
             return None

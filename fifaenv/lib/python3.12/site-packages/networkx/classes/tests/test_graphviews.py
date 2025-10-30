@@ -1,6 +1,5 @@
-import pytest
-
 import networkx as nx
+import pytest
 from networkx.utils import edges_equal, nodes_equal
 
 # Note: SubGraph views are not tested here. They have their own testing file

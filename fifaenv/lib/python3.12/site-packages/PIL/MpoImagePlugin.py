@@ -54,10 +54,7 @@ def _save_all(im: Image.Image, fp: IO[bytes], filename: str | bytes) -> None:
                 # APP2 marker
                 ifd_length = 66 + 16 * total
                 im_frame.encoderinfo["extra"] = (
-                    b"\xff\xe2"
-                    + struct.pack(">H", 6 + ifd_length)
-                    + b"MPF\0"
-                    + b" " * ifd_length
+                    b"\xff\xe2" + struct.pack(">H", 6 + ifd_length) + b"MPF\0" + b" " * ifd_length
                 )
                 exif = im_frame.encoderinfo.get("exif")
                 if isinstance(exif, Image.Exif):
@@ -116,9 +113,7 @@ class MpoImageFile(JpegImagePlugin.JpegImageFile):
             msg = "Image appears to be a malformed MPO file"
             raise ValueError(msg)
         self.n_frames = self.mpinfo[0xB001]
-        self.__mpoffsets = [
-            mpent["DataOffset"] + self.info["mpoffset"] for mpent in self.mpinfo[0xB002]
-        ]
+        self.__mpoffsets = [mpent["DataOffset"] + self.info["mpoffset"] for mpent in self.mpinfo[0xB002]]
         self.__mpoffsets[0] = 0
         # Note that the following assertion will only be invalid if something
         # gets broken within JpegImagePlugin.
@@ -158,9 +153,7 @@ class MpoImageFile(JpegImagePlugin.JpegImageFile):
         if self.info.get("exif") != original_exif:
             self._reload_exif()
 
-        self.tile = [
-            ImageFile._Tile("jpeg", (0, 0) + self.size, self.offset, self.tile[0][-1])
-        ]
+        self.tile = [ImageFile._Tile("jpeg", (0, 0) + self.size, self.offset, self.tile[0][-1])]
         self.__frame = frame
 
     def tell(self) -> int:

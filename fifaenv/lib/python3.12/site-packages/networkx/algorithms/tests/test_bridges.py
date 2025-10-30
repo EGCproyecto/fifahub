@@ -1,8 +1,7 @@
 """Unit tests for bridge-finding algorithms."""
 
-import pytest
-
 import networkx as nx
+import pytest
 
 
 class TestBridges:

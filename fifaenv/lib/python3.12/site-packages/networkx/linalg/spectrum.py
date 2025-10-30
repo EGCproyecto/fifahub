@@ -86,9 +86,7 @@ def normalized_laplacian_spectrum(G, weight="weight"):
     """
     import scipy as sp
 
-    return sp.linalg.eigvalsh(
-        nx.normalized_laplacian_matrix(G, weight=weight).todense()
-    )
+    return sp.linalg.eigvalsh(nx.normalized_laplacian_matrix(G, weight=weight).todense())
 
 
 @nx._dispatchable(edge_attrs="weight")

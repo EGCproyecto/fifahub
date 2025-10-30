@@ -65,11 +65,7 @@ class Inspect(JupyterMixin):
 
     def _make_title(self, obj: Any) -> Text:
         """Make a default title."""
-        title_str = (
-            str(obj)
-            if (isclass(obj) or callable(obj) or ismodule(obj))
-            else str(type(obj))
-        )
+        title_str = str(obj) if (isclass(obj) or callable(obj) or ismodule(obj)) else str(type(obj))
         title_text = self.highlighter(title_str)
         return title_text
 
@@ -257,9 +253,7 @@ def get_object_types_mro_as_strings(obj: object) -> Collection[str]:
     ]
 
 
-def is_object_one_of_types(
-    obj: object, fully_qualified_types_names: Collection[str]
-) -> bool:
+def is_object_one_of_types(obj: object, fully_qualified_types_names: Collection[str]) -> bool:
     """
     Returns `True` if the given object's class (or the object itself, if it's a class) has one of the
     fully qualified names in its MRO.

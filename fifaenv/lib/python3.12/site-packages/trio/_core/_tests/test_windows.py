@@ -13,9 +13,7 @@ on_windows = os.name == "nt"
 # Mark all the tests in this file as being windows-only
 pytestmark = pytest.mark.skipif(not on_windows, reason="windows only")
 
-assert (
-    sys.platform == "win32" or not TYPE_CHECKING
-)  # Skip type checking when not on Windows
+assert sys.platform == "win32" or not TYPE_CHECKING  # Skip type checking when not on Windows
 
 from ... import _core, sleep
 from ...testing import wait_all_tasks_blocked

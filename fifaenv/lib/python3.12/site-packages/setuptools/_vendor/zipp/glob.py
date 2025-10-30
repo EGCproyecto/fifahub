@@ -1,7 +1,6 @@
 import os
 import re
 
-
 _default_seps = os.sep + str(os.altsep) * bool(os.altsep)
 
 
@@ -39,7 +38,7 @@ class Translator:
 
         Append '\Z' to imply fullmatch even when match is used.
         """
-        return rf'(?s:{pattern})\Z'
+        return rf"(?s:{pattern})\Z"
 
     def translate_core(self, pattern):
         r"""
@@ -54,17 +53,17 @@ class Translator:
         '.*/[^/][^/]*'
         """
         self.restrict_rglob(pattern)
-        return ''.join(map(self.replace, separate(self.star_not_empty(pattern))))
+        return "".join(map(self.replace, separate(self.star_not_empty(pattern))))
 
     def replace(self, match):
         """
         Perform the replacements for a match from :func:`separate`.
         """
-        return match.group('set') or (
+        return match.group("set") or (
             re.escape(match.group(0))
-            .replace('\\*\\*', r'.*')
-            .replace('\\*', rf'[^{re.escape(self.seps)}]*')
-            .replace('\\?', r'[^/]')
+            .replace("\\*\\*", r".*")
+            .replace("\\*", rf"[^{re.escape(self.seps)}]*")
+            .replace("\\?", r"[^/]")
         )
 
     def restrict_rglob(self, pattern):
@@ -76,9 +75,9 @@ class Translator:
         ...
         ValueError: ** must appear alone in a path segment
         """
-        seps_pattern = rf'[{re.escape(self.seps)}]+'
+        seps_pattern = rf"[{re.escape(self.seps)}]+"
         segments = re.split(seps_pattern, pattern)
-        if any('**' in segment and segment != '**' for segment in segments):
+        if any("**" in segment and segment != "**" for segment in segments):
             raise ValueError("** must appear alone in a path segment")
 
     def star_not_empty(self, pattern):
@@ -88,9 +87,9 @@ class Translator:
 
         def handle_segment(match):
             segment = match.group(0)
-            return '?*' if segment == '*' else segment
+            return "?*" if segment == "*" else segment
 
-        not_seps_pattern = rf'[^{re.escape(self.seps)}]+'
+        not_seps_pattern = rf"[^{re.escape(self.seps)}]+"
         return re.sub(not_seps_pattern, handle_segment, pattern)
 
 
@@ -103,4 +102,4 @@ def separate(pattern):
     >>> [m.group(0) for m in separate('a[?]txt')]
     ['a', '[?]', 'txt']
     """
-    return re.finditer(r'([^\[]+)|(?P<set>[\[].*?[\]])|([\[][^\]]*$)', pattern)
+    return re.finditer(r"([^\[]+)|(?P<set>[\[].*?[\]])|([\[][^\]]*$)", pattern)

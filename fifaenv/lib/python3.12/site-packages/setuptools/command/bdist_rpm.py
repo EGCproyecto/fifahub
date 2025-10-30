@@ -1,7 +1,7 @@
+import distutils.command.bdist_rpm as orig
+
 from ..dist import Distribution
 from ..warnings import SetuptoolsDeprecationWarning
-
-import distutils.command.bdist_rpm as orig
 
 
 class bdist_rpm(orig.bdist_rpm):
@@ -27,7 +27,7 @@ class bdist_rpm(orig.bdist_rpm):
         )
 
         # ensure distro name is up-to-date
-        self.run_command('egg_info')
+        self.run_command("egg_info")
 
         orig.bdist_rpm.run(self)
 

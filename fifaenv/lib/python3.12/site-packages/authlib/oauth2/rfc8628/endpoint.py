@@ -86,9 +86,7 @@ class DeviceAuthorizationEndpoint:
                 # only support ``client_secret_basic`` auth method
                 CLIENT_AUTH_METHODS = ["client_secret_basic"]
         """
-        client = self.server.authenticate_client(
-            request, self.CLIENT_AUTH_METHODS, self.ENDPOINT_NAME
-        )
+        client = self.server.authenticate_client(request, self.CLIENT_AUTH_METHODS, self.ENDPOINT_NAME)
         request.client = client
         return client
 
@@ -101,9 +99,7 @@ class DeviceAuthorizationEndpoint:
         device_code = self.generate_device_code()
         user_code = self.generate_user_code()
         verification_uri = self.get_verification_uri()
-        verification_uri_complete = add_params_to_uri(
-            verification_uri, [("user_code", user_code)]
-        )
+        verification_uri_complete = add_params_to_uri(verification_uri, [("user_code", user_code)])
 
         data = {
             "device_code": device_code,
@@ -114,9 +110,7 @@ class DeviceAuthorizationEndpoint:
             "interval": self.INTERVAL,
         }
 
-        self.save_device_credential(
-            request.payload.client_id, request.payload.scope, data
-        )
+        self.save_device_credential(request.payload.client_id, request.payload.scope, data)
         return 200, data, default_json_headers
 
     def generate_user_code(self):

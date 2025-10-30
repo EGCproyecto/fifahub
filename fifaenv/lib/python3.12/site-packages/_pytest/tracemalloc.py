@@ -18,7 +18,4 @@ def tracemalloc_message(source: object) -> str:
         return f"\nObject allocated at:\n{formatted_tb}"
     # No need for a leading new line.
     url = "https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings"
-    return (
-        "Enable tracemalloc to get traceback where the object was allocated.\n"
-        f"See {url} for more info."
-    )
+    return "Enable tracemalloc to get traceback where the object was allocated.\n" f"See {url} for more info."

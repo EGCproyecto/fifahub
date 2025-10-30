@@ -1,8 +1,7 @@
 """Unit tests for the :mod:`networkx.algorithms.polynomials` module."""
 
-import pytest
-
 import networkx as nx
+import pytest
 
 sympy = pytest.importorskip("sympy")
 

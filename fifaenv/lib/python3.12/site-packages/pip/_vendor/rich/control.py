@@ -19,9 +19,7 @@ STRIP_CONTROL_CODES: Final = [
     12,  # Form feed
     13,  # Carriage return
 ]
-_CONTROL_STRIP_TRANSLATE: Final = {
-    _codepoint: None for _codepoint in STRIP_CONTROL_CODES
-}
+_CONTROL_STRIP_TRANSLATE: Final = {_codepoint: None for _codepoint in STRIP_CONTROL_CODES}
 
 CONTROL_ESCAPE: Final = {
     7: "\\a",
@@ -62,13 +60,9 @@ class Control:
     __slots__ = ["segment"]
 
     def __init__(self, *codes: Union[ControlType, ControlCode]) -> None:
-        control_codes: List[ControlCode] = [
-            (code,) if isinstance(code, ControlType) else code for code in codes
-        ]
+        control_codes: List[ControlCode] = [(code,) if isinstance(code, ControlType) else code for code in codes]
         _format_map = CONTROL_CODES_FORMAT
-        rendered_codes = "".join(
-            _format_map[code](*parameters) for code, *parameters in control_codes
-        )
+        rendered_codes = "".join(_format_map[code](*parameters) for code, *parameters in control_codes)
         self.segment = Segment(rendered_codes, None, control_codes)
 
     @classmethod
@@ -177,16 +171,12 @@ class Control:
     def __str__(self) -> str:
         return self.segment.text
 
-    def __rich_console__(
-        self, console: "Console", options: "ConsoleOptions"
-    ) -> "RenderResult":
+    def __rich_console__(self, console: "Console", options: "ConsoleOptions") -> "RenderResult":
         if self.segment.text:
             yield self.segment
 
 
-def strip_control_codes(
-    text: str, _translate_table: Dict[int, None] = _CONTROL_STRIP_TRANSLATE
-) -> str:
+def strip_control_codes(text: str, _translate_table: Dict[int, None] = _CONTROL_STRIP_TRANSLATE) -> str:
     """Remove control codes from text.
 
     Args:

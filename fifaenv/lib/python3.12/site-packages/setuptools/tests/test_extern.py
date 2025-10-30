@@ -2,7 +2,6 @@ import importlib
 import pickle
 
 import packaging
-
 from setuptools import Distribution
 
 

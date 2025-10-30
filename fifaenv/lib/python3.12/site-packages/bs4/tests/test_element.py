@@ -6,13 +6,14 @@ are tested in separate files.
 
 import pytest
 from bs4.element import (
-    HTMLAttributeDict,
-    XMLAttributeDict,
     CharsetMetaAttributeValue,
     ContentMetaAttributeValue,
+    HTMLAttributeDict,
     NamespacedAttribute,
     ResultSet,
+    XMLAttributeDict,
 )
+
 
 class TestNamedspacedAttribute:
     def test_name_may_be_none_or_missing(self):

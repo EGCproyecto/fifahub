@@ -224,9 +224,7 @@ if __name__ == "__main__":  # pragma: no cover
     console.print(1 / 2)
     console.print(-1 / 123123123123)
 
-    console.print(
-        "127.0.1.1 bar 192.168.1.4 2001:0db8:85a3:0000:0000:8a2e:0370:7334 foo"
-    )
+    console.print("127.0.1.1 bar 192.168.1.4 2001:0db8:85a3:0000:0000:8a2e:0370:7334 foo")
     import json
 
     console.print_json(json.dumps(obj={"name": "apple", "count": 1}), indent=None)

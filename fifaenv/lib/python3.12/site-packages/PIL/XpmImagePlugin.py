@@ -76,11 +76,7 @@ class XpmImageFile(ImageFile.ImageFile):
                         self.info["transparency"] = c
                     elif rgb.startswith(b"#"):
                         rgb_int = int(rgb[1:], 16)
-                        palette[c] = (
-                            o8((rgb_int >> 16) & 255)
-                            + o8((rgb_int >> 8) & 255)
-                            + o8(rgb_int & 255)
-                        )
+                        palette[c] = o8((rgb_int >> 16) & 255) + o8((rgb_int >> 8) & 255) + o8(rgb_int & 255)
                     else:
                         # unknown colour
                         msg = "cannot read this XPM file"

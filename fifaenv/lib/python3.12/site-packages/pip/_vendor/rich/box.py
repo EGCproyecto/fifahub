@@ -60,9 +60,7 @@ class Box:
         # foot
         self.foot_left, _, self.foot_vertical, self.foot_right = iter(line7)
         # bottom
-        self.bottom_left, self.bottom, self.bottom_divider, self.bottom_right = iter(
-            line8
-        )
+        self.bottom_left, self.bottom, self.bottom_divider, self.bottom_right = iter(line8)
 
     def __repr__(self) -> str:
         return "Box(...)"
@@ -502,9 +500,7 @@ if __name__ == "__main__":  # pragma: no cover
 
     columns = Columns(expand=True, padding=2)
     for box_name in sorted(BOXES):
-        table = Table(
-            show_footer=True, style="dim", border_style="not dim", expand=True
-        )
+        table = Table(show_footer=True, style="dim", border_style="not dim", expand=True)
         table.add_column("Header 1", "Footer 1")
         table.add_column("Header 2", "Footer 2")
         table.add_row("Cell", "Cell")

@@ -14,10 +14,7 @@ _EXECUTABLE_NAMES = [
 ]
 if WINDOWS:
     _allowed_extensions = {"", ".exe"}
-    _EXECUTABLE_NAMES = [
-        "".join(parts)
-        for parts in itertools.product(_EXECUTABLE_NAMES, _allowed_extensions)
-    ]
+    _EXECUTABLE_NAMES = ["".join(parts) for parts in itertools.product(_EXECUTABLE_NAMES, _allowed_extensions)]
 
 
 def _wrapper(args: Optional[List[str]] = None) -> int:

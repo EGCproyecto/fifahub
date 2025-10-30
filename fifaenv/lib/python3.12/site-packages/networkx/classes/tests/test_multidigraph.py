@@ -1,8 +1,7 @@
 from collections import UserDict
 
-import pytest
-
 import networkx as nx
+import pytest
 from networkx.utils import edges_equal
 
 from .test_multigraph import BaseMultiGraphTester

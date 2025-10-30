@@ -144,9 +144,7 @@ class TestTreewidthMinDegree:
 
     def test_heuristic_first_steps(self):
         """Test first steps of min_degree heuristic"""
-        graph = {
-            n: set(self.deterministic_graph[n]) - {n} for n in self.deterministic_graph
-        }
+        graph = {n: set(self.deterministic_graph[n]) - {n} for n in self.deterministic_graph}
         deg_heuristic = MinDegreeHeuristic(graph)
         elim_node = deg_heuristic.best_node(graph)
         steps = []
@@ -249,9 +247,7 @@ class TestTreewidthMinFillIn:
 
     def test_heuristic_first_steps(self):
         """Test first steps of min_fill_in heuristic"""
-        graph = {
-            n: set(self.deterministic_graph[n]) - {n} for n in self.deterministic_graph
-        }
+        graph = {n: set(self.deterministic_graph[n]) - {n} for n in self.deterministic_graph}
         elim_node = min_fill_in_heuristic(graph)
         steps = []
 

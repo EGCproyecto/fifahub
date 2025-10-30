@@ -227,8 +227,7 @@ def birank(
 
     if top_count == 0 or bottom_count == 0:
         raise nx.NetworkXAlgorithmError(
-            "The BiRank algorithm requires a bipartite graph with at least one"
-            "node in each set."
+            "The BiRank algorithm requires a bipartite graph with at least one" "node in each set."
         )
 
     # Clean the personalization dictionaries
@@ -298,9 +297,7 @@ def birank(
 
         # If both error thresholds pass, return a single dictionary mapping
         # nodes to their scores
-        return dict(
-            zip(itertools.chain(top, bottom), map(float, itertools.chain(p, u)))
-        )
+        return dict(zip(itertools.chain(top, bottom), map(float, itertools.chain(p, u))))
 
     # If we reach this point, we have not converged
     raise nx.PowerIterationFailedConvergence(max_iter)

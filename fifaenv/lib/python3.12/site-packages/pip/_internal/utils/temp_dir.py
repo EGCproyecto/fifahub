@@ -192,9 +192,7 @@ class TempDirectory:
             exc_val: BaseException,
         ) -> None:
             """Log a warning for a `rmtree` error and continue"""
-            formatted_exc = "\n".join(
-                traceback.format_exception_only(type(exc_val), exc_val)
-            )
+            formatted_exc = "\n".join(traceback.format_exception_only(type(exc_val), exc_val))
             formatted_exc = formatted_exc.rstrip()  # remove trailing new line
             if func in (os.unlink, os.remove, os.rmdir):
                 logger.debug(
@@ -215,8 +213,7 @@ class TempDirectory:
                 rmtree(self._path, onexc=onerror)
             if errors:
                 logger.warning(
-                    "Failed to remove contents in a temporary directory '%s'.\n"
-                    "You can safely remove it manually.",
+                    "Failed to remove contents in a temporary directory '%s'.\n" "You can safely remove it manually.",
                     self._path,
                 )
         else:
@@ -259,18 +256,14 @@ class AdjacentTempDirectory(TempDirectory):
         package).
         """
         for i in range(1, len(name)):
-            for candidate in itertools.combinations_with_replacement(
-                cls.LEADING_CHARS, i - 1
-            ):
+            for candidate in itertools.combinations_with_replacement(cls.LEADING_CHARS, i - 1):
                 new_name = "~" + "".join(candidate) + name[i:]
                 if new_name != name:
                     yield new_name
 
         # If we make it this far, we will have to make a longer name
         for i in range(len(cls.LEADING_CHARS)):
-            for candidate in itertools.combinations_with_replacement(
-                cls.LEADING_CHARS, i
-            ):
+            for candidate in itertools.combinations_with_replacement(cls.LEADING_CHARS, i):
                 new_name = "~" + "".join(candidate) + name
                 if new_name != name:
                     yield new_name
