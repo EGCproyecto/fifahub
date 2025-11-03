@@ -1,24 +1,21 @@
-from app.modules.dataset.models import DataSet
-from core.resources.generic_resource import create_resource
-from core.serialisers.serializer import Serializer
+from flask import jsonify
 
-file_fields = {"file_id": "id", "file_name": "name", "size": "get_formatted_size"}
-file_serializer = Serializer(file_fields)
-
-dataset_fields = {
-    "dataset_id": "id",
-    "created": "created_at",
-    "name": "name",
-    "doi": "get_uvlhub_doi",
-    "files": "files",
-}
-
-dataset_serializer = Serializer(dataset_fields, related_serializers={"files": file_serializer})
-
-DataSetResource = create_resource(DataSet, dataset_serializer)
+from app.modules.dataset.models import BaseDataset
 
 
-def init_blueprint_api(api):
-    """Function to register resources with the provided Flask-RESTful Api instance."""
-    api.add_resource(DataSetResource, "/api/v1/datasets/", endpoint="datasets")
-    api.add_resource(DataSetResource, "/api/v1/datasets/<int:id>", endpoint="dataset")
+def init_blueprint_api(bp):
+    @bp.route("/api/datasets-polymorphic", methods=["GET"])
+    def list_polymorphic():
+        items = BaseDataset.query.order_by(BaseDataset.id.desc()).all()
+
+        def as_dict(ds):
+            data = {
+                "id": ds.id,
+                "type": ds.type,
+                "title": ds.ds_meta_data.title if ds.ds_meta_data else None,
+            }
+            if ds.type == "tabular":
+                data["rows_count"] = getattr(ds, "rows_count", None)
+            return data
+
+        return jsonify([as_dict(x) for x in items])
