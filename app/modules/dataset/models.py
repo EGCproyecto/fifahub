@@ -64,14 +64,33 @@ class DSMetaData(db.Model):
     authors = db.relationship("Author", backref="ds_meta_data", lazy=True, cascade="all, delete")
 
 
-class DataSet(db.Model):
+class BaseDataset(db.Model):
+    __tablename__ = "data_set"
+
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False)
-
     ds_meta_data_id = db.Column(db.Integer, db.ForeignKey("ds_meta_data.id"), nullable=False)
     created_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+    type = db.Column(db.String(50), nullable=False, server_default="uvl", index=True)
 
     ds_meta_data = db.relationship("DSMetaData", backref=db.backref("data_set", uselist=False))
+
+    __mapper_args__ = {
+        "polymorphic_on": type,
+        "polymorphic_identity": "base",
+        "with_polymorphic": "*",
+    }
+
+    def validate_domain(self):
+        pass
+
+    def ui_blocks(self):
+        return ["common-meta", "versioning"]
+
+
+class UVLDataset(BaseDataset):
+    __mapper_args__ = {"polymorphic_identity": "uvl"}
+
     feature_models = db.relationship("FeatureModel", backref="data_set", lazy=True, cascade="all, delete")
 
     def name(self):
@@ -131,12 +150,26 @@ class DataSet(db.Model):
         return f"DataSet<{self.id}>"
 
 
+class TabularDataset(BaseDataset):
+    __mapper_args__ = {"polymorphic_identity": "tabular"}
+
+    rows_count = db.Column(db.Integer, nullable=True)
+    schema_json = db.Column(db.Text, nullable=True)
+
+    def validate_domain(self):
+        if self.rows_count is not None and self.rows_count < 0:
+            raise ValueError("rows_count cannot be negative")
+
+    def ui_blocks(self):
+        return ["common-meta", "table-schema", "sample-rows", "versioning"]
+
+
 class DSDownloadRecord(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=True)
     dataset_id = db.Column(db.Integer, db.ForeignKey("data_set.id"))
     download_date = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
-    download_cookie = db.Column(db.String(36), nullable=False)  # Assuming UUID4 strings
+    download_cookie = db.Column(db.String(36), nullable=False)
 
     def __repr__(self):
         return (
@@ -152,7 +185,7 @@ class DSViewRecord(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=True)
     dataset_id = db.Column(db.Integer, db.ForeignKey("data_set.id"))
     view_date = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
-    view_cookie = db.Column(db.String(36), nullable=False)  # Assuming UUID4 strings
+    view_cookie = db.Column(db.String(36), nullable=False)
 
     def __repr__(self):
         return f"<View id={self.id} dataset_id={self.dataset_id} date={self.view_date} cookie={self.view_cookie}>"
@@ -162,3 +195,6 @@ class DOIMapping(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     dataset_doi_old = db.Column(db.String(120))
     dataset_doi_new = db.Column(db.String(120))
+
+
+DataSet = UVLDataset
