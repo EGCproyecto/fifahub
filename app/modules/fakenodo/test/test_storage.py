@@ -1,30 +1,37 @@
 import pytest
+
 from app.modules.fakenodo.app.storage import inmemory as st
+
 
 @pytest.fixture(autouse=True)
 def clear_db():
-    #asegurar DB esta limpia antes y despues de cada test
+    # asegurar DB esta limpia antes y despues de cada test
     st.DB.clear()
     yield
     st.DB.clear()
+
 
 def test_create_deposition_stores_in_db():
     dep = st.create_deposition({"title": "Test"})
     assert dep.id in st.DB
 
+
 def test_create_deposition_initial_metadata_is_set():
     dep = st.create_deposition({"title": "Test"})
     assert dep.versions[0].metadata["title"] == "Test"
+
 
 def test_get_deposition_returns_same_object():
     dep = st.create_deposition({"title": "Test"})
     same = st.get_deposition(dep.id)
     assert same is dep
 
+
 def test_update_metadata_overwrites_existing_title():
     dep = st.create_deposition({"title": "Old"})
     st.update_metadata(dep.id, {"title": "New"})
     assert dep.versions[0].metadata["title"] == "New"
+
 
 def test_put_file_adds_filename_to_files():
     dep = st.create_deposition({"title": "Files"})
