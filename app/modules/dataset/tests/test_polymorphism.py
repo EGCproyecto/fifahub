@@ -4,9 +4,9 @@ from app.modules.dataset.models import (
     BaseDataset,
     DSMetaData,
     PublicationType,
-    TabularDataset,
     UVLDataset,
 )
+from app.modules.tabular.models import TabularDataset
 
 
 def test_polymorphic_query_returns_subclasses():
