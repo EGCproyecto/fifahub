@@ -6,6 +6,23 @@ from sqlalchemy import Enum as SQLAlchemyEnum
 
 from app import db
 
+from datetime import datetime
+from app import db
+
+class DatasetVersion(db.Model):
+    __tablename__ = "dataset_version"
+
+    id = db.Column(db.Integer, primary_key=True)
+    dataset_id = db.Column(db.Integer, db.ForeignKey("data_set.id"), nullable=False, index=True)
+    version = db.Column(db.String(32), nullable=False)
+    created_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+    author_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=True)
+    change_note = db.Column(db.Text, nullable=True)
+    metadata = db.Column(db.JSON, nullable=True)  # snapshot/metricas
+
+    def __repr__(self):
+        return f"DatasetVersion<{self.dataset_id}:{self.version}>"
+
 
 class PublicationType(Enum):
     NONE = "none"
@@ -80,6 +97,15 @@ class BaseDataset(db.Model):
         "polymorphic_identity": "base",
         "with_polymorphic": "*",
     }
+
+    versions = db.relationship(
+        "DatasetVersion",
+        backref="dataset",
+        lazy=True,
+        cascade="all, delete-orphan",
+        order_by="DatasetVersion.created_at.desc()",
+    )
+
 
     def validate_domain(self):
         pass
