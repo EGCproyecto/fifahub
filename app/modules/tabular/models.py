@@ -1,0 +1,87 @@
+# app/modules/tabular/models.py
+from app import db
+from app.modules.dataset.models import BaseDataset
+
+
+class TabularDataset(BaseDataset):
+    __mapper_args__ = {"polymorphic_identity": "tabular"}
+
+    rows_count = db.Column(db.Integer, nullable=True)
+    schema_json = db.Column(db.Text, nullable=True)
+
+    meta_data = db.relationship("TabularMetaData", backref="dataset", uselist=False, cascade="all, delete-orphan")
+
+    metrics = db.relationship("TabularMetrics", backref="dataset", uselist=False, cascade="all, delete-orphan")
+
+    def validate_domain(self):
+        if self.rows_count is not None and self.rows_count < 0:
+            raise ValueError("rows_count cannot be negative")
+
+    def ui_blocks(self):
+        return ["common-meta", "table-schema", "sample-rows", "versioning"]
+
+
+class TabularMetaData(db.Model):
+    """
+    Guarda los metadatos generales del archivo CSV (la "radiografía").
+    Relación 1-a-1 con TabularDataset.
+    """
+
+    __tablename__ = "tabular_meta_data"
+    id = db.Column(db.Integer, primary_key=True)
+
+    # --- Campos del checklist ---
+    hubfile_id = db.Column(db.Integer)
+    delimiter = db.Column(db.String(5))
+    encoding = db.Column(db.String(20))
+    has_header = db.Column(db.Boolean, default=True)
+    n_rows = db.Column(db.Integer)
+    n_cols = db.Column(db.Integer)
+
+    # JSON para datos complejos
+    primary_keys = db.Column(db.JSON)
+    index_cols = db.Column(db.JSON)
+    sample_rows = db.Column(db.JSON)
+
+    dataset_id = db.Column(db.Integer, db.ForeignKey("data_set.id"), unique=True, nullable=False)
+
+    columns = db.relationship("TabularColumn", backref="meta_data", lazy="dynamic", cascade="all, delete-orphan")
+
+
+class TabularColumn(db.Model):
+    """
+    Guarda los metadatos de CADA columna del CSV.
+    Relación N-a-1 con TabularMetaData.
+    """
+
+    __tablename__ = "tabular_column"
+    id = db.Column(db.Integer, primary_key=True)
+
+    # --- Campos del checklist ---
+    name = db.Column(db.String(255), nullable=False)
+    dtype = db.Column(db.String(50))
+    null_count = db.Column(db.Integer, default=0)
+    unique_count = db.Column(db.Integer, default=0)
+    stats = db.Column(db.JSON)
+
+    # --- Conexión (ForeignKey) ---
+    # Conexión N-a-1 con TabularMetaData
+    meta_id = db.Column(db.Integer, db.ForeignKey("tabular_meta_data.id"), nullable=False)
+
+
+class TabularMetrics(db.Model):
+    """
+    (Opcional) Guarda métricas de calidad de alto nivel.
+    Relación 1-a-1 con TabularDataset.
+    """
+
+    __tablename__ = "tabular_metrics"
+    id = db.Column(db.Integer, primary_key=True)
+
+    # --- Campos del checklist ---
+    null_ratio = db.Column(db.Float)
+    avg_cardinality = db.Column(db.Float)
+
+    # --- Conexión (ForeignKey) ---
+    # Conexión 1-a-1 con TabularDataset
+    dataset_id = db.Column(db.Integer, db.ForeignKey("data_set.id"), unique=True, nullable=False)
