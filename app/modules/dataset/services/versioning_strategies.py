@@ -3,16 +3,18 @@ from abc import ABC, abstractmethod
 from pathlib import Path
 import csv
 
+
 class BaseVersionStrategy(ABC):
     @abstractmethod
-    def snapshot(self, dataset) -> dict:
-        ...
+    def snapshot(self, dataset) -> dict: ...
+
 
 class TabularVersionStrategy(BaseVersionStrategy):
     """Snapshot por hubfiles CSV + métricas básicas (filas totales, columnas máx)."""
 
     def snapshot(self, dataset) -> dict:
         from app.modules.hubfile.services import HubfileService
+
         files = [f for fm in dataset.feature_models for f in fm.files if f.name.lower().endswith(".csv")]
         hsvc = HubfileService()
 
@@ -35,11 +37,13 @@ class TabularVersionStrategy(BaseVersionStrategy):
             summary.append({"file": f.name, "rows": n_rows, "columns": n_cols, "size": getattr(f, "size", None)})
         return {"type": "tabular", "files": summary, "metrics": {"total_rows": total_rows, "max_columns": max_cols}}
 
+
 class UVLVersionStrategy(BaseVersionStrategy):
     """Snapshot UVL con metadatos ligeros (longitud del contenido)."""
 
     def snapshot(self, dataset) -> dict:
         from app.modules.hubfile.services import HubfileService
+
         files = [f for fm in dataset.feature_models for f in fm.files if f.name.lower().endswith(".uvl")]
         hsvc = HubfileService()
 

@@ -9,6 +9,7 @@ from app import db
 from datetime import datetime
 from app import db
 
+
 class DatasetVersion(db.Model):
     __tablename__ = "dataset_version"
 
@@ -105,7 +106,6 @@ class BaseDataset(db.Model):
         cascade="all, delete-orphan",
         order_by="DatasetVersion.created_at.desc()",
     )
-
 
     def validate_domain(self):
         pass
