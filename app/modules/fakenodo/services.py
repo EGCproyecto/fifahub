@@ -16,6 +16,7 @@ from core.services.BaseService import BaseService
 logger = logging.getLogger(__name__)
 load_dotenv()
 
+
 class FakenodoService(BaseService):
     """
     Local service that emulates Zenodo.
@@ -50,7 +51,9 @@ class FakenodoService(BaseService):
             dict: Information about the created deposition.
         """
         deposition_id = dataset.id
-        fake_doi = f"{publication_doi}/dataset{deposition_id}" if publication_doi else f"10.5281/fakenodo.{deposition_id}"
+        fake_doi = (
+            f"{publication_doi}/dataset{deposition_id}" if publication_doi else f"10.5281/fakenodo.{deposition_id}"
+        )
 
         metadata = self._build_metadata(dataset)
 
@@ -187,13 +190,15 @@ class FakenodoService(BaseService):
                             num_rows = len(rows)
                             num_cols = len(rows[0]) if num_rows > 0 else 0
 
-                        csv_summaries.append({
-                            "file_name": file_name,
-                            "path": file_path,
-                            "rows": num_rows,
-                            "columns": num_cols,
-                            "size_bytes": os.path.getsize(file_path),
-                        })
+                        csv_summaries.append(
+                            {
+                                "file_name": file_name,
+                                "path": file_path,
+                                "rows": num_rows,
+                                "columns": num_cols,
+                                "size_bytes": os.path.getsize(file_path),
+                            }
+                        )
 
         if not csv_summaries:
             error_message = f"No valid CSV files found for Fakenodo {fakenodo_id}."
@@ -266,10 +271,7 @@ class FakenodoService(BaseService):
         del self.fakenodos[fakenodo_id]
         logger.info(f"Fakenodo deleted: {fakenodo_id}")
 
-        return {
-            "message": "Deposition deleted successfully.",
-            "deleted_csv_files": deleted_files
-        }
+        return {"message": "Deposition deleted successfully.", "deleted_csv_files": deleted_files}
 
     # -------------------------------------------------------------
     # Internal helper methods
@@ -293,11 +295,7 @@ class FakenodoService(BaseService):
                 }
                 for author in ds.authors
             ],
-            "keywords": (
-                ["fakenodo", "csv"]
-                if not ds.tags
-                else ds.tags.split(", ") + ["fakenodo", "csv"]
-            ),
+            "keywords": (["fakenodo", "csv"] if not ds.tags else ds.tags.split(", ") + ["fakenodo", "csv"]),
             "access_right": "open",
             "license": "CC-BY-4.0",
         }
