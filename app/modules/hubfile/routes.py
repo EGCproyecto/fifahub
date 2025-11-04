@@ -2,13 +2,49 @@ import os
 import uuid
 from datetime import datetime, timezone
 
+# app/modules/hubfile/routes.py
 from flask import current_app, jsonify, make_response, request, send_from_directory
-from flask_login import current_user
+from flask_login import current_user, login_required
 
 from app import db
+from app.modules.dataset.services.versioning_service import VersioningService
 from app.modules.hubfile import hubfile_bp
-from app.modules.hubfile.models import HubfileDownloadRecord, HubfileViewRecord
+from app.modules.hubfile.models import Hubfile, HubfileDownloadRecord, HubfileViewRecord
 from app.modules.hubfile.services import HubfileDownloadRecordService, HubfileService
+
+
+@hubfile_bp.route("/file/reupload/<int:file_id>", methods=["POST"])
+@login_required
+def reupload_csv(file_id):
+    hsvc = HubfileService()
+    hf = hsvc.get_or_404(file_id)
+    dataset = hf.feature_model.data_set
+
+    file = request.files.get("file")
+    if not file or not file.filename.lower().endswith(".csv"):
+        return jsonify({"message": "CSV requerido"}), 400
+
+    # Guardar físicamente
+    path = hsvc.get_path_by_hubfile(hf)
+    file.save(path)
+
+    # (Opcional) recalcular size/checksum según vuestro servicio
+    try:
+        file.seek(0, 2)  # al final
+        hf.size = file.tell()
+    except Exception:
+        pass
+    db.session.commit()
+
+    # Crear nueva versión con snapshot y métricas
+    VersioningService().create_version(
+        dataset=dataset,
+        author_id=getattr(current_user, "id", None),
+        change_note=f"Re-subida de {hf.name}",
+        strategy="tabular",
+    )
+
+    return jsonify({"message": "CSV re-subido y versionado"}), 200
 
 
 @hubfile_bp.route("/file/download/<int:file_id>", methods=["GET"])
