@@ -29,3 +29,52 @@ class Deposition:
     id: str
     conceptrecid: str
     versions: List[Version] = field(default_factory=list)
+
+def create_deposition(initial_metadata: dict) -> Deposition:
+    dep_id = f"d_{uuid.uuid4().hex[:8]}"
+    conceptrecid = f"c_{uuid.uuid4().hex[:8]}"
+    draft = Version(
+        recid=f"r_{uuid.uuid4().hex[:8]}",
+        version=0,
+        doi=None,
+        metadata=initial_metadata or {},
+    )
+    dep = Deposition(id=dep_id,conceptrecid=conceptrecid,versions=[draft])
+    DB[dep_id] = dep
+    return dep
+
+def get_deposition(dep_id: str) -> Optional[Deposition]:
+    return DB.get(dep_id)
+
+def update_metadata(dep_id: str, metadata: dict) -> Version:
+    dep = DB[dep_id]
+    draft = dep.versions[0]
+    draft.metadata = metadata or {}
+    return draft
+
+def put_file(dep_id: str, filename: str, content: bytes) -> Version:
+    dep = DB[dep_id]
+    draft = dep.versions[0]
+    draft.files[filename] = content
+    return draft
+
+def add_published_version(dep_id: str, published: Version) -> Version:
+    dep = DB[dep_id]
+    dep.versions.append(published)
+    return published
+
+def list_versions(dep_id: str) -> Dict:
+    dep = DB[dep_id]
+    return {
+        "conceptrecid": dep.conceptrecid,
+        "versions": [
+            {
+                "recid": v.recid,
+                "version": v.version,
+                "state": v.state,
+                "doi": v.doi,
+                "created": v.created,
+            }
+            for v in dep.versions
+        ],
+    }
