@@ -150,20 +150,6 @@ class UVLDataset(BaseDataset):
         return f"DataSet<{self.id}>"
 
 
-class TabularDataset(BaseDataset):
-    __mapper_args__ = {"polymorphic_identity": "tabular"}
-
-    rows_count = db.Column(db.Integer, nullable=True)
-    schema_json = db.Column(db.Text, nullable=True)
-
-    def validate_domain(self):
-        if self.rows_count is not None and self.rows_count < 0:
-            raise ValueError("rows_count cannot be negative")
-
-    def ui_blocks(self):
-        return ["common-meta", "table-schema", "sample-rows", "versioning"]
-
-
 class DSDownloadRecord(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=True)
