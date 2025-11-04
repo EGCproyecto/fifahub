@@ -1,5 +1,5 @@
 import pytest
-from fakenodo.app.storage import inmemory as st
+from app.modules.fakenodo.app.storage import inmemory as st
 
 @pytest.fixture(autouse=True)
 def clear_db():
