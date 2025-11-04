@@ -2,7 +2,6 @@ import os
 import uuid
 from datetime import datetime, timezone
 
-# app/modules/hubfile/routes.py
 from flask import current_app, jsonify, make_response, request, send_from_directory
 from flask_login import current_user, login_required
 
@@ -16,6 +15,10 @@ from app.modules.hubfile.services import HubfileDownloadRecordService, HubfileSe
 @hubfile_bp.route("/file/reupload/<int:file_id>", methods=["POST"])
 @login_required
 def reupload_csv(file_id):
+    """
+    Reemplaza un archivo CSV existente por una nueva versión del mismo.
+    Tras la subida, recalcula métricas y crea una nueva versión del dataset.
+    """
     hsvc = HubfileService()
     hf = hsvc.get_or_404(file_id)
     dataset = hf.feature_model.data_set
@@ -26,25 +29,31 @@ def reupload_csv(file_id):
 
     # Guardar físicamente
     path = hsvc.get_path_by_hubfile(hf)
-    file.save(path)
+    try:
+        file.save(path)
+    except Exception as e:
+        return jsonify({"message": f"Error guardando CSV: {e}"}), 500
 
     # (Opcional) recalcular size/checksum según vuestro servicio
     try:
-        file.seek(0, 2)  # al final
+        file.seek(0, 2)  # Ir al final
         hf.size = file.tell()
     except Exception:
         pass
     db.session.commit()
 
     # Crear nueva versión con snapshot y métricas
-    VersioningService().create_version(
-        dataset=dataset,
-        author_id=getattr(current_user, "id", None),
-        change_note=f"Re-subida de {hf.name}",
-        strategy="tabular",
-    )
+    try:
+        VersioningService().create_version(
+            dataset=dataset,
+            author_id=getattr(current_user, "id", None),
+            change_note=f"Re-subida de {hf.name}",
+            strategy="tabular",
+        )
+    except Exception as e:
+        return jsonify({"message": f"CSV subido pero error en versionado: {e}"}), 500
 
-    return jsonify({"message": "CSV re-subido y versionado"}), 200
+    return jsonify({"message": "CSV re-subido y versionado correctamente"}), 200
 
 
 @hubfile_bp.route("/file/download/<int:file_id>", methods=["GET"])
@@ -56,18 +65,19 @@ def download_file(file_id):
     parent_directory_path = os.path.dirname(current_app.root_path)
     file_path = os.path.join(parent_directory_path, directory_path)
 
-    # Get the cookie from the request or generate a new one if it does not exist
+    # Obtener cookie o crear una nueva
     user_cookie = request.cookies.get("file_download_cookie")
     if not user_cookie:
         user_cookie = str(uuid.uuid4())
 
-    # Check if the download record already exists for this cookie
+    # Registrar descarga si no existe
     existing_record = HubfileDownloadRecord.query.filter_by(
-        user_id=current_user.id if current_user.is_authenticated else None, file_id=file_id, download_cookie=user_cookie
+        user_id=current_user.id if current_user.is_authenticated else None,
+        file_id=file_id,
+        download_cookie=user_cookie,
     ).first()
 
     if not existing_record:
-        # Record the download in your database
         HubfileDownloadRecordService().create(
             user_id=current_user.id if current_user.is_authenticated else None,
             file_id=file_id,
@@ -75,7 +85,7 @@ def download_file(file_id):
             download_cookie=user_cookie,
         )
 
-    # Save the cookie to the user's browser
+    # Respuesta con cookie persistente
     resp = make_response(send_from_directory(directory=file_path, path=filename, as_attachment=True))
     resp.set_cookie("file_download_cookie", user_cookie)
 
@@ -100,7 +110,6 @@ def view_file(file_id):
             if not user_cookie:
                 user_cookie = str(uuid.uuid4())
 
-            # Check if the view record already exists for this cookie
             existing_record = HubfileViewRecord.query.filter_by(
                 user_id=current_user.id if current_user.is_authenticated else None,
                 file_id=file_id,
@@ -108,7 +117,6 @@ def view_file(file_id):
             ).first()
 
             if not existing_record:
-                # Register file view
                 new_view_record = HubfileViewRecord(
                     user_id=current_user.id if current_user.is_authenticated else None,
                     file_id=file_id,
@@ -118,7 +126,6 @@ def view_file(file_id):
                 db.session.add(new_view_record)
                 db.session.commit()
 
-            # Prepare response
             response = jsonify({"success": True, "content": content})
             if not request.cookies.get("view_cookie"):
                 response = make_response(response)
