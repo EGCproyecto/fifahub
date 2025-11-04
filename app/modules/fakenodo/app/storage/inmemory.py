@@ -30,6 +30,7 @@ class Deposition:
     conceptrecid: str
     versions: List[Version] = field(default_factory=list)
 
+
 def create_deposition(initial_metadata: dict) -> Deposition:
     dep_id = f"d_{uuid.uuid4().hex[:8]}"
     conceptrecid = f"c_{uuid.uuid4().hex[:8]}"
@@ -39,12 +40,14 @@ def create_deposition(initial_metadata: dict) -> Deposition:
         doi=None,
         metadata=initial_metadata or {},
     )
-    dep = Deposition(id=dep_id,conceptrecid=conceptrecid,versions=[draft])
+    dep = Deposition(id=dep_id, conceptrecid=conceptrecid, versions=[draft])
     DB[dep_id] = dep
     return dep
 
+
 def get_deposition(dep_id: str) -> Optional[Deposition]:
     return DB.get(dep_id)
+
 
 def update_metadata(dep_id: str, metadata: dict) -> Version:
     dep = DB[dep_id]
@@ -52,16 +55,19 @@ def update_metadata(dep_id: str, metadata: dict) -> Version:
     draft.metadata = metadata or {}
     return draft
 
+
 def put_file(dep_id: str, filename: str, content: bytes) -> Version:
     dep = DB[dep_id]
     draft = dep.versions[0]
     draft.files[filename] = content
     return draft
 
+
 def add_published_version(dep_id: str, published: Version) -> Version:
     dep = DB[dep_id]
     dep.versions.append(published)
     return published
+
 
 def list_versions(dep_id: str) -> Dict:
     dep = DB[dep_id]
