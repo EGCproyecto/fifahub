@@ -203,9 +203,13 @@ class DatasetVersion(db.Model):
     created_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
     author_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=True)
     change_note = db.Column(db.Text, nullable=True)
+<<<<<<< HEAD
 
     # ⚠️ 'metadata' es reservado en SQLAlchemy; usamos 'snapshot' (columna 'metadata' en BD)
     snapshot = db.Column("metadata", db.JSON, nullable=True)
+=======
+    meta_data = db.Column(db.JSON, nullable=True)
+>>>>>>> 0e0d722d (fix(WI-1.1): Fix in the dataset models, changed metadata for meta_data)
 
     def __repr__(self):
         return f"DatasetVersion<{self.dataset_id}:{self.version}>"
