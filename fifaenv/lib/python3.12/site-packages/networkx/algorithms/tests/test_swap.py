@@ -1,6 +1,5 @@
-import pytest
-
 import networkx as nx
+import pytest
 
 cycle = nx.cycle_graph(5, create_using=nx.DiGraph)
 tree = nx.DiGraph()

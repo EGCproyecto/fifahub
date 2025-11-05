@@ -2,9 +2,8 @@
 
 from datetime import datetime, timedelta
 
-import pytest
-
 import networkx as nx
+import pytest
 
 _delta = timedelta(days=5 * 365)
 

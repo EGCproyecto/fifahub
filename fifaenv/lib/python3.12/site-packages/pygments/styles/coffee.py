@@ -9,8 +9,7 @@
 """
 
 from pygments.style import Style
-from pygments.token import (Comment, Error, Generic, Keyword, Literal, Name,
-                            Number, Operator, Punctuation, String, Token)
+from pygments.token import Comment, Error, Generic, Keyword, Literal, Name, Number, Operator, Punctuation, String, Token
 
 __all__ = ["CoffeeStyle"]
 

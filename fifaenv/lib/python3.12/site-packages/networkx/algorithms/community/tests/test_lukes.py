@@ -1,8 +1,7 @@
 from itertools import product
 
-import pytest
-
 import networkx as nx
+import pytest
 
 EWL = "e_weight"
 NWL = "n_weight"

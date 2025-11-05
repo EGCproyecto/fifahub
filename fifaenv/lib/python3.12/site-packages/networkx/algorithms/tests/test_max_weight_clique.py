@@ -1,8 +1,7 @@
 """Maximum weight clique test suite."""
 
-import pytest
-
 import networkx as nx
+import pytest
 
 
 class TestMaximumWeightClique:

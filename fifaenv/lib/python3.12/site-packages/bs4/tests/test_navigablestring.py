@@ -1,5 +1,4 @@
 import pytest
-
 from bs4.element import (
     CData,
     Comment,

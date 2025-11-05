@@ -2,9 +2,8 @@
 
 import itertools
 
-import pytest
-
 import networkx as nx
+import pytest
 
 is_coloring = nx.algorithms.coloring.equitable_coloring.is_coloring
 is_equitable = nx.algorithms.coloring.equitable_coloring.is_equitable

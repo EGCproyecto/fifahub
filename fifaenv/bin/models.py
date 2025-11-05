@@ -57,11 +57,13 @@
 #
 #==============================================================================
 from __future__ import print_function
+
 import getopt
 import os
+import sys
+
 from pysat.formula import CNFPlus
 from pysat.solvers import Solver, SolverNames
-import sys
 
 
 #

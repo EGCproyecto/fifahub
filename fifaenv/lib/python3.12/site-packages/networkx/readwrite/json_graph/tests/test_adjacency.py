@@ -1,9 +1,8 @@
 import copy
 import json
 
-import pytest
-
 import networkx as nx
+import pytest
 from networkx.readwrite.json_graph import adjacency_data, adjacency_graph
 from networkx.utils import graphs_equal
 

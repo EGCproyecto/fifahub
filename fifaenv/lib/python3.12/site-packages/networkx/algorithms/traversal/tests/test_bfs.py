@@ -1,8 +1,7 @@
 from functools import partial
 
-import pytest
-
 import networkx as nx
+import pytest
 
 
 class TestBFS:

@@ -1,6 +1,5 @@
-import pytest
-
 import networkx as nx
+import pytest
 
 
 def test_valid_degree_sequence1():

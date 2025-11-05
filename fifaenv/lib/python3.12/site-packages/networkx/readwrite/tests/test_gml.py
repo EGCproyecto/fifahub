@@ -5,9 +5,8 @@ from ast import literal_eval
 from contextlib import contextmanager
 from textwrap import dedent
 
-import pytest
-
 import networkx as nx
+import pytest
 from networkx.readwrite.gml import literal_destringizer, literal_stringizer
 
 

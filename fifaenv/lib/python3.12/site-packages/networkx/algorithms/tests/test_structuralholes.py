@@ -2,9 +2,8 @@
 
 import math
 
-import pytest
-
 import networkx as nx
+import pytest
 from networkx.classes.tests import dispatch_interface
 
 

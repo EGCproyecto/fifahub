@@ -1,8 +1,7 @@
 import itertools as it
 
-import pytest
-
 import networkx as nx
+import pytest
 from networkx import vf2pp_is_isomorphic, vf2pp_isomorphism
 from networkx.algorithms.isomorphism.vf2pp import (
     _consistent_PT,

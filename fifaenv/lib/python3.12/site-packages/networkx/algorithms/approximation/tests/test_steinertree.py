@@ -1,6 +1,5 @@
-import pytest
-
 import networkx as nx
+import pytest
 from networkx.algorithms.approximation.steinertree import (
     _remove_nonterminal_leaves,
     metric_closure,

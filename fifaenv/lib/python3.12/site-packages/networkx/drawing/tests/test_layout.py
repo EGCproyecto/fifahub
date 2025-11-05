@@ -1,8 +1,7 @@
 """Unit tests for layout functions."""
 
-import pytest
-
 import networkx as nx
+import pytest
 
 np = pytest.importorskip("numpy")
 pytest.importorskip("scipy")

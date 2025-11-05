@@ -1,13 +1,12 @@
 # Python implementation of low level MySQL client-server protocol
 # http://dev.mysql.com/doc/internals/en/client-server-protocol.html
 
-from .charset import MBLENGTH
-from .constants import FIELD_TYPE, SERVER_STATUS
-from . import err
-
 import struct
 import sys
 
+from . import err
+from .charset import MBLENGTH
+from .constants import FIELD_TYPE, SERVER_STATUS
 
 DEBUG = False
 

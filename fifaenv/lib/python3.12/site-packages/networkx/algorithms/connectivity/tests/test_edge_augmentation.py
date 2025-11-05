@@ -1,9 +1,8 @@
 import itertools as it
 import random
 
-import pytest
-
 import networkx as nx
+import pytest
 from networkx.algorithms.connectivity import k_edge_augmentation
 from networkx.algorithms.connectivity.edge_augmentation import (
     _unpack_available_edges,

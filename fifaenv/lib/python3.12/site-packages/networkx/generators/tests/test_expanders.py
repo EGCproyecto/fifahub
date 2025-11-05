@@ -1,8 +1,7 @@
 """Unit tests for the :mod:`networkx.generators.expanders` module."""
 
-import pytest
-
 import networkx as nx
+import pytest
 
 
 @pytest.mark.parametrize("n", (2, 3, 5, 6, 10))

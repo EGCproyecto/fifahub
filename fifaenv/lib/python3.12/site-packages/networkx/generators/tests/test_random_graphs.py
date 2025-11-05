@@ -1,8 +1,7 @@
 """Unit tests for the :mod:`networkx.generators.random_graphs` module."""
 
-import pytest
-
 import networkx as nx
+import pytest
 
 _gnp_generators = [
     nx.gnp_random_graph,

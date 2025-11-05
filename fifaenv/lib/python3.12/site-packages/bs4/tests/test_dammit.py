@@ -1,12 +1,13 @@
 # encoding: utf-8
-import pytest
 import logging
 import warnings
+
 import bs4
+import pytest
 from bs4 import BeautifulSoup
 from bs4.dammit import (
-    EntitySubstitution,
     EncodingDetector,
+    EntitySubstitution,
     UnicodeDammit,
 )
 

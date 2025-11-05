@@ -1,9 +1,8 @@
 import pickle
 from copy import deepcopy
 
-import pytest
-
 import networkx as nx
+import pytest
 from networkx.classes import reportviews as rv
 from networkx.classes.reportviews import NodeDataView
 

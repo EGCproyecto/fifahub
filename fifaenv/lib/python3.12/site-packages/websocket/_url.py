@@ -3,6 +3,7 @@ import socket
 import struct
 from typing import Optional
 from urllib.parse import unquote, urlparse
+
 from ._exceptions import WebSocketProxyException
 
 """

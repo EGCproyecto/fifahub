@@ -1,6 +1,5 @@
-import pytest
-
 import networkx as nx
+import pytest
 from networkx.algorithms.community import (
     greedy_modularity_communities,
     naive_greedy_modularity_communities,

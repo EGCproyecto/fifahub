@@ -85,15 +85,17 @@
 #
 #==============================================================================
 from __future__ import print_function
+
 import collections
 import getopt
-from math import copysign
 import os
+import re
+import sys
+from math import copysign
+
 from pysat.formula import CNFPlus, WCNFPlus
 from pysat.solvers import Solver, SolverNames
-import re
 from six.moves import range
-import sys
 
 
 #

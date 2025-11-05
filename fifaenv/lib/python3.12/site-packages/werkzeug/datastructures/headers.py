@@ -7,8 +7,7 @@ import typing as t
 from .._internal import _missing
 from ..exceptions import BadRequestKeyError
 from .mixins import ImmutableHeadersMixin
-from .structures import iter_multi_items
-from .structures import MultiDict
+from .structures import MultiDict, iter_multi_items
 
 if t.TYPE_CHECKING:
     import typing_extensions as te

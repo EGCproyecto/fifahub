@@ -12,9 +12,8 @@ from typing import (
 )
 
 import attrs
-from outcome import Error, Value
-
 import trio
+from outcome import Error, Value
 
 from ._abc import ReceiveChannel, ReceiveType, SendChannel, SendType, T
 from ._core import Abort, RaiseCancelT, Task, enable_ki_protection

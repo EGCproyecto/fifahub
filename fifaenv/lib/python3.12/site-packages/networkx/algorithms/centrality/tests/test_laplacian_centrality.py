@@ -1,6 +1,5 @@
-import pytest
-
 import networkx as nx
+import pytest
 
 np = pytest.importorskip("numpy")
 sp = pytest.importorskip("scipy")

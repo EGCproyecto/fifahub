@@ -1,9 +1,8 @@
 import math
 from functools import partial
 
-import pytest
-
 import networkx as nx
+import pytest
 
 
 def _test_func(G, ebunch, expected, predict_func, **kwargs):

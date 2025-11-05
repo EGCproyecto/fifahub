@@ -23,7 +23,7 @@ from base64 import encodebytes as base64encode
 from http import HTTPStatus
 
 from ._cookiejar import SimpleCookieJar
-from ._exceptions import WebSocketException, WebSocketBadStatusException
+from ._exceptions import WebSocketBadStatusException, WebSocketException
 from ._http import read_headers
 from ._logging import dump, error
 from ._socket import send

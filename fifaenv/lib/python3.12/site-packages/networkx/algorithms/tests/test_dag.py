@@ -1,9 +1,8 @@
 from collections import deque
 from itertools import combinations, permutations
 
-import pytest
-
 import networkx as nx
+import pytest
 from networkx.utils import edges_equal, pairwise
 
 

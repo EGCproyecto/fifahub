@@ -106,14 +106,16 @@
 #
 #==============================================================================
 from __future__ import print_function
+
 import getopt
 import os
+import re
+import sys
+
 from pysat.examples.hitman import Atom, Hitman
 from pysat.examples.rc2 import RC2
 from pysat.formula import CNFPlus, WCNFPlus
 from pysat.solvers import Solver
-import re
-import sys
 
 
 #

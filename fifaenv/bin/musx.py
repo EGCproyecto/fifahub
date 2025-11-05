@@ -97,12 +97,14 @@
 #
 #==============================================================================
 from __future__ import print_function
+
 import getopt
 import os
-from pysat.formula import CNFPlus, WCNFPlus
-from pysat.solvers import Solver, SolverNames
 import re
 import sys
+
+from pysat.formula import CNFPlus, WCNFPlus
+from pysat.solvers import Solver, SolverNames
 
 
 #

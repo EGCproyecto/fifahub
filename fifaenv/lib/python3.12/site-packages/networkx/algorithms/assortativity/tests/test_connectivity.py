@@ -1,8 +1,7 @@
 from itertools import permutations
 
-import pytest
-
 import networkx as nx
+import pytest
 
 
 class TestNeighborConnectivity:

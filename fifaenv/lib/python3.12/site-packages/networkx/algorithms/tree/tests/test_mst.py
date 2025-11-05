@@ -1,8 +1,7 @@
 """Unit tests for the :mod:`networkx.algorithms.tree.mst` module."""
 
-import pytest
-
 import networkx as nx
+import pytest
 from networkx.utils import edges_equal, nodes_equal
 
 

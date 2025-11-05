@@ -4,9 +4,8 @@ Unit tests for bipartite edgelists.
 
 import io
 
-import pytest
-
 import networkx as nx
+import pytest
 from networkx.algorithms import bipartite
 from networkx.utils import edges_equal, graphs_equal, nodes_equal
 

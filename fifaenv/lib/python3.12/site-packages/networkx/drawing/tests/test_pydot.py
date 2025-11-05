@@ -2,9 +2,8 @@
 
 from io import StringIO
 
-import pytest
-
 import networkx as nx
+import pytest
 from networkx.utils import graphs_equal
 
 pydot = pytest.importorskip("pydot")

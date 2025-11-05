@@ -1,6 +1,5 @@
-import pytest
-
 import networkx as nx
+import pytest
 from networkx.algorithms.similarity import (
     graph_edit_distance,
     optimal_edit_paths,

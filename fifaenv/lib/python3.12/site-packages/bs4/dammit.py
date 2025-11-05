@@ -12,11 +12,11 @@ to reflect a new encoding; that's the job of `TreeBuilder`.
 # Use of this source code is governed by the MIT license.
 __license__ = "MIT"
 
-from html.entities import codepoint2name
-from collections import defaultdict
 import codecs
-from html.entities import html5
 import re
+import warnings
+from collections import defaultdict
+from html.entities import codepoint2name, html5
 from logging import Logger, getLogger
 from types import ModuleType
 from typing import (
@@ -31,12 +31,12 @@ from typing import (
     Union,
     cast,
 )
-from typing_extensions import Literal
+
 from bs4._typing import (
     _Encoding,
     _Encodings,
 )
-import warnings
+from typing_extensions import Literal
 
 # Import a library to autodetect character encodings. We'll support
 # any of a number of libraries that all support the same API:

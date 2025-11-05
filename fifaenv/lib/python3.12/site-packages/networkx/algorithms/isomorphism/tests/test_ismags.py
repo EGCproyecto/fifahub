@@ -2,9 +2,8 @@
 Tests for ISMAGS isomorphism algorithm.
 """
 
-import pytest
-
 import networkx as nx
+import pytest
 from networkx.algorithms import isomorphism as iso
 
 

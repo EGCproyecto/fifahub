@@ -107,11 +107,13 @@
 #
 #==============================================================================
 from __future__ import print_function
+
 import getopt
 import os
-from pysat.formula import CNF
 import re
 import sys
+
+from pysat.formula import CNF
 
 # we need pyapproxmc to be installed:
 pyapproxmc_present = True

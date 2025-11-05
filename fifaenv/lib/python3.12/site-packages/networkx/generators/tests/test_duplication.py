@@ -1,8 +1,7 @@
 """Unit tests for the :mod:`networkx.generators.duplication` module."""
 
-import pytest
-
 import networkx as nx
+import pytest
 
 
 class TestDuplicationDivergenceGraph:

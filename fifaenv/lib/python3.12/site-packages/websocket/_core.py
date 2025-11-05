@@ -6,10 +6,10 @@ from typing import Optional, Union
 
 # websocket modules
 from ._abnf import ABNF, STATUS_NORMAL, continuous_frame, frame_buffer
-from ._exceptions import WebSocketProtocolException, WebSocketConnectionClosedException
+from ._exceptions import WebSocketConnectionClosedException, WebSocketProtocolException
 from ._handshake import SUPPORTED_REDIRECT_STATUSES, handshake
 from ._http import connect, proxy_info
-from ._logging import debug, error, trace, isEnabledForError, isEnabledForTrace
+from ._logging import debug, error, isEnabledForError, isEnabledForTrace, trace
 from ._socket import getdefaulttimeout, recv, send, sock_opt
 from ._ssl_compat import ssl
 from ._utils import NoLock

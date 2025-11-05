@@ -1,5 +1,6 @@
 import ipaddress
 import re
+
 # Allow underscore in host name
 # Note: This could be a DNS label, a hostname, a FQDN, or an IP
 from typing import AnyStr

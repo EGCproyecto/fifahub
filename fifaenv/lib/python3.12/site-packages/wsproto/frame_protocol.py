@@ -7,9 +7,9 @@ WebSocket frame protocol implementation.
 
 import os
 import struct
-from codecs import getincrementaldecoder, IncrementalDecoder
+from codecs import IncrementalDecoder, getincrementaldecoder
 from enum import IntEnum
-from typing import Generator, List, NamedTuple, Optional, Tuple, TYPE_CHECKING, Union
+from typing import TYPE_CHECKING, Generator, List, NamedTuple, Optional, Tuple, Union
 
 if TYPE_CHECKING:
     from .extensions import Extension  # pragma: no cover

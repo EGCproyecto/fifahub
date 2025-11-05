@@ -12,7 +12,6 @@ from typing import (
 
 from typing_extensions import Buffer
 
-
 T = TypeVar("T")
 
 enc_hook_sig = Optional[Callable[[Any], Any]]

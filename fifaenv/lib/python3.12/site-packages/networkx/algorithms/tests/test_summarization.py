@@ -2,9 +2,8 @@
 Unit tests for dedensification and graph summarization
 """
 
-import pytest
-
 import networkx as nx
+import pytest
 
 
 class TestDirectedDedensification:

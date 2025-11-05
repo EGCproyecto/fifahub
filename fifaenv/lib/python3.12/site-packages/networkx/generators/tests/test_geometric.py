@@ -2,9 +2,8 @@ import math
 import random
 from itertools import combinations
 
-import pytest
-
 import networkx as nx
+import pytest
 
 
 def l1dist(x, y):

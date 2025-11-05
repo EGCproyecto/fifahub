@@ -2,16 +2,17 @@
 
 import copy
 import pickle
-import pytest
 import sys
 import warnings
 
+import pytest
 from bs4 import BeautifulSoup
 from bs4.element import (
     AttributeValueList,
     Comment,
 )
 from bs4.filter import SoupStrainer
+
 from . import (
     SoupTest,
 )

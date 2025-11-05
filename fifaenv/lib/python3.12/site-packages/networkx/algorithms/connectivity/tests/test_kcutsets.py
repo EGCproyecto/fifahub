@@ -2,9 +2,8 @@
 # Test for k-cutsets
 import itertools
 
-import pytest
-
 import networkx as nx
+import pytest
 from networkx.algorithms import flow
 from networkx.algorithms.connectivity.kcutsets import _is_separating_set
 

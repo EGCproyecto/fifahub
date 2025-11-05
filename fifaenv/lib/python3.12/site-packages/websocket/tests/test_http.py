@@ -7,15 +7,15 @@ import ssl
 import unittest
 
 import websocket
-from websocket._exceptions import WebSocketProxyException, WebSocketException
+from websocket._exceptions import WebSocketException, WebSocketProxyException
 from websocket._http import (
+    HAVE_PYTHON_SOCKS,
     _get_addrinfo_list,
     _start_proxied_socket,
     _tunnel,
     connect,
     proxy_info,
     read_headers,
-    HAVE_PYTHON_SOCKS,
 )
 
 """

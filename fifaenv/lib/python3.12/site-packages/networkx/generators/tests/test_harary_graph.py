@@ -1,8 +1,7 @@
 """Unit tests for the :mod:`networkx.generators.harary_graph` module."""
 
-import pytest
-
 import networkx as nx
+import pytest
 from networkx.algorithms.isomorphism.isomorph import is_isomorphic
 from networkx.generators.harary_graph import hkn_harary_graph, hnm_harary_graph
 

@@ -1,8 +1,7 @@
 import pickle
 
-import pytest
-
 import networkx as nx
+import pytest
 
 sp = pytest.importorskip("scipy")
 pytest.importorskip("numpy")

@@ -1,6 +1,5 @@
-import pytest
-
 import networkx as nx
+import pytest
 from networkx.algorithms import bipartite
 from networkx.utils import edges_equal, nodes_equal
 

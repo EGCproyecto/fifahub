@@ -1,6 +1,5 @@
-import pytest
-
 import networkx as nx
+import pytest
 from networkx.generators.classic import empty_graph
 from networkx.utils import edges_equal, nodes_equal
 

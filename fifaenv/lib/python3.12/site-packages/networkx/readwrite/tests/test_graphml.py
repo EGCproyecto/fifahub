@@ -1,8 +1,7 @@
 import io
 
-import pytest
-
 import networkx as nx
+import pytest
 from networkx.readwrite.graphml import GraphMLWriter
 from networkx.utils import edges_equal, nodes_equal
 

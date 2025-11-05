@@ -113,14 +113,16 @@
 #
 #==============================================================================
 from __future__ import print_function
+
 import collections
 import getopt
 import itertools
 import os
-from pysat.card import *
-from pysat.formula import IDPool, CNF
-from six.moves import range
 import sys
+
+from pysat.card import *
+from pysat.formula import CNF, IDPool
+from six.moves import range
 
 
 #

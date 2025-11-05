@@ -1,6 +1,5 @@
-import pytest
-
 import networkx as nx
+import pytest
 from networkx import approximate_current_flow_betweenness_centrality as approximate_cfbc
 from networkx import edge_current_flow_betweenness_centrality as edge_current_flow
 

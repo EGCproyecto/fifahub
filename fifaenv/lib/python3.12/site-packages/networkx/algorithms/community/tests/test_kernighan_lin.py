@@ -4,9 +4,8 @@ module.
 
 from itertools import permutations
 
-import pytest
-
 import networkx as nx
+import pytest
 from networkx.algorithms.community import kernighan_lin_bisection
 
 

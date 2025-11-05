@@ -27,7 +27,7 @@ __all__ = [
 
 try:
     import ssl
-    from ssl import SSLError, SSLEOFError, SSLWantReadError, SSLWantWriteError
+    from ssl import SSLEOFError, SSLError, SSLWantReadError, SSLWantWriteError
 
     HAVE_SSL = True
 except ImportError:

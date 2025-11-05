@@ -1,8 +1,7 @@
 import random
 
-import pytest
-
 import networkx as nx
+import pytest
 from networkx.algorithms.approximation import maxcut
 
 

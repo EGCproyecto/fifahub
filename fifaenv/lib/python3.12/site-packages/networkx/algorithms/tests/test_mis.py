@@ -5,9 +5,8 @@ Tests for maximal (not maximum) independent sets.
 
 import random
 
-import pytest
-
 import networkx as nx
+import pytest
 
 
 def test_random_seed():

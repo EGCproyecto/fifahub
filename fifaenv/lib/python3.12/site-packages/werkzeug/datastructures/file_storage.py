@@ -5,8 +5,7 @@ import mimetypes
 import os
 import typing as t
 from io import BytesIO
-from os import fsdecode
-from os import fspath
+from os import fsdecode, fspath
 
 from .._internal import _plain_int
 from .headers import Headers

@@ -2,14 +2,16 @@
 trees."""
 
 import pickle
+from typing import Any
+
 import pytest
 from bs4.builder._htmlparser import (
-    _DuplicateAttributeHandler,
     BeautifulSoupHTMLParser,
     HTMLParserTreeBuilder,
+    _DuplicateAttributeHandler,
 )
 from bs4.exceptions import ParserRejectedMarkup
-from typing import Any
+
 from . import HTMLTreeBuilderSmokeTest
 
 
