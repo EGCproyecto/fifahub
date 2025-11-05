@@ -3,6 +3,7 @@
 # ==========================
 .venv/
 venv/
+fifaenv/
 vagrant_venv/
 rosemary.egg-info/
 build/

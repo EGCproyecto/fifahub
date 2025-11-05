@@ -419,7 +419,9 @@ except ImportError:
     def _decode(state: int, codep: int, ch: int) -> tuple:
         tp = _UTF8D[ch]
 
-        codep = (ch & 0x3F) | (codep << 6) if (state != _UTF8_ACCEPT) else (0xFF >> tp) & ch
+        codep = (
+            (ch & 0x3F) | (codep << 6) if (state != _UTF8_ACCEPT) else (0xFF >> tp) & ch
+        )
         state = _UTF8D[256 + state + tp]
 
         return state, codep

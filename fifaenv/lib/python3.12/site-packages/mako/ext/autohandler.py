@@ -44,7 +44,9 @@ def autohandler(template, context, name="autohandler"):
         path = "/" + "/".join(tokens)
         if path != _template_uri and _file_exists(lookup, path):
             if not lookup.filesystem_checks:
-                return lookup._uri_cache.setdefault((autohandler, _template_uri, name), path)
+                return lookup._uri_cache.setdefault(
+                    (autohandler, _template_uri, name), path
+                )
             else:
                 return path
         if len(tokens) == 1:
@@ -52,7 +54,9 @@ def autohandler(template, context, name="autohandler"):
         tokens[-2:] = [name]
 
     if not lookup.filesystem_checks:
-        return lookup._uri_cache.setdefault((autohandler, _template_uri, name), None)
+        return lookup._uri_cache.setdefault(
+            (autohandler, _template_uri, name), None
+        )
     else:
         return None
 

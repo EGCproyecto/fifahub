@@ -11,7 +11,9 @@ NormalizedExtra = NewType("NormalizedExtra", str)
 logger = logging.getLogger(__name__)
 
 
-def check_requires_python(requires_python: Optional[str], version_info: Tuple[int, ...]) -> bool:
+def check_requires_python(
+    requires_python: Optional[str], version_info: Tuple[int, ...]
+) -> bool:
     """
     Check if the given Python version matches a "Requires-Python" specifier.
 

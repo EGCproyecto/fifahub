@@ -618,4 +618,6 @@ def astuple(inst, *, recurse=True, filter=None):
 
     .. versionadded:: 21.3.0
     """
-    return _astuple(inst=inst, recurse=recurse, filter=filter, retain_collection_types=True)
+    return _astuple(
+        inst=inst, recurse=recurse, filter=filter, retain_collection_types=True
+    )

@@ -1,9 +1,14 @@
 """Test against the builders in the op.* module."""
 
-from sqlalchemy import Column, Integer, String, Table, event
+from sqlalchemy import Column
+from sqlalchemy import event
+from sqlalchemy import Integer
+from sqlalchemy import String
+from sqlalchemy import Table
 from sqlalchemy.sql import text
 
-from ...testing.fixtures import AlterColRoundTripFixture, TestBase
+from ...testing.fixtures import AlterColRoundTripFixture
+from ...testing.fixtures import TestBase
 
 
 @event.listens_for(Table, "after_parent_attach")

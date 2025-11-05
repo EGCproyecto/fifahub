@@ -281,8 +281,12 @@ class MemoryReceiveStream(ReceiveStream):
 
 
 # TODO: investigate why this is necessary for the docs
-MemorySendStream.__module__ = MemorySendStream.__module__.replace("._memory_streams", "")
-MemoryReceiveStream.__module__ = MemoryReceiveStream.__module__.replace("._memory_streams", "")
+MemorySendStream.__module__ = MemorySendStream.__module__.replace(
+    "._memory_streams", ""
+)
+MemoryReceiveStream.__module__ = MemoryReceiveStream.__module__.replace(
+    "._memory_streams", ""
+)
 
 
 def memory_stream_pump(

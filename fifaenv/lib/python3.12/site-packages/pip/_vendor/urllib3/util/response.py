@@ -82,7 +82,9 @@ def assert_header_parsing(headers):
         defects = [
             defect
             for defect in defects
-            if not isinstance(defect, (StartBoundaryNotFoundDefect, MultipartInvariantViolationDefect))
+            if not isinstance(
+                defect, (StartBoundaryNotFoundDefect, MultipartInvariantViolationDefect)
+            )
         ]
 
     if defects or unparsed_data:
