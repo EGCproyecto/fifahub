@@ -1,15 +1,16 @@
 """dataset versioning
 
 Revision ID: 00a_dataset_version
-Revises: <PON_AQUI_TU_ULTIMA_REVISION>
+Revises: ddba84b9a16a
 Create Date: 2025-11-04 10:00:00
 """
 
 import sqlalchemy as sa
 from alembic import op
 
+# Identificadores de revisión
 revision = "00a_dataset_version"
-down_revision = "<ddba84b9a16a>"
+down_revision = "ddba84b9a16a"
 branch_labels = None
 depends_on = None
 
