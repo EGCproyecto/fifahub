@@ -86,7 +86,9 @@ def download_file(file_id):
         )
 
     # Respuesta con cookie persistente
-    resp = make_response(send_from_directory(directory=file_path, path=filename, as_attachment=True))
+    resp = make_response(
+        send_from_directory(directory=file_path, path=filename, as_attachment=True)
+    )
     resp.set_cookie("file_download_cookie", user_cookie)
 
     return resp
