@@ -9,9 +9,16 @@ class TabularDataset(BaseDataset):
     rows_count = db.Column(db.Integer, nullable=True)
     schema_json = db.Column(db.Text, nullable=True)
 
-    meta_data = db.relationship("TabularMetaData", backref="dataset", uselist=False, cascade="all, delete-orphan")
+    meta_data = db.relationship(
+        "TabularMetaData",
+        backref="dataset",
+        uselist=False,
+        cascade="all, delete-orphan",
+    )
 
-    metrics = db.relationship("TabularMetrics", backref="dataset", uselist=False, cascade="all, delete-orphan")
+    metrics = db.relationship(
+        "TabularMetrics", backref="dataset", uselist=False, cascade="all, delete-orphan"
+    )
 
     def validate_domain(self):
         if self.rows_count is not None and self.rows_count < 0:
@@ -43,9 +50,16 @@ class TabularMetaData(db.Model):
     index_cols = db.Column(db.JSON)
     sample_rows = db.Column(db.JSON)
 
-    dataset_id = db.Column(db.Integer, db.ForeignKey("data_set.id"), unique=True, nullable=False)
+    dataset_id = db.Column(
+        db.Integer, db.ForeignKey("data_set.id"), unique=True, nullable=False
+    )
 
-    columns = db.relationship("TabularColumn", backref="meta_data", lazy="dynamic", cascade="all, delete-orphan")
+    columns = db.relationship(
+        "TabularColumn",
+        backref="meta_data",
+        lazy="dynamic",
+        cascade="all, delete-orphan",
+    )
 
 
 class TabularColumn(db.Model):
@@ -66,7 +80,9 @@ class TabularColumn(db.Model):
 
     # --- Conexión (ForeignKey) ---
     # Conexión N-a-1 con TabularMetaData
-    meta_id = db.Column(db.Integer, db.ForeignKey("tabular_meta_data.id"), nullable=False)
+    meta_id = db.Column(
+        db.Integer, db.ForeignKey("tabular_meta_data.id"), nullable=False
+    )
 
 
 class TabularMetrics(db.Model):
@@ -84,4 +100,6 @@ class TabularMetrics(db.Model):
 
     # --- Conexión (ForeignKey) ---
     # Conexión 1-a-1 con TabularDataset
-    dataset_id = db.Column(db.Integer, db.ForeignKey("data_set.id"), unique=True, nullable=False)
+    dataset_id = db.Column(
+        db.Integer, db.ForeignKey("data_set.id"), unique=True, nullable=False
+    )

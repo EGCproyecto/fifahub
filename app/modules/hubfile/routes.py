@@ -86,7 +86,9 @@ def download_file(file_id):
         )
 
     # Respuesta con cookie persistente
-    resp = make_response(send_from_directory(directory=file_path, path=filename, as_attachment=True))
+    resp = make_response(
+        send_from_directory(directory=file_path, path=filename, as_attachment=True)
+    )
     resp.set_cookie("file_download_cookie", user_cookie)
 
     return resp
@@ -129,7 +131,9 @@ def view_file(file_id):
             response = jsonify({"success": True, "content": content})
             if not request.cookies.get("view_cookie"):
                 response = make_response(response)
-                response.set_cookie("view_cookie", user_cookie, max_age=60 * 60 * 24 * 365 * 2)
+                response.set_cookie(
+                    "view_cookie", user_cookie, max_age=60 * 60 * 24 * 365 * 2
+                )
 
             return response
         else:

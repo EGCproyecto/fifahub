@@ -1,4 +1,7 @@
-from app.modules.featuremodel.repositories import FeatureModelRepository, FMMetaDataRepository
+from app.modules.featuremodel.repositories import (
+    FeatureModelRepository,
+    FMMetaDataRepository,
+)
 from app.modules.hubfile.services import HubfileService
 from core.services.BaseService import BaseService
 

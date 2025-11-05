@@ -1,8 +1,8 @@
-"""first migration
+"""Add tabular module models and updates
 
-Revision ID: 001
-Revises:
-Create Date: 2024-09-08 16:50:20.326640
+Revision ID: 864bd489fe5d
+Revises: ddba84b9a16a
+Create Date: 2025-11-05 18:22:05.125051
 
 """
 
@@ -10,8 +10,8 @@ import sqlalchemy as sa
 from alembic import op
 
 # revision identifiers, used by Alembic.
-revision = "001"
-down_revision = None
+revision = "864bd489fe5d"
+down_revision = "ddba84b9a16a"
 branch_labels = None
 depends_on = None
 
@@ -47,11 +47,6 @@ def upgrade():
         sa.Column("created_at", sa.DateTime(), nullable=False),
         sa.PrimaryKeyConstraint("id"),
         sa.UniqueConstraint("email"),
-    )
-    op.create_table(
-        "webhook",
-        sa.Column("id", sa.Integer(), nullable=False),
-        sa.PrimaryKeyConstraint("id"),
     )
     op.create_table(
         "zenodo",
@@ -143,6 +138,18 @@ def upgrade():
         sa.PrimaryKeyConstraint("id"),
     )
     op.create_table(
+        "notepad",
+        sa.Column("id", sa.Integer(), nullable=False),
+        sa.Column("title", sa.String(length=256), nullable=False),
+        sa.Column("body", sa.Text(), nullable=False),
+        sa.Column("user_id", sa.Integer(), nullable=False),
+        sa.ForeignKeyConstraint(
+            ["user_id"],
+            ["user.id"],
+        ),
+        sa.PrimaryKeyConstraint("id"),
+    )
+    op.create_table(
         "user_profile",
         sa.Column("id", sa.Integer(), nullable=False),
         sa.Column("user_id", sa.Integer(), nullable=False),
@@ -181,6 +188,9 @@ def upgrade():
         sa.Column("user_id", sa.Integer(), nullable=False),
         sa.Column("ds_meta_data_id", sa.Integer(), nullable=False),
         sa.Column("created_at", sa.DateTime(), nullable=False),
+        sa.Column("type", sa.String(length=50), server_default="uvl", nullable=False),
+        sa.Column("rows_count", sa.Integer(), nullable=True),
+        sa.Column("schema_json", sa.Text(), nullable=True),
         sa.ForeignKeyConstraint(
             ["ds_meta_data_id"],
             ["ds_meta_data.id"],
@@ -191,6 +201,9 @@ def upgrade():
         ),
         sa.PrimaryKeyConstraint("id"),
     )
+    with op.batch_alter_table("data_set", schema=None) as batch_op:
+        batch_op.create_index(batch_op.f("ix_data_set_type"), ["type"], unique=False)
+
     op.create_table(
         "ds_download_record",
         sa.Column("id", sa.Integer(), nullable=False),
@@ -241,6 +254,39 @@ def upgrade():
         sa.PrimaryKeyConstraint("id"),
     )
     op.create_table(
+        "tabular_meta_data",
+        sa.Column("id", sa.Integer(), nullable=False),
+        sa.Column("hubfile_id", sa.Integer(), nullable=True),
+        sa.Column("delimiter", sa.String(length=5), nullable=True),
+        sa.Column("encoding", sa.String(length=20), nullable=True),
+        sa.Column("has_header", sa.Boolean(), nullable=True),
+        sa.Column("n_rows", sa.Integer(), nullable=True),
+        sa.Column("n_cols", sa.Integer(), nullable=True),
+        sa.Column("primary_keys", sa.JSON(), nullable=True),
+        sa.Column("index_cols", sa.JSON(), nullable=True),
+        sa.Column("sample_rows", sa.JSON(), nullable=True),
+        sa.Column("dataset_id", sa.Integer(), nullable=False),
+        sa.ForeignKeyConstraint(
+            ["dataset_id"],
+            ["data_set.id"],
+        ),
+        sa.PrimaryKeyConstraint("id"),
+        sa.UniqueConstraint("dataset_id"),
+    )
+    op.create_table(
+        "tabular_metrics",
+        sa.Column("id", sa.Integer(), nullable=False),
+        sa.Column("null_ratio", sa.Float(), nullable=True),
+        sa.Column("avg_cardinality", sa.Float(), nullable=True),
+        sa.Column("dataset_id", sa.Integer(), nullable=False),
+        sa.ForeignKeyConstraint(
+            ["dataset_id"],
+            ["data_set.id"],
+        ),
+        sa.PrimaryKeyConstraint("id"),
+        sa.UniqueConstraint("dataset_id"),
+    )
+    op.create_table(
         "file",
         sa.Column("id", sa.Integer(), nullable=False),
         sa.Column("name", sa.String(length=120), nullable=False),
@@ -250,6 +296,21 @@ def upgrade():
         sa.ForeignKeyConstraint(
             ["feature_model_id"],
             ["feature_model.id"],
+        ),
+        sa.PrimaryKeyConstraint("id"),
+    )
+    op.create_table(
+        "tabular_column",
+        sa.Column("id", sa.Integer(), nullable=False),
+        sa.Column("name", sa.String(length=255), nullable=False),
+        sa.Column("dtype", sa.String(length=50), nullable=True),
+        sa.Column("null_count", sa.Integer(), nullable=True),
+        sa.Column("unique_count", sa.Integer(), nullable=True),
+        sa.Column("stats", sa.JSON(), nullable=True),
+        sa.Column("meta_id", sa.Integer(), nullable=False),
+        sa.ForeignKeyConstraint(
+            ["meta_id"],
+            ["tabular_meta_data.id"],
         ),
         sa.PrimaryKeyConstraint("id"),
     )
@@ -294,17 +355,23 @@ def downgrade():
     # ### commands auto generated by Alembic - please adjust! ###
     op.drop_table("file_view_record")
     op.drop_table("file_download_record")
+    op.drop_table("tabular_column")
     op.drop_table("file")
+    op.drop_table("tabular_metrics")
+    op.drop_table("tabular_meta_data")
     op.drop_table("feature_model")
     op.drop_table("ds_view_record")
     op.drop_table("ds_download_record")
+    with op.batch_alter_table("data_set", schema=None) as batch_op:
+        batch_op.drop_index(batch_op.f("ix_data_set_type"))
+
     op.drop_table("data_set")
     op.drop_table("author")
     op.drop_table("user_profile")
+    op.drop_table("notepad")
     op.drop_table("fm_meta_data")
     op.drop_table("ds_meta_data")
     op.drop_table("zenodo")
-    op.drop_table("webhook")
     op.drop_table("user")
     op.drop_table("fm_metrics")
     op.drop_table("ds_metrics")
