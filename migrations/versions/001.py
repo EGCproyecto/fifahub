@@ -48,8 +48,16 @@ def upgrade():
         sa.PrimaryKeyConstraint("id"),
         sa.UniqueConstraint("email"),
     )
-    op.create_table("webhook", sa.Column("id", sa.Integer(), nullable=False), sa.PrimaryKeyConstraint("id"))
-    op.create_table("zenodo", sa.Column("id", sa.Integer(), nullable=False), sa.PrimaryKeyConstraint("id"))
+    op.create_table(
+        "webhook",
+        sa.Column("id", sa.Integer(), nullable=False),
+        sa.PrimaryKeyConstraint("id"),
+    )
+    op.create_table(
+        "zenodo",
+        sa.Column("id", sa.Integer(), nullable=False),
+        sa.PrimaryKeyConstraint("id"),
+    )
     op.create_table(
         "ds_meta_data",
         sa.Column("id", sa.Integer(), nullable=False),

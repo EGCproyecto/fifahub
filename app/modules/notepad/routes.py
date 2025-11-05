@@ -31,7 +31,9 @@ CREATE
 def create_notepad():
     form = NotepadForm()
     if form.validate_on_submit():
-        result = notepad_service.create(title=form.title.data, body=form.body.data, user_id=current_user.id)
+        result = notepad_service.create(
+            title=form.title.data, body=form.body.data, user_id=current_user.id
+        )
         return notepad_service.handle_service_response(
             result=result,
             errors=form.errors,
@@ -75,7 +77,9 @@ def edit_notepad(notepad_id):
 
     form = NotepadForm(obj=notepad)
     if form.validate_on_submit():
-        result = notepad_service.update(notepad_id, title=form.title.data, body=form.body.data)
+        result = notepad_service.update(
+            notepad_id, title=form.title.data, body=form.body.data
+        )
         return notepad_service.handle_service_response(
             result=result,
             errors=form.errors,

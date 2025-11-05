@@ -3,7 +3,9 @@
 
 from core.blueprints.base_blueprint import BaseBlueprint
 
-tabular_bp = BaseBlueprint("tabular", __name__, template_folder="templates", url_prefix="/tabular")
+tabular_bp = BaseBlueprint(
+    "tabular", __name__, template_folder="templates", url_prefix="/tabular"
+)
 
 
 from . import models, routes

@@ -12,7 +12,11 @@ def test_basic_structure():
     Verifica que el parser lee correctamente el número de filas, columnas,
     detecta headers y genera la lista de metadatos de columnas.
     """
-    csv_data = [["Name", "Age", "Position"], ["Messi", "36", "RW"], ["Ronaldo", "38", "ST"]]
+    csv_data = [
+        ["Name", "Age", "Position"],
+        ["Messi", "36", "RW"],
+        ["Ronaldo", "38", "ST"],
+    ]
 
     with tempfile.NamedTemporaryFile(mode="w", suffix=".csv", delete=False) as f:
         writer = csv.writer(f)
@@ -107,7 +111,13 @@ def test_sample_data():
     Verifica que el parser extrae correctamente las primeras N filas
     como muestra, respetando el parámetro sample_rows.
     """
-    csv_data = [["Name", "Age"], ["Messi", "36"], ["Ronaldo", "38"], ["Mbappé", "24"], ["Neymar", "31"]]
+    csv_data = [
+        ["Name", "Age"],
+        ["Messi", "36"],
+        ["Ronaldo", "38"],
+        ["Mbappé", "24"],
+        ["Neymar", "31"],
+    ]
 
     with tempfile.NamedTemporaryFile(mode="w", delete=False, newline="") as f:
         writer = csv.writer(f)

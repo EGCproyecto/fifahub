@@ -30,7 +30,11 @@ class HubfileService(BaseService):
         working_dir = os.getenv("WORKING_DIR")
 
         path = os.path.join(
-            working_dir, "uploads", f"user_{hubfile_user.id}", f"dataset_{hubfile_dataset.id}", hubfile.name
+            working_dir,
+            "uploads",
+            f"user_{hubfile_user.id}",
+            f"dataset_{hubfile_dataset.id}",
+            hubfile.name,
         )
 
         return path

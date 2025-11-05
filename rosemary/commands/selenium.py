@@ -20,7 +20,8 @@ def selenium(module):
             selenium_test_path = os.path.join(module_path, "tests", "test_selenium.py")
             if not os.path.exists(selenium_test_path):
                 raise click.UsageError(
-                    f"Selenium test for module '{module}' does not exist at path " f"'{selenium_test_path}'."
+                    f"Selenium test for module '{module}' does not exist at path "
+                    f"'{selenium_test_path}'."
                 )
 
     def run_selenium_tests_in_local(module):
@@ -39,7 +40,9 @@ def selenium(module):
             # ejecutamos todos los módulos uno tras otro
             for module_name in module_names:
                 test_command = ["python", "-m", module_name]
-                click.echo(f"Running Selenium tests with command: {' '.join(test_command)}")
+                click.echo(
+                    f"Running Selenium tests with command: {' '.join(test_command)}"
+                )
                 subprocess.run(test_command, check=True)
             return  # importante: no seguimos con el bloque común
 
