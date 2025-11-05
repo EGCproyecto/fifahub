@@ -4,6 +4,7 @@
 .venv/
 venv/
 fifaenv/
+env/
 vagrant_venv/
 rosemary.egg-info/
 build/
