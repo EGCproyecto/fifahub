@@ -1,5 +1,5 @@
 import logging
-from typing import Dict, Any
+from typing import Any, Dict
 
 logger = logging.getLogger(__name__)
 
@@ -66,7 +66,9 @@ class FakenodoRepository:
 
         self.storage[fakenodo_id]["files"].append(file_info)
 
-        logger.info(f"FakenodoRepository: Added CSV file '{file_name}' to Fakenodo ID {fakenodo_id}")
+        logger.info(
+            f"FakenodoRepository: Added CSV file '{file_name}' to Fakenodo ID {fakenodo_id}"
+        )
         return file_info
 
     def get_fakenodo(self, fakenodo_id: int) -> dict:
@@ -93,5 +95,7 @@ class FakenodoRepository:
             logger.info(f"FakenodoRepository: Deleted Fakenodo with ID {fakenodo_id}")
             return True
 
-        logger.warning(f"FakenodoRepository: Tried to delete non-existent ID {fakenodo_id}")
+        logger.warning(
+            f"FakenodoRepository: Tried to delete non-existent ID {fakenodo_id}"
+        )
         return False
