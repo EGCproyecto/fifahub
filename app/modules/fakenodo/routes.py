@@ -2,14 +2,15 @@ from flask import Blueprint, jsonify, request
 from flask_login import login_required
 
 from app.modules.dataset.models import DataSet
-from app.modules.featuremodel.models import FeatureModel
 from app.modules.fakenodo.services import FakenodoService
+from app.modules.featuremodel.models import FeatureModel
 
 # Blueprint
 fakenodo_bp = Blueprint("fakenodo", __name__, url_prefix="/api/fakenodo")
 
+
 # -------------------------------------------------------------
-#Create a new deposition (POST)
+# Create a new deposition (POST)
 # -------------------------------------------------------------
 @fakenodo_bp.route("/depositions", methods=["POST"])
 @login_required
@@ -27,6 +28,7 @@ def create_deposition():
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)}), 500
 
+
 # -------------------------------------------------------------
 # Upload CSV file (PUT)
 # -------------------------------------------------------------
@@ -40,7 +42,12 @@ def upload_csv(deposition_id):
         dataset = DataSet.query.get(dataset_id)
         feature_model = FeatureModel.query.get(feature_model_id)
         if not dataset or not feature_model:
-            return jsonify({"status": "error", "message": "Dataset or FeatureModel not found"}), 404
+            return (
+                jsonify(
+                    {"status": "error", "message": "Dataset or FeatureModel not found"}
+                ),
+                404,
+            )
 
         service = FakenodoService()
         result = service.upload_file(dataset, deposition_id, feature_model)
@@ -50,8 +57,9 @@ def upload_csv(deposition_id):
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)}), 500
 
+
 # -------------------------------------------------------------
-#Publish deposition (POST)
+# Publish deposition (POST)
 # -------------------------------------------------------------
 @fakenodo_bp.route("/depositions/<int:deposition_id>/actions/publish", methods=["POST"])
 @login_required
@@ -63,6 +71,7 @@ def publish_deposition(deposition_id):
 
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)}), 500
+
 
 # -------------------------------------------------------------
 # List all depositions(GET)
@@ -78,6 +87,7 @@ def list_depositions():
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)}), 500
 
+
 # -------------------------------------------------------------
 # Get a specific deposition (GET)
 # -------------------------------------------------------------
@@ -91,6 +101,7 @@ def get_deposition(deposition_id):
 
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)}), 500
+
 
 # -------------------------------------------------------------
 # Delete a deposition (DELETE)
