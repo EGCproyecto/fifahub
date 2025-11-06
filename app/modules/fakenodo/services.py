@@ -1,13 +1,14 @@
+import csv
 import hashlib
 import logging
 import os
-import csv
+
 from dotenv import load_dotenv
 from flask_login import current_user
 
 from app.modules.dataset.models import DataSet
-from app.modules.featuremodel.models import FeatureModel
 from app.modules.fakenodo.repositories import FakenodoRepository
+from app.modules.featuremodel.models import FeatureModel
 from core.configuration.configuration import uploads_folder_name
 from core.services.BaseService import BaseService
 
@@ -34,7 +35,9 @@ class FakenodoService(BaseService):
     # -------------------------------------------------------------
     # Create a new deposition
     # -------------------------------------------------------------
-    def create_new_deposition(self, dataset: DataSet, publication_doi: str = None) -> dict:
+    def create_new_deposition(
+        self, dataset: DataSet, publication_doi: str = None
+    ) -> dict:
         """Create a new deposition in Fakenodo."""
         deposition_id = dataset.id
         fake_doi = (
@@ -48,13 +51,19 @@ class FakenodoService(BaseService):
 
         # Store locally as well
         logger.info(f"Fakenodo created in memory: {fake_doi}")
-        return self._build_response(fakenodo, metadata, "Fakenodo created successfully.", fake_doi)
+        return self._build_response(
+            fakenodo, metadata, "Fakenodo created successfully.", fake_doi
+        )
 
     # -------------------------------------------------------------
     # Upload CSV file
     # -------------------------------------------------------------
     def upload_file(
-        self, dataset: DataSet, deposition_id: int, feature_model: FeatureModel, user=None
+        self,
+        dataset: DataSet,
+        deposition_id: int,
+        feature_model: FeatureModel,
+        user=None,
     ) -> dict:
         """Simulate uploading a CSV file to Fakenodo."""
         fakenodo = self.repository.storage.get(deposition_id)
@@ -90,7 +99,11 @@ class FakenodoService(BaseService):
             }
 
         logger.warning(f"CSV file '{file_name}' already exists in storage.")
-        return {"message": "File already exists.", "status": "conflict", "file": file_name}
+        return {
+            "message": "File already exists.",
+            "status": "conflict",
+            "file": file_name,
+        }
 
     # -------------------------------------------------------------
     # Publish deposition
@@ -102,7 +115,11 @@ class FakenodoService(BaseService):
             raise Exception(f"Fakenodo {fakenodo_id} not found.")
 
         if not fakenodo["files"]:
-            return {"id": fakenodo_id, "status": "draft", "message": "No CSV files found."}
+            return {
+                "id": fakenodo_id,
+                "status": "draft",
+                "message": "No CSV files found.",
+            }
 
         csv_summaries = []
         for file_info in fakenodo["files"]:
@@ -168,18 +185,28 @@ class FakenodoService(BaseService):
         ds = dataset.ds_meta_data
         return {
             "title": ds.title,
-            "upload_type": "dataset" if ds.publication_type.value == "none" else "publication",
+            "upload_type": (
+                "dataset" if ds.publication_type.value == "none" else "publication"
+            ),
             "description": ds.description,
             "file_type": "text/csv",
             "creators": [
                 {
                     "name": author.name,
-                    **({"affiliation": author.affiliation} if author.affiliation else {}),
+                    **(
+                        {"affiliation": author.affiliation}
+                        if author.affiliation
+                        else {}
+                    ),
                     **({"orcid": author.orcid} if author.orcid else {}),
                 }
                 for author in ds.authors
             ],
-            "keywords": (["fakenodo", "csv"] if not ds.tags else ds.tags.split(", ") + ["fakenodo", "csv"]),
+            "keywords": (
+                ["fakenodo", "csv"]
+                if not ds.tags
+                else ds.tags.split(", ") + ["fakenodo", "csv"]
+            ),
             "access_right": "open",
             "license": "CC-BY-4.0",
         }
