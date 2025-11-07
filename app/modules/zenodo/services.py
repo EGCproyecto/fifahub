@@ -27,15 +27,7 @@ class ZenodoService(BaseService):
     # CONFIG
     # ---------------------------------------------------------------------
     def get_zenodo_url(self) -> str:
-        """
-        Devuelve la URL adecuada para Zenodo o Fakenodo.
 
-        Prioridad:
-        1) Si existe FAKENODO_URL -> usarla.
-        2) Si FLASK_ENV=production -> zenodo.org
-        3) En otro caso -> sandbox.zenodo.org
-        4) En todos los casos, permite override con ZENODO_API_URL.
-        """
         fakenodo_url = os.getenv("FAKENODO_URL")
         if fakenodo_url:
             logger.info(f"Using Fakenodo instead of Zenodo: {fakenodo_url}")
@@ -56,18 +48,14 @@ class ZenodoService(BaseService):
     # TESTS DE CONEXIÓN
     # ---------------------------------------------------------------------
     def test_connection(self) -> bool:
-        """
-        Testea la conexión básica con Zenodo/Fakenodo.
-        """
+        """Testea la conexión básica con Zenodo/Fakenodo."""
         response = requests.get(
             self.ZENODO_API_URL, params=self.params, headers=self.headers
         )
         return response.status_code == 200
 
     def test_full_connection(self) -> Response:
-        """
-        Test completo: crear deposition, subir archivo de prueba y borrar.
-        """
+        """Test completo: crear deposition, subir archivo de prueba y borrar."""
         success = True
         messages: list[str] = []
 
@@ -134,8 +122,7 @@ class ZenodoService(BaseService):
     def create_new_deposition(self, dataset: "DataSet") -> dict:
         """
         Crea una nueva deposition en Zenodo a partir de un DataSet.
-        Nota: no importamos DataSet arriba para evitar ciclos; si necesitas
-        funciones/attrs del modelo en import time, haz el import dentro del método.
+        Evitamos importar DataSet en import time para no crear ciclos.
         """
         logger.info("Dataset sending to Zenodo...")
         logger.info(f"Publication type...{dataset.ds_meta_data.publication_type.value}")
@@ -191,7 +178,7 @@ class ZenodoService(BaseService):
     ) -> dict:
         """
         Sube un archivo a una deposition existente.
-        Evitamos import de modelos en import time para no crear ciclos.
+        Evitamos importar modelos en import time para no crear ciclos.
         """
         uvl_filename = feature_model.fm_meta_data.uvl_filename
         data = {"name": uvl_filename}
