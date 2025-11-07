@@ -17,26 +17,29 @@ logger = logging.getLogger(__name__)
 load_dotenv()
 
 
-def get_zenodo_url(self):
-    """
-    Returns the appropriate base URL for Zenodo or Fakenodo.
-    """
+class ZenodoService(BaseService):
+    def get_zenodo_url(self):
+        """
+        Returns the appropriate base URL for Zenodo or Fakenodo.
+        """
+        # If FAKENODO_URL exists, use it
+        fakenodo_url = os.getenv("FAKENODO_URL")
+        if fakenodo_url:
+            logger.info(f"Using Fakenodo instead of Zenodo: {fakenodo_url}")
+            return fakenodo_url
 
-    # If FAKENODO_URL exists, use it
-    fakenodo_url = os.getenv("FAKENODO_URL")
-    if fakenodo_url:
-        logger.info(f"Using Fakenodo instead of Zenodo: {fakenodo_url}")
-        return fakenodo_url
+        # Otherwise, default to Zenodo
+        FLASK_ENV = os.getenv("FLASK_ENV", "development")
 
-    # Otherwise, default to Zenodo
-    FLASK_ENV = os.getenv("FLASK_ENV", "development")
-
-    if FLASK_ENV == "production":
-        return os.getenv("ZENODO_API_URL", "https://zenodo.org/api/deposit/depositions")
-    else:
-        return os.getenv(
-            "ZENODO_API_URL", "https://sandbox.zenodo.org/api/deposit/depositions"
-        )
+        if FLASK_ENV == "production":
+            return os.getenv(
+                "ZENODO_API_URL", "https://zenodo.org/api/deposit/depositions"
+            )
+        else:
+            return os.getenv(
+                "ZENODO_API_URL",
+                "https://sandbox.zenodo.org/api/deposit/depositions",
+            )
 
     def get_zenodo_access_token(self):
         return os.getenv("ZENODO_ACCESS_TOKEN")
@@ -68,7 +71,6 @@ def get_zenodo_url(self):
         Returns:
             bool: True if the connection, upload, and deletion are successful, False otherwise.
         """
-
         success = True
 
         # Create a test file
@@ -126,9 +128,7 @@ def get_zenodo_url(self):
             success = False
 
         # Step 3: Delete the deposition
-        response = requests.delete(
-            f"{self.ZENODO_API_URL}/{deposition_id}", params=self.params
-        )
+        requests.delete(f"{self.ZENODO_API_URL}/{deposition_id}", params=self.params)
 
         if os.path.exists(file_path):
             os.remove(file_path)
@@ -159,7 +159,6 @@ def get_zenodo_url(self):
         Returns:
             dict: The response in JSON format with the details of the created deposition.
         """
-
         logger.info("Dataset sending to Zenodo...")
         logger.info(f"Publication type...{dataset.ds_meta_data.publication_type.value}")
 
