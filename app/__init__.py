@@ -5,7 +5,6 @@ from flask import Flask
 from flask_migrate import Migrate
 from flask_sqlalchemy import SQLAlchemy
 
-from app.modules.dataset.services.type_registration import register_dataset_types
 from core.configuration.configuration import get_app_version
 from core.managers.config_manager import ConfigManager
 from core.managers.error_handler_manager import ErrorHandlerManager
@@ -93,6 +92,8 @@ def create_app(config_name: str = "development"):
             f"No se pudo resolver la ruta del hubfile_id={hubfile_id}. "
             "Implementa HubfileService.path_for() o asegúrate de que el repositorio expone una ruta."
         )
+
+    from app.modules.dataset.services.type_registration import register_dataset_types
 
     register_dataset_types(resolve_path_func=_resolve_path)
 
