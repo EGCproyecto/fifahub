@@ -21,7 +21,7 @@ class ZenodoService(BaseService):
 
     def get_zenodo_url(self):
    """
-   Returns the appropriate base URL for Zenodo or Fakenodo.
+   Returns the appropriate URL for Zenodo or Fakenodo.
    """
 
 
