@@ -17,27 +17,26 @@ logger = logging.getLogger(__name__)
 load_dotenv()
 
 
-class ZenodoService(BaseService):
+def get_zenodo_url(self):
+    """
+    Returns the appropriate base URL for Zenodo or Fakenodo.
+    """
 
-    def get_zenodo_url(self):
+    # If FAKENODO_URL exists, use it
+    fakenodo_url = os.getenv("FAKENODO_URL")
+    if fakenodo_url:
+        logger.info(f"Using Fakenodo instead of Zenodo: {fakenodo_url}")
+        return fakenodo_url
 
-        FLASK_ENV = os.getenv("FLASK_ENV", "development")
-        ZENODO_API_URL = ""
+    # Otherwise, default to Zenodo
+    FLASK_ENV = os.getenv("FLASK_ENV", "development")
 
-        if FLASK_ENV == "development":
-            ZENODO_API_URL = os.getenv(
-                "ZENODO_API_URL", "https://sandbox.zenodo.org/api/deposit/depositions"
-            )
-        elif FLASK_ENV == "production":
-            ZENODO_API_URL = os.getenv(
-                "ZENODO_API_URL", "https://zenodo.org/api/deposit/depositions"
-            )
-        else:
-            ZENODO_API_URL = os.getenv(
-                "ZENODO_API_URL", "https://sandbox.zenodo.org/api/deposit/depositions"
-            )
-
-        return ZENODO_API_URL
+    if FLASK_ENV == "production":
+        return os.getenv("ZENODO_API_URL", "https://zenodo.org/api/deposit/depositions")
+    else:
+        return os.getenv(
+            "ZENODO_API_URL", "https://sandbox.zenodo.org/api/deposit/depositions"
+        )
 
     def get_zenodo_access_token(self):
         return os.getenv("ZENODO_ACCESS_TOKEN")
