@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import logging
 import os
+
 import requests
 from dotenv import load_dotenv
 from flask import Response, jsonify
