@@ -14,6 +14,9 @@ from core.managers.module_manager import ModuleManager
 # Load environment variables
 load_dotenv()
 
+if os.getenv("FAKENODO_URL"):
+    print("Running in FAKENODO mode")
+
 # Create the instances
 db = SQLAlchemy()
 migrate = Migrate()
