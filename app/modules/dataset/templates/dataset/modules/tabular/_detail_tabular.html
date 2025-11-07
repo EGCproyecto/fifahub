@@ -1,0 +1,14 @@
+<div class="dataset-detail dataset-detail--tabular">
+  <h3>CSV (Tabular)</h3>
+  {% if meta %}
+    <dl>
+      <dt>Filas</dt><dd>{{ meta.n_rows or 0 }}</dd>
+      <dt>Columnas</dt><dd>{{ meta.n_cols or 0 }}</dd>
+      <dt>Delimitador</dt><dd>{{ meta.delimiter }}</dd>
+      <dt>Encoding</dt><dd>{{ meta.encoding }}</dd>
+      <dt>Cabecera</dt><dd>{{ 'Sí' if meta.has_header else 'No' }}</dd>
+    </dl>
+  {% else %}
+    <p>Sin metadatos tabulares.</p>
+  {% endif %}
+</div>
