@@ -7,24 +7,21 @@ from .interfaces import DatasetTypeSpec
 
 class DatasetTypeRegistry:
     def __init__(self) -> None:
-        self._by_key: Dict[str, DatasetTypeSpec] = {}
+        self._by_key: dict[str, DatasetTypeSpec] = {}
+
+    def clear(self) -> None:
+        """Vacía el registro (útil para tests que crean varias apps)."""
+        self._by_key.clear()
 
     def register(self, spec: DatasetTypeSpec) -> None:
-        key = spec.type_key
-        if key in self._by_key:
-            raise ValueError(f"Dataset type '{key}' ya registrado")
-        self._by_key[key] = spec
+        """Registra un tipo. Si ya existe, lo reemplaza (idempotente)."""
+        self._by_key[spec.type_key] = spec
 
-    def get(self, key: str) -> DatasetTypeSpec:
-        if key not in self._by_key:
-            raise KeyError(f"Dataset type '{key}' no encontrado")
-        return self._by_key[key]
+    def get(self, type_key: str) -> DatasetTypeSpec:
+        return self._by_key[type_key]
 
     def keys(self):
         return tuple(self._by_key.keys())
-
-    def all(self):
-        return tuple(self._by_key.values())
 
 
 registry = DatasetTypeRegistry()
