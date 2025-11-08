@@ -7,7 +7,7 @@ logger = logging.getLogger(__name__)
 class FakenodoRepository:
     """In-memory repository to simulate Zenodo deposit storage."""
 
-    def _init_(self):
+    def __init__(self):
         # Simulated "database" (key: fakenodo_id, value: fakenodo_data)
         self.storage: Dict[int, Dict[str, Any]] = {}
         self.counter = 1  # Simulates auto-increment IDs

@@ -173,9 +173,22 @@ class FakenodoService(BaseService):
         return fakenodo["doi"]
 
     def delete_deposition(self, fakenodo_id: int) -> dict:
+        fakenodo = self.repository.storage.get(fakenodo_id)
+        if not fakenodo:
+            raise Exception(f"Fakenodo {fakenodo_id} not found.")
+
+        for file_info in fakenodo.get("files", []):
+            file_path = file_info.get("file_path")
+            if file_path and os.path.exists(file_path):
+                try:
+                    os.remove(file_path)
+                except OSError:
+                    logger.warning("Could not delete file at %s", file_path)
+
         if self.repository.delete_fakenodo(fakenodo_id):
             logger.info(f"Fakenodo deleted: {fakenodo_id}")
             return {"message": f"Fakenodo {fakenodo_id} deleted successfully."}
+
         raise Exception(f"Fakenodo {fakenodo_id} not found.")
 
     # -------------------------------------------------------------
