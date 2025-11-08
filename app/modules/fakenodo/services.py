@@ -190,6 +190,7 @@ class FakenodoService(BaseService):
             return {"message": f"Fakenodo {fakenodo_id} deleted successfully."}
 
         raise Exception(f"Fakenodo {fakenodo_id} not found.")
+
     # -------------------------------------------------------------
     # Helper methods
     # -------------------------------------------------------------

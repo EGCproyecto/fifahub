@@ -7,7 +7,6 @@ import pytest
 import app.modules.fakenodo.services as fakenodo_services
 from app.modules.fakenodo.services import FakenodoService
 
-
 # -----------------------------
 # Dummies para DataSet y FeatureModel
 # -----------------------------
@@ -64,7 +63,7 @@ class DummyFeatureModel:
 
 @pytest.fixture
 def service(tmp_path, monkeypatch) -> FakenodoService:
-    
+
     monkeypatch.setattr(
         fakenodo_services,
         "uploads_folder_name",
@@ -89,7 +88,9 @@ def service(tmp_path, monkeypatch) -> FakenodoService:
 # ============================================================
 
 
-def test_create_new_deposition_generates_default_doi_and_stores_metadata(service: FakenodoService):
+def test_create_new_deposition_generates_default_doi_and_stores_metadata(
+    service: FakenodoService,
+):
     dataset = DummyDataSet(ds_id=1)
     resp = service.create_new_deposition(dataset)
 
@@ -107,7 +108,9 @@ def test_create_new_deposition_generates_default_doi_and_stores_metadata(service
     assert stored["meta_data"]["upload_type"] == "dataset"
 
 
-def test_create_new_deposition_uses_publication_doi_when_provided(service: FakenodoService):
+def test_create_new_deposition_uses_publication_doi_when_provided(
+    service: FakenodoService,
+):
     dataset = DummyDataSet(ds_id=2)
     pub_doi = "10.9999/publication"
     resp = service.create_new_deposition(dataset, publication_doi=pub_doi)
@@ -120,7 +123,9 @@ def test_create_new_deposition_uses_publication_doi_when_provided(service: Faken
 # ============================================================
 
 
-def test_upload_file_creates_csv_and_registers_in_repository(service: FakenodoService, tmp_path):
+def test_upload_file_creates_csv_and_registers_in_repository(
+    service: FakenodoService, tmp_path
+):
     dataset = DummyDataSet(ds_id=3)
     feature_model = DummyFeatureModel(csv_filename="mydata.csv")
 
@@ -151,7 +156,9 @@ def test_upload_file_creates_csv_and_registers_in_repository(service: FakenodoSe
     assert stored["files"][0]["file_name"] == "mydata.csv"
 
 
-def test_upload_file_when_file_exists_returns_conflict(service: FakenodoService, tmp_path):
+def test_upload_file_when_file_exists_returns_conflict(
+    service: FakenodoService, tmp_path
+):
     dataset = DummyDataSet(ds_id=4)
     feature_model = DummyFeatureModel(csv_filename="duplicate.csv")
 
@@ -176,7 +183,9 @@ def test_upload_file_when_file_exists_returns_conflict(service: FakenodoService,
 # ============================================================
 
 
-def test_publish_deposition_without_files_returns_draft_status(service: FakenodoService):
+def test_publish_deposition_without_files_returns_draft_status(
+    service: FakenodoService,
+):
     dataset = DummyDataSet(ds_id=5)
     resp = service.create_new_deposition(dataset)
     dep_id = resp["deposition_id"]
@@ -187,7 +196,9 @@ def test_publish_deposition_without_files_returns_draft_status(service: Fakenodo
     assert "No CSV files found" in result["message"]
 
 
-def test_publish_deposition_reads_csv_and_sets_doi_and_status(service: FakenodoService, tmp_path):
+def test_publish_deposition_reads_csv_and_sets_doi_and_status(
+    service: FakenodoService, tmp_path
+):
     dataset = DummyDataSet(ds_id=6)
     feature1 = DummyFeatureModel(csv_filename="file1.csv")
     feature2 = DummyFeatureModel(csv_filename="file2.csv")
@@ -210,7 +221,7 @@ def test_publish_deposition_reads_csv_and_sets_doi_and_status(service: FakenodoS
 
     # Comprobamos resumen de un fichero
     info = result["csv_files_info"][0]
-    assert info["rows"] == 4     # 1 header + 3 filas
+    assert info["rows"] == 4  # 1 header + 3 filas
     assert info["columns"] == 3  # id, name, value
     assert info["size_bytes"] > 0
     assert "checksum" in info
@@ -221,7 +232,9 @@ def test_publish_deposition_reads_csv_and_sets_doi_and_status(service: FakenodoS
 # ============================================================
 
 
-def test_delete_deposition_removes_from_repository_and_deletes_csv(service: FakenodoService, tmp_path):
+def test_delete_deposition_removes_from_repository_and_deletes_csv(
+    service: FakenodoService, tmp_path
+):
     dataset = DummyDataSet(ds_id=7)
     feature_model = DummyFeatureModel(csv_filename="todelete.csv")
 
