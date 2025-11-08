@@ -22,7 +22,7 @@ db = SQLAlchemy()
 migrate = Migrate()
 
 
-def create_app(config_name="development"):
+def create_app(config_name: str = "development"):
     app = Flask(__name__)
 
     # Load configuration according to environment
@@ -67,6 +67,38 @@ def create_app(config_name="development"):
             "DOMAIN": os.getenv("DOMAIN", "localhost"),
             "APP_VERSION": get_app_version(),
         }
+
+    def _resolve_path(hubfile_id: int) -> str:
+        try:
+            from app.modules.hubfile.services import HubfileService
+
+            svc = HubfileService()
+            for meth in ("path_for", "get_path", "resolve_path", "file_path"):
+                if hasattr(svc, meth):
+                    return getattr(svc, meth)(hubfile_id)
+        except Exception:
+            pass
+
+        try:
+            from app.modules.dataset.repositories import HubfileRepository
+
+            repo = HubfileRepository()
+            hf = repo.get_by_id(hubfile_id)
+            for attr in ("path", "file_path", "storage_path", "absolute_path"):
+                p = getattr(hf, attr, None)
+                if p:
+                    return p
+        except Exception:
+            pass
+
+        raise RuntimeError(
+            f"No se pudo resolver la ruta del hubfile_id={hubfile_id}. "
+            "Implementa HubfileService.path_for() o asegúrate de que el repositorio expone una ruta."
+        )
+
+    from app.modules.dataset.services.type_registration import register_dataset_types
+
+    register_dataset_types(resolve_path_func=_resolve_path)
 
     return app
 

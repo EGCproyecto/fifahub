@@ -19,9 +19,10 @@ from flask import (
 )
 from flask_login import current_user, login_required
 
+from app import db
 from app.modules.dataset import dataset_bp
 from app.modules.dataset.forms import DataSetForm
-from app.modules.dataset.models import DSDownloadRecord
+from app.modules.dataset.models import BaseDataset, DSDownloadRecord
 from app.modules.dataset.services import (
     AuthorService,
     DataSetService,
@@ -30,6 +31,7 @@ from app.modules.dataset.services import (
     DSMetaDataService,
     DSViewRecordService,
 )
+from app.modules.dataset.services.resolvers import render_detail
 from app.modules.zenodo.services import ZenodoService
 
 logger = logging.getLogger(__name__)
@@ -266,9 +268,18 @@ def subdomain_index(doi):
     # Get dataset
     dataset = ds_meta_data.data_set
 
-    # Save the cookie to the user's browser
     user_cookie = ds_view_record_service.create_cookie(dataset=dataset)
-    resp = make_response(render_template("dataset/view_dataset.html", dataset=dataset))
+
+    detail_template, detail_ctx = render_detail(dataset.type, dataset)
+
+    resp = make_response(
+        render_template(
+            "dataset/view_dataset.html",
+            dataset=dataset,
+            detail_template=detail_template,
+            **detail_ctx,  # meta=..., etc.
+        )
+    )
     resp.set_cookie("view_cookie", user_cookie)
 
     return resp
@@ -278,10 +289,16 @@ def subdomain_index(doi):
 @login_required
 def get_unsynchronized_dataset(dataset_id):
 
-    # Get dataset
     dataset = dataset_service.get_unsynchronized_dataset(current_user.id, dataset_id)
 
     if not dataset:
         abort(404)
 
-    return render_template("dataset/view_dataset.html", dataset=dataset)
+    detail_template, detail_ctx = render_detail(dataset.type, dataset)
+
+    return render_template(
+        "dataset/view_dataset.html",
+        dataset=dataset,
+        detail_template=detail_template,
+        **detail_ctx,  # meta=..., etc.
+    )
