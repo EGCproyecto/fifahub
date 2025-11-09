@@ -62,15 +62,22 @@ class FakenodoService(BaseService):
         self,
         dataset: DataSet,
         deposition_id: int,
-        feature_model: FeatureModel,
+        feature_model=None,
         user=None,
     ) -> dict:
         """Simulate uploading a CSV file to Fakenodo."""
+        # Buscar la "deposición" en memoria
         fakenodo = self.repository.storage.get(deposition_id)
         if not fakenodo:
             raise Exception(f"Deposition {deposition_id} not found.")
 
-        file_name = getattr(feature_model.fm_meta_data, "csv_filename", "dataset.csv")
+        
+        if feature_model is not None and hasattr(feature_model, "fm_meta_data"):
+            file_name = getattr(feature_model.fm_meta_data, "csv_filename", "dataset.csv")
+        else:
+            file_name = "dataset.csv"
+
+        # Usuario
         user_id = current_user.id if user is None else user.id
 
         file_path = os.path.join(
@@ -82,7 +89,7 @@ class FakenodoService(BaseService):
 
         if not os.path.exists(file_path):
             os.makedirs(os.path.dirname(file_path), exist_ok=True)
-            with open(file_path, "w") as f:
+            with open(file_path, "w", encoding="utf-8") as f:
                 f.write("id,name,value\n1,example,123\n2,another,456\n3,final,789\n")
 
             self.repository.add_csv_file(deposition_id, file_name, file_path)
@@ -104,6 +111,7 @@ class FakenodoService(BaseService):
             "status": "conflict",
             "file": file_name,
         }
+
 
     # -------------------------------------------------------------
     # Publish deposition
