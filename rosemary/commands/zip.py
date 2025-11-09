@@ -23,20 +23,12 @@ def create_zip(uvus):
         ):
             try:
                 zip_path.unlink()  # Remove the existing zip file
-                click.echo(
-                    click.style(f"Existing zip file {zip_name} removed.", fg="yellow")
-                )
+                click.echo(click.style(f"Existing zip file {zip_name} removed.", fg="yellow"))
             except Exception as e:
-                click.echo(
-                    click.style(f"Failed to remove existing zip file: {e}", fg="red")
-                )
+                click.echo(click.style(f"Failed to remove existing zip file: {e}", fg="red"))
                 return
         else:
-            click.echo(
-                click.style(
-                    "Operation cancelled. No zip file was created.", fg="yellow"
-                )
-            )
+            click.echo(click.style("Operation cancelled. No zip file was created.", fg="yellow"))
             return
 
     # Check for exactly one .pdf file
@@ -69,11 +61,7 @@ def create_zip(uvus):
                         try:
                             zf.write(file_path, file_path.relative_to(project_root))
                         except Exception as e:
-                            click.echo(
-                                click.style(
-                                    f"Failed to add {file_path} to zip: {e}", fg="red"
-                                )
-                            )
+                            click.echo(click.style(f"Failed to add {file_path} to zip: {e}", fg="red"))
             # Exclude specific files
             elif item.name == ".env":  # Exclude only the .env file
                 continue
@@ -86,9 +74,7 @@ def create_zip(uvus):
                 try:
                     zf.write(item, item.relative_to(project_root))
                 except Exception as e:
-                    click.echo(
-                        click.style(f"Failed to add {item.name} to zip: {e}", fg="red")
-                    )
+                    click.echo(click.style(f"Failed to add {item.name} to zip: {e}", fg="red"))
 
         # Ensure the .pdf is included only once
         if pdf_file.name not in zf.namelist():

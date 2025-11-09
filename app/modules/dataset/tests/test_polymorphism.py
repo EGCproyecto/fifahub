@@ -47,11 +47,7 @@ def test_polymorphic_query_returns_subclasses():
             db.session.commit()
 
             # Verificación polimórfica
-            items = (
-                BaseDataset.query.filter(BaseDataset.id.in_([u.id, t.id]))
-                .order_by(BaseDataset.id)
-                .all()
-            )
+            items = BaseDataset.query.filter(BaseDataset.id.in_([u.id, t.id])).order_by(BaseDataset.id).all()
             assert type(items[0]) is UVLDataset
             assert type(items[1]) is TabularDataset
         finally:

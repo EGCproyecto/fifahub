@@ -81,9 +81,7 @@ def make_module(name):
                 {"module_name": name},
             )
         else:
-            open(
-                os.path.join(module_path, filename), "a"
-            ).close()  # Create empty file if there is no template.
+            open(os.path.join(module_path, filename), "a").close()  # Create empty file if there is no template.
 
     click.echo(click.style(f"Module '{name}' created successfully.", fg="green"))
 
@@ -101,22 +99,14 @@ def make_module(name):
         for dir_ in dirs:
             dir_path = os.path.join(root, dir_)
             os.chown(dir_path, uid, gid)
-            os.chmod(
-                dir_path, stat.S_IRWXU | stat.S_IRWXG | stat.S_IROTH | stat.S_IXOTH
-            )
+            os.chmod(dir_path, stat.S_IRWXU | stat.S_IRWXG | stat.S_IROTH | stat.S_IXOTH)
 
         for file_ in files:
             file_path = os.path.join(root, file_)
             os.chown(file_path, uid, gid)
             os.chmod(
                 file_path,
-                stat.S_IRUSR
-                | stat.S_IWUSR
-                | stat.S_IRGRP
-                | stat.S_IWGRP
-                | stat.S_IROTH,
+                stat.S_IRUSR | stat.S_IWUSR | stat.S_IRGRP | stat.S_IWGRP | stat.S_IROTH,
             )
 
-    click.echo(
-        click.style(f"Module '{name}' permissions changed successfully.", fg="green")
-    )
+    click.echo(click.style(f"Module '{name}' permissions changed successfully.", fg="green"))

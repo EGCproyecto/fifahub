@@ -13,11 +13,7 @@ class VersioningService:
 
     def _next_version(self, dataset):
         """Genera el siguiente número de versión semántico (1.0.0, 1.0.1, etc.)."""
-        last = (
-            DatasetVersion.query.filter_by(dataset_id=dataset.id)
-            .order_by(DatasetVersion.created_at.desc())
-            .first()
-        )
+        last = DatasetVersion.query.filter_by(dataset_id=dataset.id).order_by(DatasetVersion.created_at.desc()).first()
         if not last:
             return "1.0.0"
         try:
@@ -37,11 +33,7 @@ class VersioningService:
             strat = self.uvl_strategy
         else:
             # heurística: si tiene CSV => tabular, si no => UVL
-            has_csv = any(
-                f.name.lower().endswith(".csv")
-                for fm in dataset.feature_models
-                for f in fm.files
-            )
+            has_csv = any(f.name.lower().endswith(".csv") for fm in dataset.feature_models for f in fm.files)
             strat = self.tabular_strategy if has_csv else self.uvl_strategy
 
         snapshot = strat.snapshot(dataset)

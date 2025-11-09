@@ -43,9 +43,7 @@ def upload_csv(deposition_id):
         feature_model = FeatureModel.query.get(feature_model_id)
         if not dataset or not feature_model:
             return (
-                jsonify(
-                    {"status": "error", "message": "Dataset or FeatureModel not found"}
-                ),
+                jsonify({"status": "error", "message": "Dataset or FeatureModel not found"}),
                 404,
             )
 

@@ -16,9 +16,7 @@ class TabularDataset(BaseDataset):
         cascade="all, delete-orphan",
     )
 
-    metrics = db.relationship(
-        "TabularMetrics", backref="dataset", uselist=False, cascade="all, delete-orphan"
-    )
+    metrics = db.relationship("TabularMetrics", backref="dataset", uselist=False, cascade="all, delete-orphan")
 
     def validate_domain(self):
         if self.rows_count is not None and self.rows_count < 0:
@@ -50,9 +48,7 @@ class TabularMetaData(db.Model):
     index_cols = db.Column(db.JSON)
     sample_rows = db.Column(db.JSON)
 
-    dataset_id = db.Column(
-        db.Integer, db.ForeignKey("data_set.id"), unique=True, nullable=False
-    )
+    dataset_id = db.Column(db.Integer, db.ForeignKey("data_set.id"), unique=True, nullable=False)
 
     columns = db.relationship(
         "TabularColumn",
@@ -80,9 +76,7 @@ class TabularColumn(db.Model):
 
     # --- Conexión (ForeignKey) ---
     # Conexión N-a-1 con TabularMetaData
-    meta_id = db.Column(
-        db.Integer, db.ForeignKey("tabular_meta_data.id"), nullable=False
-    )
+    meta_id = db.Column(db.Integer, db.ForeignKey("tabular_meta_data.id"), nullable=False)
 
 
 class TabularMetrics(db.Model):
@@ -100,6 +94,4 @@ class TabularMetrics(db.Model):
 
     # --- Conexión (ForeignKey) ---
     # Conexión 1-a-1 con TabularDataset
-    dataset_id = db.Column(
-        db.Integer, db.ForeignKey("data_set.id"), unique=True, nullable=False
-    )
+    dataset_id = db.Column(db.Integer, db.ForeignKey("data_set.id"), unique=True, nullable=False)

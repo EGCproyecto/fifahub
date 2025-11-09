@@ -58,9 +58,7 @@ def create_dataset():
 
         try:
             logger.info("Creating dataset...")
-            dataset = dataset_service.create_from_form(
-                form=form, current_user=current_user
-            )
+            dataset = dataset_service.create_from_form(form=form, current_user=current_user)
             logger.info(f"Created dataset: {dataset}")
             dataset_service.move_feature_models(dataset)
         except Exception as exc:
@@ -85,9 +83,7 @@ def create_dataset():
             deposition_id = data.get("id")
 
             # update dataset with deposition id in Zenodo
-            dataset_service.update_dsmetadata(
-                dataset.ds_meta_data_id, deposition_id=deposition_id
-            )
+            dataset_service.update_dsmetadata(dataset.ds_meta_data_id, deposition_id=deposition_id)
 
             try:
                 # iterate for each feature model (one feature model = one request to Zenodo)
@@ -99,9 +95,7 @@ def create_dataset():
 
                 # update DOI
                 deposition_doi = zenodo_service.get_doi(deposition_id)
-                dataset_service.update_dsmetadata(
-                    dataset.ds_meta_data_id, dataset_doi=deposition_doi
-                )
+                dataset_service.update_dsmetadata(dataset.ds_meta_data_id, dataset_doi=deposition_doi)
             except Exception as e:
                 msg = f"it has not been possible upload feature models in Zenodo and update the DOI: {e}"
                 return jsonify({"message": msg}), 200
@@ -146,9 +140,7 @@ def upload():
         # Generate unique filename (by recursion)
         base_name, extension = os.path.splitext(file.filename)
         i = 1
-        while os.path.exists(
-            os.path.join(temp_folder, f"{base_name} ({i}){extension}")
-        ):
+        while os.path.exists(os.path.join(temp_folder, f"{base_name} ({i}){extension}")):
             i += 1
         new_filename = f"{base_name} ({i}){extension}"
         file_path = os.path.join(temp_folder, new_filename)
@@ -203,16 +195,12 @@ def download_dataset(dataset_id):
 
                 zipf.write(
                     full_path,
-                    arcname=os.path.join(
-                        os.path.basename(zip_path[:-4]), relative_path
-                    ),
+                    arcname=os.path.join(os.path.basename(zip_path[:-4]), relative_path),
                 )
 
     user_cookie = request.cookies.get("download_cookie")
     if not user_cookie:
-        user_cookie = str(
-            uuid.uuid4()
-        )  # Generate a new unique identifier if it does not exist
+        user_cookie = str(uuid.uuid4())  # Generate a new unique identifier if it does not exist
         # Save the cookie to the user's browser
         resp = make_response(
             send_from_directory(
@@ -275,7 +263,6 @@ def subdomain_index(doi):
     resp = make_response(
         render_template(
             "dataset/view_dataset.html",
-            dataset=dataset,
             detail_template=detail_template,
             **detail_ctx,  # meta=..., etc.
         )
@@ -298,7 +285,6 @@ def get_unsynchronized_dataset(dataset_id):
 
     return render_template(
         "dataset/view_dataset.html",
-        dataset=dataset,
         detail_template=detail_template,
         **detail_ctx,  # meta=..., etc.
     )

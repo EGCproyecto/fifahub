@@ -123,9 +123,7 @@ def test_create_new_deposition_uses_publication_doi_when_provided(
 # ============================================================
 
 
-def test_upload_file_creates_csv_and_registers_in_repository(
-    service: FakenodoService, tmp_path
-):
+def test_upload_file_creates_csv_and_registers_in_repository(service: FakenodoService, tmp_path):
     dataset = DummyDataSet(ds_id=3)
     feature_model = DummyFeatureModel(csv_filename="mydata.csv")
 
@@ -156,9 +154,7 @@ def test_upload_file_creates_csv_and_registers_in_repository(
     assert stored["files"][0]["file_name"] == "mydata.csv"
 
 
-def test_upload_file_when_file_exists_returns_conflict(
-    service: FakenodoService, tmp_path
-):
+def test_upload_file_when_file_exists_returns_conflict(service: FakenodoService, tmp_path):
     dataset = DummyDataSet(ds_id=4)
     feature_model = DummyFeatureModel(csv_filename="duplicate.csv")
 
@@ -196,9 +192,7 @@ def test_publish_deposition_without_files_returns_draft_status(
     assert "No CSV files found" in result["message"]
 
 
-def test_publish_deposition_reads_csv_and_sets_doi_and_status(
-    service: FakenodoService, tmp_path
-):
+def test_publish_deposition_reads_csv_and_sets_doi_and_status(service: FakenodoService, tmp_path):
     dataset = DummyDataSet(ds_id=6)
     feature1 = DummyFeatureModel(csv_filename="file1.csv")
     feature2 = DummyFeatureModel(csv_filename="file2.csv")
@@ -232,9 +226,7 @@ def test_publish_deposition_reads_csv_and_sets_doi_and_status(
 # ============================================================
 
 
-def test_delete_deposition_removes_from_repository_and_deletes_csv(
-    service: FakenodoService, tmp_path
-):
+def test_delete_deposition_removes_from_repository_and_deletes_csv(service: FakenodoService, tmp_path):
     dataset = DummyDataSet(ds_id=7)
     feature_model = DummyFeatureModel(csv_filename="todelete.csv")
 

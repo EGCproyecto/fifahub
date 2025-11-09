@@ -33,9 +33,7 @@ class HubfileService(BaseService):
 
         hubfile_user = self.get_owner_user_by_hubfile(hubfile)
         hubfile_dataset = self.get_dataset_by_hubfile(hubfile)
-        working_dir = (
-            os.getenv("WORKING_DIR") or ""
-        )  # ✅ evita TypeError cuando es None
+        working_dir = os.getenv("WORKING_DIR") or ""  # ✅ evita TypeError cuando es None
 
         path = os.path.join(
             working_dir,

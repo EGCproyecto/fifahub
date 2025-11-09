@@ -12,9 +12,7 @@ from app.modules.tabular.utils.parser import parse_csv_metadata
 
 class TabularIngestor:
     def __init__(self, resolve_path: Optional[Callable[[int], str]] = None) -> None:
-        self._resolve_path = (
-            resolve_path  # pásame aquí tu HubfileService cuando lo tengas.
-        )
+        self._resolve_path = resolve_path  # pásame aquí tu HubfileService cuando lo tengas.
 
     def ingest(
         self,
@@ -28,9 +26,7 @@ class TabularIngestor:
     ) -> Mapping[str, Any]:
         if not file_path:
             if not (hubfile_id and self._resolve_path):
-                raise ValueError(
-                    "Debes pasar file_path o un hubfile_id con resolve_path definido."
-                )
+                raise ValueError("Debes pasar file_path o un hubfile_id con resolve_path definido.")
             file_path = self._resolve_path(hubfile_id)
 
         parsed = parse_csv_metadata(
@@ -75,9 +71,7 @@ class TabularIngestor:
 
         try:
             avg_cardinality = (
-                mean([c.get("unique_count", 0) for c in parsed.get("columns", [])])
-                if parsed.get("columns")
-                else None
+                mean([c.get("unique_count", 0) for c in parsed.get("columns", [])]) if parsed.get("columns") else None
             )
         except Exception:
             avg_cardinality = None
