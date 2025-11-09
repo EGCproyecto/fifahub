@@ -71,9 +71,7 @@ class DataSetRepository(BaseRepository):
     def get_synchronized(self, current_user_id: int) -> DataSet:
         return (
             self.model.query.join(DSMetaData)
-            .filter(
-                DataSet.user_id == current_user_id, DSMetaData.dataset_doi.isnot(None)
-            )
+            .filter(DataSet.user_id == current_user_id, DSMetaData.dataset_doi.isnot(None))
             .order_by(self.model.created_at.desc())
             .all()
         )
@@ -81,16 +79,12 @@ class DataSetRepository(BaseRepository):
     def get_unsynchronized(self, current_user_id: int) -> DataSet:
         return (
             self.model.query.join(DSMetaData)
-            .filter(
-                DataSet.user_id == current_user_id, DSMetaData.dataset_doi.is_(None)
-            )
+            .filter(DataSet.user_id == current_user_id, DSMetaData.dataset_doi.is_(None))
             .order_by(self.model.created_at.desc())
             .all()
         )
 
-    def get_unsynchronized_dataset(
-        self, current_user_id: int, dataset_id: int
-    ) -> DataSet:
+    def get_unsynchronized_dataset(self, current_user_id: int, dataset_id: int) -> DataSet:
         return (
             self.model.query.join(DSMetaData)
             .filter(
@@ -102,18 +96,10 @@ class DataSetRepository(BaseRepository):
         )
 
     def count_synchronized_datasets(self):
-        return (
-            self.model.query.join(DSMetaData)
-            .filter(DSMetaData.dataset_doi.isnot(None))
-            .count()
-        )
+        return self.model.query.join(DSMetaData).filter(DSMetaData.dataset_doi.isnot(None)).count()
 
     def count_unsynchronized_datasets(self):
-        return (
-            self.model.query.join(DSMetaData)
-            .filter(DSMetaData.dataset_doi.is_(None))
-            .count()
-        )
+        return self.model.query.join(DSMetaData).filter(DSMetaData.dataset_doi.is_(None)).count()
 
     def latest_synchronized(self):
         return (

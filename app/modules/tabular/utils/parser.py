@@ -129,13 +129,7 @@ def _infer_dtype_specific(values):
 
     try:
         for val in sample:
-            clean_val = (
-                val.replace("€", "")
-                .replace("$", "")
-                .replace("M", "")
-                .replace("K", "")
-                .replace(",", "")
-            )
+            clean_val = val.replace("€", "").replace("$", "").replace("M", "").replace("K", "").replace(",", "")
             int(clean_val)
         return "int"
     except ValueError:
@@ -143,13 +137,7 @@ def _infer_dtype_specific(values):
 
     try:
         for val in sample:
-            clean_val = (
-                val.replace("€", "")
-                .replace("$", "")
-                .replace("M", "")
-                .replace("K", "")
-                .replace(",", "")
-            )
+            clean_val = val.replace("€", "").replace("$", "").replace("M", "").replace("K", "").replace(",", "")
             float(clean_val)
         return "float"
     except ValueError:
@@ -176,13 +164,7 @@ def _calculate_numeric_stats(values, dtype):
         numeric_values = []
 
         for val in values:
-            clean_val = (
-                val.replace("€", "")
-                .replace("$", "")
-                .replace("M", "")
-                .replace("K", "")
-                .replace(",", "")
-            )
+            clean_val = val.replace("€", "").replace("$", "").replace("M", "").replace("K", "").replace(",", "")
 
             if dtype == "int":
                 numeric_values.append(int(clean_val))

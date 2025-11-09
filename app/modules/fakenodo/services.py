@@ -35,15 +35,11 @@ class FakenodoService(BaseService):
     # -------------------------------------------------------------
     # Create a new deposition
     # -------------------------------------------------------------
-    def create_new_deposition(
-        self, dataset: DataSet, publication_doi: str = None
-    ) -> dict:
+    def create_new_deposition(self, dataset: DataSet, publication_doi: str = None) -> dict:
         """Create a new deposition in Fakenodo."""
         deposition_id = dataset.id
         fake_doi = (
-            f"{publication_doi}/dataset{deposition_id}"
-            if publication_doi
-            else f"10.5281/fakenodo.{deposition_id}"
+            f"{publication_doi}/dataset{deposition_id}" if publication_doi else f"10.5281/fakenodo.{deposition_id}"
         )
 
         metadata = self._build_metadata(dataset)
@@ -51,9 +47,7 @@ class FakenodoService(BaseService):
 
         # Store locally as well
         logger.info(f"Fakenodo created in memory: {fake_doi}")
-        return self._build_response(
-            fakenodo, metadata, "Fakenodo created successfully.", fake_doi
-        )
+        return self._build_response(fakenodo, metadata, "Fakenodo created successfully.", fake_doi)
 
     # -------------------------------------------------------------
     # Upload CSV file
@@ -198,28 +192,18 @@ class FakenodoService(BaseService):
         ds = dataset.ds_meta_data
         return {
             "title": ds.title,
-            "upload_type": (
-                "dataset" if ds.publication_type.value == "none" else "publication"
-            ),
+            "upload_type": ("dataset" if ds.publication_type.value == "none" else "publication"),
             "description": ds.description,
             "file_type": "text/csv",
             "creators": [
                 {
                     "name": author.name,
-                    **(
-                        {"affiliation": author.affiliation}
-                        if author.affiliation
-                        else {}
-                    ),
+                    **({"affiliation": author.affiliation} if author.affiliation else {}),
                     **({"orcid": author.orcid} if author.orcid else {}),
                 }
                 for author in ds.authors
             ],
-            "keywords": (
-                ["fakenodo", "csv"]
-                if not ds.tags
-                else ds.tags.split(", ") + ["fakenodo", "csv"]
-            ),
+            "keywords": (["fakenodo", "csv"] if not ds.tags else ds.tags.split(", ") + ["fakenodo", "csv"]),
             "access_right": "open",
             "license": "CC-BY-4.0",
         }

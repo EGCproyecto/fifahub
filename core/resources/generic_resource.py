@@ -34,11 +34,7 @@ class GenericResource(Resource):
             return {"message": "No input data provided"}, 400
 
         if self.serializer.serialization_fields:
-            filtered_data = {
-                key: value
-                for key, value in data.items()
-                if key in self.serializer.serialization_fields
-            }
+            filtered_data = {key: value for key, value in data.items() if key in self.serializer.serialization_fields}
             item = self.model(**filtered_data)
         else:
             item = self.model(**data)
