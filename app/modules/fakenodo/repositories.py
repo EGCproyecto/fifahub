@@ -1,4 +1,5 @@
 import logging
+
 from app import db
 from app.modules.fakenodo.models import Fakenodo
 
@@ -8,7 +9,9 @@ logger = logging.getLogger(__name__)
 class FakenodoRepository:
     """Repository for interacting with the Fakenodo depositions in the database."""
 
-    def create_new_deposition(self, meta_data: dict = None, doi: str = None) -> Fakenodo:
+    def create_new_deposition(
+        self, meta_data: dict = None, doi: str = None
+    ) -> Fakenodo:
         """
         Create a new deposition entry in the database.
 
@@ -26,7 +29,9 @@ class FakenodoRepository:
         db.session.add(deposition)
         db.session.commit()
 
-        logger.info(f"FakenodoRepository: Created new deposition with ID {deposition.id}")
+        logger.info(
+            f"FakenodoRepository: Created new deposition with ID {deposition.id}"
+        )
         return deposition
 
     def add_csv_file(self, deposition_id: int, file_name: str, file_path: str) -> dict:
@@ -94,7 +99,9 @@ class FakenodoRepository:
         if deposition:
             db.session.delete(deposition)
             db.session.commit()
-            logger.info(f"FakenodoRepository: Deleted deposition with ID {deposition_id}")
+            logger.info(
+                f"FakenodoRepository: Deleted deposition with ID {deposition_id}"
+            )
             return True
 
         logger.warning(

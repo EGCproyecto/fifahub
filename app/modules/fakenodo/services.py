@@ -6,10 +6,10 @@ import os
 from dotenv import load_dotenv
 from flask_login import current_user
 
+import core.configuration.configuration as config
 from app.modules.dataset.models import DataSet
 from app.modules.fakenodo.repositories import FakenodoRepository
 from app.modules.featuremodel.models import FeatureModel
-import core.configuration.configuration as config
 from core.services.BaseService import BaseService
 
 logger = logging.getLogger(__name__)
@@ -25,7 +25,9 @@ class FakenodoService(BaseService):
     def __init__(self):
         self.repository = FakenodoRepository()
 
-    def create_new_deposition(self, dataset: DataSet, publication_doi: str = None) -> dict:
+    def create_new_deposition(
+        self, dataset: DataSet, publication_doi: str = None
+    ) -> dict:
         """Create a new deposition in Fakenodo."""
         deposition_id = dataset.id
         fake_doi = (
@@ -35,7 +37,9 @@ class FakenodoService(BaseService):
         )
 
         metadata = self._build_metadata(dataset)
-        deposition = self.repository.create_new_deposition(meta_data=metadata, doi=fake_doi)
+        deposition = self.repository.create_new_deposition(
+            meta_data=metadata, doi=fake_doi
+        )
 
         logger.info(f"FakenodoService: Created deposition {fake_doi}")
         return self._build_response(
@@ -59,7 +63,9 @@ class FakenodoService(BaseService):
 
         # Determine filename
         if feature_model is not None and hasattr(feature_model, "fm_meta_data"):
-            file_name = getattr(feature_model.fm_meta_data, "csv_filename", "dataset.csv")
+            file_name = getattr(
+                feature_model.fm_meta_data, "csv_filename", "dataset.csv"
+            )
         else:
             file_name = "dataset.csv"
 
@@ -90,7 +96,9 @@ class FakenodoService(BaseService):
                 },
             }
 
-        logger.warning(f"CSV file '{file_name}' already exists for deposition {deposition_id}")
+        logger.warning(
+            f"CSV file '{file_name}' already exists for deposition {deposition_id}"
+        )
         return {
             "message": "File already exists.",
             "status": "conflict",
@@ -191,7 +199,11 @@ class FakenodoService(BaseService):
             "creators": [
                 {
                     "name": author.name,
-                    **({"affiliation": author.affiliation} if author.affiliation else {}),
+                    **(
+                        {"affiliation": author.affiliation}
+                        if author.affiliation
+                        else {}
+                    ),
                     **({"orcid": author.orcid} if author.orcid else {}),
                 }
                 for author in ds.authors

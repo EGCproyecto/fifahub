@@ -1,13 +1,16 @@
 import os
-import pytest
 from unittest.mock import MagicMock, patch
+
+import pytest
+
 from app import create_app, db
-from app.modules.fakenodo.services import FakenodoService
 from app.modules.fakenodo.repositories import FakenodoRepository
+from app.modules.fakenodo.services import FakenodoService
 
 # ============================================================
 # FIXTURES
 # ============================================================
+
 
 @pytest.fixture(autouse=True)
 def mock_db_session(monkeypatch):
@@ -61,6 +64,7 @@ def mock_feature_model():
 # REPOSITORY TESTS
 # ============================================================
 
+
 def test_repo_create_and_get(repository, app):
     with app.app_context():
         dep = MagicMock()
@@ -98,6 +102,7 @@ def test_repo_add_csv_file(repository, tmp_path, app):
 # SERVICE TESTS
 # ============================================================
 
+
 def test_service_create_new_deposition(service, mock_dataset, app):
     with app.app_context():
         fake_dep = MagicMock()
@@ -116,7 +121,9 @@ def test_service_create_invalid_dataset(service):
         service.create_new_deposition(invalid)
 
 
-def test_service_upload_file_creates_csv(service, mock_dataset, mock_feature_model, tmp_path):
+def test_service_upload_file_creates_csv(
+    service, mock_dataset, mock_feature_model, tmp_path
+):
     """Should create a new CSV file if it does not already exist."""
     mock_dep = MagicMock()
     mock_dep.id = 42  # unique deposition
@@ -146,7 +153,9 @@ def test_service_upload_file_creates_csv(service, mock_dataset, mock_feature_mod
     assert os.path.exists(file_path)
 
 
-def test_service_upload_file_already_exists(service, mock_dataset, mock_feature_model, tmp_path):
+def test_service_upload_file_already_exists(
+    service, mock_dataset, mock_feature_model, tmp_path
+):
     mock_dep = MagicMock()
     mock_dep.id = 1
     service.repository.get_deposition.return_value = mock_dep
@@ -158,7 +167,10 @@ def test_service_upload_file_already_exists(service, mock_dataset, mock_feature_
     file_path.write_text("existing data")
 
     patch_user = patch("app.modules.fakenodo.services.current_user", MagicMock(id=1))
-    patch_path = patch("core.configuration.configuration.uploads_folder_name", return_value=str(upload_dir))
+    patch_path = patch(
+        "core.configuration.configuration.uploads_folder_name",
+        return_value=str(upload_dir),
+    )
 
     with patch_user, patch_path:
         res = service.upload_file(mock_dataset, 1, mock_feature_model)

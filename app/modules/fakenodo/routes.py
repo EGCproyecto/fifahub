@@ -1,13 +1,14 @@
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, jsonify, request
 from flask_login import login_required
 
-from app.modules.fakenodo.services import FakenodoService
 from app.modules.dataset.repositories import DataSetRepository
+from app.modules.fakenodo.services import FakenodoService
 
 bp = Blueprint("fakenodo", __name__, url_prefix="/fakenodo")
 
 fakenodo_service = FakenodoService()
 dataset_repo = DataSetRepository()
+
 
 @bp.route("/depositions", methods=["POST"])
 @login_required
@@ -23,7 +24,9 @@ def create_deposition():
     if dataset is None:
         return jsonify({"error": f"Dataset {ds_id} not found"}), 404
 
-    resp = fakenodo_service.create_new_deposition(dataset, publication_doi=publication_doi)
+    resp = fakenodo_service.create_new_deposition(
+        dataset, publication_doi=publication_doi
+    )
     return jsonify(resp), 201
 
 
@@ -42,13 +45,11 @@ def upload_file(dep_id: int):
     return jsonify(resp), 200
 
 
-
 @bp.route("/depositions/<int:dep_id>/publish", methods=["POST"])
 @login_required
 def publish_deposition(dep_id: int):
     resp = fakenodo_service.publish_deposition(dep_id)
     return jsonify(resp), 200
-
 
 
 @bp.route("/depositions/<int:dep_id>", methods=["DELETE"])

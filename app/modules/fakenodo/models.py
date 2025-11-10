@@ -5,6 +5,7 @@ class Fakenodo(db.Model):
     """
     Simple model that represents a simulated deposition in Fakenodo.
     """
+
     id = db.Column(db.Integer, primary_key=True)
     meta_data = db.Column(db.JSON, nullable=False)
     status = db.Column(db.String(100), nullable=False, default="draft")
