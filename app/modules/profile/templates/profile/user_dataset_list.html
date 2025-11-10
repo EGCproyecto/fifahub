@@ -48,18 +48,26 @@
                 if (data.status === 'success' && data.data.length > 0) {
                     
                     data.data.forEach(dataset => {
+                        
+                        // --- ESTA ES LA PARTE MODIFICADA ---
+
                         // Creamos una "tarjeta" (card) de Bootstrap para cada dataset
+                        // Ahora, toda la tarjeta está envuelta en un <a> que usa la 'view_url' de la API
                         const cardHtml = `
                             <div class="col-md-6 mb-3">
-                                <div class="card shadow-sm">
-                                    <div class="card-body">
-                                        <h5 class="card-title">${dataset.title}</h5>
-                                        <p class="card-text">${dataset.description || ''}</p>
-                                        <span class="badge bg-secondary">${dataset.type}</span>
+                                <a href="${dataset.view_url}" class="text-decoration-none text-dark">
+                                    <div class="card shadow-sm h-100 card-hover">
+                                        <div class="card-body">
+                                            <h5 class="card-title text-primary">${dataset.title}</h5>
+                                            <p class="card-text">${dataset.description || ''}</p>
+                                            <span class="badge bg-secondary">${dataset.type}</span>
+                                        </div>
                                     </div>
-                                </div>
+                                </a>
                             </div>
                         `;
+                        // --- FIN DE LA MODIFICACIÓN ---
+                        
                         // Añadimos la tarjeta al contenedor
                         container.innerHTML += cardHtml;
                     });
