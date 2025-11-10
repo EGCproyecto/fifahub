@@ -22,7 +22,7 @@ from flask_login import current_user, login_required
 from app import db
 from app.modules.dataset import dataset_bp
 from app.modules.dataset.forms import DataSetForm
-from app.modules.dataset.models import BaseDataset, DSDownloadRecord
+from app.modules.dataset.models import BaseDataset, DatasetVersion, DSDownloadRecord
 from app.modules.dataset.services import (
     AuthorService,
     DataSetService,
@@ -256,15 +256,21 @@ def subdomain_index(doi):
     # Get dataset
     dataset = ds_meta_data.data_set
 
+    # cookie de vistas
     user_cookie = ds_view_record_service.create_cookie(dataset=dataset)
 
+    # resolver de detalle (tu flujo original)
     detail_template, detail_ctx = render_detail(dataset.type, dataset)
+
+    # 🔹 NUEVO: versiones ordenadas (últimas primero) y pasadas a la plantilla
+    versions = DatasetVersion.query.filter_by(dataset_id=dataset.id).order_by(DatasetVersion.created_at.desc()).all()
 
     resp = make_response(
         render_template(
             "dataset/view_dataset.html",
             detail_template=detail_template,
-            **detail_ctx,  # meta=..., etc.
+            versions=versions,  # <- aquí van las versiones
+            **detail_ctx,  # meta=..., dataset=..., etc.
         )
     )
     resp.set_cookie("view_cookie", user_cookie)
@@ -283,8 +289,12 @@ def get_unsynchronized_dataset(dataset_id):
 
     detail_template, detail_ctx = render_detail(dataset.type, dataset)
 
+    # 🔹 NUEVO: versiones también para no sincronizados (si existen)
+    versions = DatasetVersion.query.filter_by(dataset_id=dataset.id).order_by(DatasetVersion.created_at.desc()).all()
+
     return render_template(
         "dataset/view_dataset.html",
         detail_template=detail_template,
-        **detail_ctx,  # meta=..., etc.
+        versions=versions,  # <- aquí van las versiones
+        **detail_ctx,  # meta=..., dataset=..., etc.
     )

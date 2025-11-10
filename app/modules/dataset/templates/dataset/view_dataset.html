@@ -184,53 +184,54 @@
         <div class="card mt-3">
             <div class="card-header d-flex align-items-center justify-content-between">
                 <h5 class="mb-0">Historial de versiones</h5>
-                {% if dataset.versions and dataset.versions|length > 0 %}
-                    <span class="badge bg-secondary">{{ dataset.versions|length }}</span>
+                {% if versions and versions|length > 0 %}
+                    <span class="badge bg-secondary">{{ versions|length }}</span>
                 {% endif %}
             </div>
             <div class="list-group list-group-flush">
-                {% for v in dataset.versions %}
-                    <div class="list-group-item">
-                        <div class="d-flex w-100 justify-content-between">
-                            <h6 class="mb-1">v{{ v.version }}</h6>
-                            <small>{{ v.created_at.strftime('%Y-%m-%d %H:%M') }}</small>
+                {% if versions and versions|length > 0 %}
+                    {% for v in versions %}
+                        <div class="list-group-item">
+                            <div class="d-flex w-100 justify-content-between">
+                                <h6 class="mb-1">v{{ v.version }}</h6>
+                                <small>{{ v.created_at.strftime('%Y-%m-%d %H:%M') if v.created_at else '-' }}</small>
+                            </div>
+
+                            {% if v.change_note %}
+                                <p class="mb-1">{{ v.change_note }}</p>
+                            {% endif %}
+
+                            {% if v.snapshot and v.snapshot.metrics %}
+                                <small class="text-muted d-block">
+                                    Métricas: filas totales {{ v.snapshot.metrics.total_rows }}, columnas máx {{ v.snapshot.metrics.max_columns }}
+                                </small>
+                            {% endif %}
+
+                            {% if v.snapshot and v.snapshot.files %}
+                                <details class="mt-2">
+                                    <summary>Ver archivos de snapshot</summary>
+                                    <ul class="mt-2 mb-0">
+                                        {% for f in v.snapshot.files %}
+                                            <li>
+                                                {{ f.file }}
+                                                {% if f.rows is not none %} — {{ f.rows }} filas{% endif %}
+                                                {% if f.columns is not none %} × {{ f.columns }} cols{% endif %}
+                                                {% if f.chars is not none %} — {{ f.chars }} chars{% endif %}
+                                            </li>
+                                        {% endfor %}
+                                    </ul>
+                                </details>
+                            {% endif %}
                         </div>
-
-                        {% if v.change_note %}
-                            <p class="mb-1">{{ v.change_note }}</p>
-                        {% endif %}
-
-                        {% if v.snapshot and v.snapshot.metrics %}
-                            <small class="text-muted">
-                                Métricas: filas totales {{ v.snapshot.metrics.total_rows }}, columnas máx {{ v.snapshot.metrics.max_columns }}
-                            </small>
-                        {% endif %}
-
-                        {% if v.snapshot and v.snapshot.files %}
-                            <details class="mt-2">
-                                <summary>Ver archivos de snapshot</summary>
-                                <ul class="mt-2 mb-0">
-                                    {% for f in v.snapshot.files %}
-                                        <li>
-                                            {{ f.file }}
-                                            {% if f.rows is not none %} — {{ f.rows }} filas{% endif %}
-                                            {% if f.columns is not none %} × {{ f.columns }} cols{% endif %}
-                                            {% if f.chars is not none %} — {{ f.chars }} chars{% endif %}
-                                        </li>
-                                    {% endfor %}
-                                </ul>
-                            </details>
-                        {% endif %}
-                    </div>
+                    {% endfor %}
                 {% else %}
                     <div class="list-group-item text-muted">Sin versiones todavía</div>
-                {% endfor %}
+                {% endif %}
             </div>
         </div>
         <!-- /🧾 HISTORIAL DE VERSIONES -->
 
         <!-- resto del HTML igual (related publication, botones, lista UVL, modal, scripts, etc.) -->
         <!-- ✅ No se elimina nada de tu archivo original -->
-        <!-- ... (todo tu contenido original sigue aquí igual que antes) ... -->
 
 {% endblock %}
