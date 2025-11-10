@@ -6,10 +6,10 @@ import os
 from dotenv import load_dotenv
 from flask_login import current_user
 
+import core.configuration.configuration as config
 from app.modules.dataset.models import DataSet
 from app.modules.fakenodo.repositories import FakenodoRepository
 from app.modules.featuremodel.models import FeatureModel
-from core.configuration.configuration import uploads_folder_name
 from core.services.BaseService import BaseService
 
 logger = logging.getLogger(__name__)
@@ -19,7 +19,7 @@ load_dotenv()
 class FakenodoService(BaseService):
     """
     Local service that emulates Zenodo for CSV datasets.
-    Manages creation, upload, publication, retrieval, and deletion of fake depositions.
+    Manages creation, upload, publication, retrieval, and deletion of depositions.
     """
 
     def __init__(self):
@@ -43,44 +43,50 @@ class FakenodoService(BaseService):
         )
 
         metadata = self._build_metadata(dataset)
-        fakenodo = self.repository.create_new_fakenodo(meta_data=metadata, doi=fake_doi)
+        deposition = self.repository.create_new_deposition(meta_data=metadata, doi=fake_doi)
 
-        # Store locally as well
-        logger.info(f"Fakenodo created in memory: {fake_doi}")
-        return self._build_response(fakenodo, metadata, "Fakenodo created successfully.", fake_doi)
+        logger.info(f"FakenodoService: Created deposition {fake_doi}")
+        return self._build_response(
+            deposition,
+            metadata,
+            "Deposition created successfully.",
+            fake_doi,
+        )
 
-    # -------------------------------------------------------------
-    # Upload CSV file
-    # -------------------------------------------------------------
     def upload_file(
         self,
         dataset: DataSet,
         deposition_id: int,
-        feature_model: FeatureModel,
+        feature_model: FeatureModel = None,
         user=None,
     ) -> dict:
-        """Simulate uploading a CSV file to Fakenodo."""
-        fakenodo = self.repository.storage.get(deposition_id)
-        if not fakenodo:
+        """Simulate uploading a CSV file to a deposition."""
+        deposition = self.repository.get_deposition(deposition_id)
+        if not deposition:
             raise Exception(f"Deposition {deposition_id} not found.")
 
-        file_name = getattr(feature_model.fm_meta_data, "csv_filename", "dataset.csv")
-        user_id = current_user.id if user is None else user.id
+        # Determine filename
+        if feature_model is not None and hasattr(feature_model, "fm_meta_data"):
+            file_name = getattr(feature_model.fm_meta_data, "csv_filename", "dataset.csv")
+        else:
+            file_name = "dataset.csv"
 
+        user_id = current_user.id if user is None else user.id
         file_path = os.path.join(
-            uploads_folder_name(),
+            config.uploads_folder_name(),
             f"user_{user_id}",
             f"dataset_{dataset.id}",
             file_name,
         )
 
+        # Check for file existence
         if not os.path.exists(file_path):
             os.makedirs(os.path.dirname(file_path), exist_ok=True)
-            with open(file_path, "w") as f:
+            with open(file_path, "w", encoding="utf-8") as f:
                 f.write("id,name,value\n1,example,123\n2,another,456\n3,final,789\n")
 
             self.repository.add_csv_file(deposition_id, file_name, file_path)
-            logger.info(f"CSV uploaded: {file_name}")
+            logger.info(f"FakenodoService: CSV uploaded '{file_name}'")
 
             return {
                 "message": f"The CSV '{file_name}' was uploaded successfully.",
@@ -92,31 +98,30 @@ class FakenodoService(BaseService):
                 },
             }
 
-        logger.warning(f"CSV file '{file_name}' already exists in storage.")
+        logger.warning(f"CSV file '{file_name}' already exists for deposition {deposition_id}")
         return {
             "message": "File already exists.",
             "status": "conflict",
             "file": file_name,
         }
 
-    # -------------------------------------------------------------
-    # Publish deposition
-    # -------------------------------------------------------------
-    def publish_deposition(self, fakenodo_id: int) -> dict:
+    def publish_deposition(self, deposition_id: int) -> dict:
         """Simulate publishing a deposition by reading its CSVs."""
-        fakenodo = self.repository.storage.get(fakenodo_id)
-        if not fakenodo:
-            raise Exception(f"Fakenodo {fakenodo_id} not found.")
+        deposition = self.repository.get_deposition(deposition_id)
+        if not deposition:
+            raise Exception(f"Deposition {deposition_id} not found.")
 
-        if not fakenodo["files"]:
+        # Retrieve attached files
+        files = getattr(deposition, "files", [])
+        if not files:
             return {
-                "id": fakenodo_id,
+                "id": deposition_id,
                 "status": "draft",
                 "message": "No CSV files found.",
             }
 
         csv_summaries = []
-        for file_info in fakenodo["files"]:
+        for file_info in files:
             file_path = file_info["file_path"]
             file_name = file_info["file_name"]
 
@@ -137,41 +142,36 @@ class FakenodoService(BaseService):
                 }
             )
 
-        fakenodo["doi"] = f"10.5281/fakenodo.{fakenodo_id}.v{len(fakenodo['files'])}"
-        fakenodo["status"] = "published"
-        logger.info(f"Fakenodo published: {fakenodo['doi']}")
+        deposition.doi = f"10.5281/fakenodo.{deposition_id}.v{len(files)}"
+        deposition.status = "published"
+        logger.info(f"FakenodoService: Published deposition {deposition.doi}")
 
         return {
-            "id": fakenodo_id,
+            "id": deposition_id,
             "status": "published",
-            "conceptdoi": fakenodo["doi"],
-            "message": "Fakenodo published successfully.",
+            "conceptdoi": deposition.doi,
+            "message": "Deposition published successfully.",
             "csv_files_info": csv_summaries,
         }
 
-    # -------------------------------------------------------------
-    # Retrieve, DOI and Delete
-    # -------------------------------------------------------------
-    def get_deposition(self, fakenodo_id: int) -> dict:
-        fakenodo = self.repository.storage.get(fakenodo_id)
-        if not fakenodo:
-            raise Exception(f"Fakenodo {fakenodo_id} not found.")
-        return fakenodo
+    def get_deposition(self, deposition_id: int):
+        deposition = self.repository.get_deposition(deposition_id)
+        return deposition if deposition else None
 
-    def get_doi(self, fakenodo_id: int) -> str:
-        fakenodo = self.repository.storage.get(fakenodo_id)
-        if not fakenodo:
-            raise Exception(f"Fakenodo {fakenodo_id} not found.")
-        if not fakenodo.get("doi"):
-            fakenodo["doi"] = self._generate_doi(fakenodo_id)
-        return fakenodo["doi"]
+    def get_doi(self, deposition_id: int) -> str:
+        deposition = self.repository.get_deposition(deposition_id)
+        if not deposition:
+            raise Exception(f"Deposition {deposition_id} not found.")
+        if not deposition.doi:
+            deposition.doi = self._generate_doi(deposition_id)
+        return deposition.doi
 
-    def delete_deposition(self, fakenodo_id: int) -> dict:
-        fakenodo = self.repository.storage.get(fakenodo_id)
-        if not fakenodo:
-            raise Exception(f"Fakenodo {fakenodo_id} not found.")
+    def delete_deposition(self, deposition_id: int) -> dict:
+        deposition = self.repository.get_deposition(deposition_id)
+        if not deposition:
+            raise Exception(f"Deposition {deposition_id} not found.")
 
-        for file_info in fakenodo.get("files", []):
+        for file_info in getattr(deposition, "files", []):
             file_path = file_info.get("file_path")
             if file_path and os.path.exists(file_path):
                 try:
@@ -179,15 +179,14 @@ class FakenodoService(BaseService):
                 except OSError:
                     logger.warning("Could not delete file at %s", file_path)
 
-        if self.repository.delete_fakenodo(fakenodo_id):
-            logger.info(f"Fakenodo deleted: {fakenodo_id}")
-            return {"message": f"Fakenodo {fakenodo_id} deleted successfully."}
+        if self.repository.delete_deposition(deposition_id):
+            logger.info(f"FakenodoService: Deleted deposition {deposition_id}")
+            return {"message": f"Deposition {deposition_id} deleted successfully."}
 
-        raise Exception(f"Fakenodo {fakenodo_id} not found.")
+        raise Exception(f"Deposition {deposition_id} not found.")
 
-    # -------------------------------------------------------------
     # Helper methods
-    # -------------------------------------------------------------
+
     def _build_metadata(self, dataset: DataSet) -> dict:
         ds = dataset.ds_meta_data
         return {
@@ -208,9 +207,9 @@ class FakenodoService(BaseService):
             "license": "CC-BY-4.0",
         }
 
-    def _build_response(self, fakenodo, meta_data, message, doi) -> dict:
+    def _build_response(self, deposition, meta_data, message, doi) -> dict:
         return {
-            "deposition_id": fakenodo["id"],
+            "deposition_id": deposition.id,
             "doi": doi,
             "meta_data": meta_data,
             "message": message,
@@ -220,5 +219,5 @@ class FakenodoService(BaseService):
         with open(file_path, "rb") as file:
             return hashlib.sha256(file.read()).hexdigest()
 
-    def _generate_doi(self, fakenodo_id: int) -> str:
-        return f"10.5281/fakenodo.{fakenodo_id}"
+    def _generate_doi(self, deposition_id: int) -> str:
+        return f"10.5281/fakenodo.{deposition_id}"

@@ -1,97 +1,100 @@
 import logging
-from typing import Any, Dict
+
+from app import db
+from app.modules.fakenodo.models import Fakenodo
 
 logger = logging.getLogger(__name__)
 
 
 class FakenodoRepository:
-    """In-memory repository to simulate Zenodo deposit storage."""
+    """Repository for interacting with the Fakenodo depositions in the database."""
 
-    def __init__(self):
-        # Simulated "database" (key: fakenodo_id, value: fakenodo_data)
-        self.storage: Dict[int, Dict[str, Any]] = {}
-        self.counter = 1  # Simulates auto-increment IDs
-
-    def create_new_fakenodo(self, meta_data: dict = None, doi: str = None) -> dict:
+    def create_new_deposition(self, meta_data: dict = None, doi: str = None) -> Fakenodo:
         """
-        Create a new Fakenodo entry in memory.
+        Create a new deposition entry in the database.
 
         Args:
-            meta_data (dict): Metadata for the Fakenodo (title, description, etc.).
+            meta_data (dict): Metadata for the deposition (title, description, etc.)
             doi (str): Optional DOI string.
 
         Returns:
-            dict: The newly created Fakenodo record.
+            Fakenodo: The newly created database object.
         """
         if meta_data is None:
             meta_data = {}
 
-        fakenodo_id = self.counter
-        self.counter += 1
+        deposition = Fakenodo(meta_data=meta_data, doi=doi)
+        db.session.add(deposition)
+        db.session.commit()
 
-        fakenodo_entry = {
-            "id": fakenodo_id,
-            "meta_data": meta_data,
-            "doi": doi,
-            "files": [],  # Here we'll store uploaded CSV file info
-            "status": "draft",
-        }
+        logger.info(f"FakenodoRepository: Created new deposition with ID {deposition.id}")
+        return deposition
 
-        # Store it in memory
-        self.storage[fakenodo_id] = fakenodo_entry
-
-        logger.info(f"FakenodoRepository: Created new Fakenodo with ID {fakenodo_id}")
-        return fakenodo_entry
-
-    def add_csv_file(self, fakenodo_id: int, file_name: str, file_path: str) -> dict:
+    def add_csv_file(self, deposition_id: int, file_name: str, file_path: str) -> dict:
         """
-        Attach a CSV file to an existing Fakenodo record.
+        Attach a CSV file to an existing deposition record.
 
         Args:
-            fakenodo_id (int): The Fakenodo ID.
+            deposition_id (int): The deposition ID.
             file_name (str): The CSV filename.
             file_path (str): The simulated local path.
 
         Returns:
-            dict: File metadata added to the Fakenodo.
+            dict: Updated meta_data with file information.
         """
-        if fakenodo_id not in self.storage:
-            raise Exception(f"Fakenodo with ID {fakenodo_id} not found.")
+        deposition = Fakenodo.query.get(deposition_id)
+        if not deposition:
+            raise Exception(f"Deposition with ID {deposition_id} not found.")
 
-        file_info = {
-            "file_name": file_name,
-            "file_path": file_path,
-            "file_type": "text/csv",
-        }
+        # Add CSV info inside meta_data["files"]
+        meta_data = deposition.meta_data or {}
+        files = meta_data.get("files", [])
+        files.append(
+            {
+                "file_name": file_name,
+                "file_path": file_path,
+                "file_type": "text/csv",
+            }
+        )
+        meta_data["files"] = files
+        deposition.meta_data = meta_data
 
-        self.storage[fakenodo_id]["files"].append(file_info)
+        db.session.commit()
 
-        logger.info(f"FakenodoRepository: Added CSV file '{file_name}' to Fakenodo ID {fakenodo_id}")
-        return file_info
+        logger.info(f"FakenodoRepository: Added CSV file '{file_name}' to deposition ID {deposition_id}")
+        return meta_data
 
-    def get_fakenodo(self, fakenodo_id: int) -> dict:
+    def get_deposition(self, deposition_id: int) -> Fakenodo:
         """
-        Get a Fakenodo by ID.
-        """
-        fakenodo = self.storage.get(fakenodo_id)
-        if not fakenodo:
-            raise Exception(f"Fakenodo with ID {fakenodo_id} not found.")
-        return fakenodo
-
-    def delete_fakenodo(self, fakenodo_id: int) -> bool:
-        """
-        Delete a Fakenodo entry from memory.
+        Retrieve a deposition entry by its ID.
 
         Args:
-            fakenodo_id (int): The ID of the Fakenodo to delete.
+            deposition_id (int): The ID of the deposition.
+
+        Returns:
+            Fakenodo: The corresponding database object.
+        """
+        deposition = Fakenodo.query.get(deposition_id)
+        if not deposition:
+            raise Exception(f"Deposition with ID {deposition_id} not found.")
+        return deposition
+
+    def delete_deposition(self, deposition_id: int) -> bool:
+        """
+        Delete a deposition entry from the database.
+
+        Args:
+            deposition_id (int): The ID of the deposition to delete.
 
         Returns:
             bool: True if deleted, False otherwise.
         """
-        if fakenodo_id in self.storage:
-            del self.storage[fakenodo_id]
-            logger.info(f"FakenodoRepository: Deleted Fakenodo with ID {fakenodo_id}")
+        deposition = Fakenodo.query.get(deposition_id)
+        if deposition:
+            db.session.delete(deposition)
+            db.session.commit()
+            logger.info(f"FakenodoRepository: Deleted deposition with ID {deposition_id}")
             return True
 
-        logger.warning(f"FakenodoRepository: Tried to delete non-existent ID {fakenodo_id}")
+        logger.warning(f"FakenodoRepository: Tried to delete non-existent deposition ID {deposition_id}")
         return False

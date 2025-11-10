@@ -8,9 +8,12 @@ from dotenv import load_dotenv
 from flask import Response, jsonify
 from flask_login import current_user
 
+from app.modules.fakenodo.services import FakenodoService
 from app.modules.zenodo.repositories import ZenodoRepository
 from core.configuration.configuration import uploads_folder_name
 from core.services.BaseService import BaseService
+
+ZenodoService = FakenodoService
 
 logger = logging.getLogger(__name__)
 load_dotenv()
