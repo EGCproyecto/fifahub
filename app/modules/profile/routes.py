@@ -65,13 +65,19 @@ def serialize_dataset(dataset):
     """
     Convierte un objeto BaseDataset (UVL o Tabular) en un diccionario
     que luego se devuelve como JSON.
-    Lo he hecho aqui para no tener que modificar los datos de momento.
+    Ahora incluye una 'view_url' para que el frontend pueda enlazar.
     """
 
     if dataset.type == "uvl":
         try:
             data = dataset.to_dict()
             data["type"] = "uvl"
+
+            # --- LÍNEA NUEVA ---
+            # Replicamos la lógica de summary.html: usamos la URL del DOI si existe,
+            # si no, usamos la URL interna (data.get('url') es el DOI).
+            data["view_url"] = data.get("url") or url_for("dataset.get_unsynchronized_dataset", dataset_id=dataset.id)
+
             return data
         except Exception as e:
             print(f"Error al serializar UVLDataset {dataset.id}: {e}")
@@ -105,14 +111,20 @@ def serialize_dataset(dataset):
             "delimiter": dataset.meta_data.delimiter if dataset.meta_data else None,
             "encoding": dataset.meta_data.encoding if dataset.meta_data else None,
             "null_ratio": dataset.metrics.null_ratio if dataset.metrics else None,
+            # --- LÍNEA NUEVA ---
+            # Asumimos que los datasets tabulares usan la misma vista de detalle
+            "view_url": url_for("dataset.get_unsynchronized_dataset", dataset_id=dataset.id),
         }
 
+    # --- Fallback (opción de seguridad) ---
     return {
         "type": dataset.type,
         "id": dataset.id,
         "title": dataset.ds_meta_data.title if dataset.ds_meta_data else "N/A",
         "created_at": dataset.created_at.isoformat() if dataset.created_at else None,
         "description": dataset.ds_meta_data.description if dataset.ds_meta_data else "",
+        # --- LÍNEA NUEVA ---
+        "view_url": url_for("dataset.get_unsynchronized_dataset", dataset_id=dataset.id),
     }
 
 
