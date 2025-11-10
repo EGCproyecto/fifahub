@@ -154,3 +154,17 @@ def get_user_datasets_api(userId):
             },
         }
     )
+
+
+@profile_bp.route("/users/<string:userId>/datasets", methods=["GET"])
+@login_required
+def view_user_datasets(userId):
+    """
+    Renderiza la página de perfil público que listará los datasets
+    de un usuario dado.
+    """
+    user_to_view = db.session.query(User).filter_by(id=userId).first()
+    if not user_to_view:
+        return "User not found", 404
+
+    return render_template("profile/user_dataset_list.html", user_to_view=user_to_view)

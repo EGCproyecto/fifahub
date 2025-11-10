@@ -1,0 +1,80 @@
+{% extends "base_template.html" %}
+
+{% block title %}Datasets de {{ user_to_view.email }}{% endblock %}
+
+{% block content %}
+
+<h1 class="h3 mb-3">Datasets subidos por el usuario</h1>
+
+<div id="loading-spinner" class="text-center mt-5">
+    <div class="spinner-border text-primary" role="status">
+        <span class="visually-hidden">Loading...</span>
+    </div>
+    <p class="mt-2">Cargando datasets...</p>
+</div>
+
+<div id="datasets-container" class="row mt-4">
+    </div>
+
+<div id="no-datasets-message" class="alert alert-info" style="display: none;" role="alert">
+    Este usuario aún no ha subido ningún dataset.
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Espera a que todo el HTML esté listo
+    document.addEventListener('DOMContentLoaded', function() {
+    
+        const userId = '{{ user_to_view.id | safe }}';
+        
+        // Referencias a nuestros elementos HTML
+        const loader = document.getElementById('loading-spinner');
+        const container = document.getElementById('datasets-container');
+        const noDataMessage = document.getElementById('no-datasets-message');
+
+        fetch(`/api/users/${userId}/datasets`)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('La respuesta de la red no fue exitosa');
+                }
+                return response.json();
+            })
+            .then(data => {
+                // ¡Éxito! Ocultamos el "Cargando..."
+                loader.style.display = 'none';
+
+                if (data.status === 'success' && data.data.length > 0) {
+                    
+                    data.data.forEach(dataset => {
+                        // Creamos una "tarjeta" (card) de Bootstrap para cada dataset
+                        const cardHtml = `
+                            <div class="col-md-6 mb-3">
+                                <div class="card shadow-sm">
+                                    <div class="card-body">
+                                        <h5 class="card-title">${dataset.title}</h5>
+                                        <p class="card-text">${dataset.description || ''}</p>
+                                        <span class="badge bg-secondary">${dataset.type}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                        // Añadimos la tarjeta al contenedor
+                        container.innerHTML += cardHtml;
+                    });
+
+                } else {
+                    // No hay datasets, mostramos el mensaje de "vacío"
+                    noDataMessage.style.display = 'block';
+                }
+            })
+            .catch(error => {
+                // Si la API falla (error 500, etc.)
+                console.error('Error al cargar los datasets:', error);
+                loader.style.display = 'none';
+                container.innerHTML = '<div class="alert alert-danger">Hubo un error al cargar los datasets. Por favor, inténtalo de nuevo más tarde.</div>';
+            });
+    });
+</script>
+{% endblock %}
