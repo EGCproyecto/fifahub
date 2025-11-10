@@ -5,7 +5,14 @@
 
 {% block content %}
 
-<h1 class="h3 mb-3">User profile</h1>
+<div class="d-flex justify-content-between align-items-center mb-3">
+    
+    <h1 class="h3 m-0">User profile</h1>
+    
+    <a href="{{ url_for('profile.view_user_datasets', userId=user.id) }}" class="btn btn-primary">
+      Ver Datasets Subidos
+    </a>
+</div>
 
 <div class="row">
 
