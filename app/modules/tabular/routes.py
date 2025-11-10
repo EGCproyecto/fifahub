@@ -49,21 +49,21 @@ def upload():
     form = TabularDatasetForm()
 
     if request.method == "GET":
-        return render_template("modules/tabular/upload_tabular.html", form=form)
+        return render_template("upload_tabular.html", form=form)
 
     if not form.validate_on_submit():
-        return render_template("modules/tabular/upload_tabular.html", form=form), 400
+        return render_template("upload_tabular.html", form=form), 400
 
     f = form.csv_file.data
     if not f or not f.filename:
         flash("Sube un archivo CSV válido.", "warning")
-        return render_template("modules/tabular/upload_tabular.html", form=form), 400
+        return render_template("upload_tabular.html", form=form), 400
 
     try:
         file_path = _save_uploaded_file(f)
     except ValueError as e:
         flash(str(e), "danger")
-        return render_template("modules/tabular/upload_tabular.html", form=form), 400
+        return render_template("upload_tabular.html", form=form), 400
 
     name = (form.name.data or "").strip()
 
@@ -105,7 +105,7 @@ def upload():
         current_app.logger.exception("Falló la ingesta tabular")
         flash(f"Error al procesar el CSV: {e}", "danger")
         db.session.rollback()
-        return render_template("modules/tabular/upload_tabular.html", form=form), 400
+        return render_template("upload_tabular.html", form=form), 400
 
     if is_resubida and VersioningService is not None:
         try:
@@ -125,7 +125,7 @@ def upload():
 def my_tabular():
     """Listado de tabulares del usuario"""
     items = TabularDataset.query.filter_by(user_id=current_user.id).order_by(TabularDataset.id.desc()).all()
-    return render_template("modules/tabular/list_tabular.html", items=items)
+    return render_template("list_tabular.html", items=items)
 
 
 @tabular_bp.route("/<int:dataset_id>", methods=["GET"])
