@@ -25,6 +25,18 @@ class TabularDataset(BaseDataset):
     def ui_blocks(self):
         return ["common-meta", "table-schema", "sample-rows", "versioning"]
 
+    def get_cleaned_publication_type(self):
+        """Retorna el publication_type formateado"""
+        if not self.ds_meta_data or not self.ds_meta_data.publication_type:
+            return "Unknown"
+        return self.ds_meta_data.publication_type.name.replace("_", " ").title()
+
+    def get_uvlhub_doi(self):
+        """Retorna el DOI de UVLHub"""
+        from app.modules.dataset.services import DataSetService
+
+        return DataSetService().get_uvlhub_doi(self)
+
 
 class TabularMetaData(db.Model):
     """

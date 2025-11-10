@@ -5,12 +5,18 @@ from typing import Mapping, Tuple
 
 
 class TabularDetailRenderer:
-    def render(self, dataset) -> Tuple[str, Mapping]:
-        meta = getattr(dataset, "meta_data", None)
-        # La ruta del template debe existir en tus loaders de Jinja (ver abajo).
+    def render(self, dataset):
+        """
+        Renderiza la vista de detalle usando el template específico de tabular.
+        """
+        meta = dataset.meta_data
+
         return (
-            "modules/tabular/_detail_tabular.html",
-            {"dataset": dataset, "meta": meta},
+            "view_tabular.html",
+            {
+                "dataset": dataset,
+                "meta": meta,
+            },
         )
 
 

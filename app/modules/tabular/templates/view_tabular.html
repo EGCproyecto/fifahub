@@ -1,0 +1,253 @@
+{% extends "base_template.html" %}
+
+{% block title %}{{ dataset.ds_meta_data.title }} - Tabular Dataset{% endblock %}
+
+{% block head_extra %}
+<style>
+    .option-button {
+        display: block;
+        width: 100%;
+        margin-bottom: 5px;
+    }
+    .option-button:last-child {
+        margin-bottom: 0;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<div class="row mb-3">
+    <div class="col-6">
+        <a href="/explore" class="btn btn-primary btn-sm" style="border-radius: 5px;">
+            <i data-feather="search" class="center-button-icon"></i>
+            Explore more datasets
+        </a>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-xl-8 col-lg-12 col-md-12 col-sm-12">
+
+        <!-- CARD PRINCIPAL -->
+        <div class="card">
+            <div class="card-body">
+                <div class="d-flex align-items-center justify-content-between">
+                    <h1><b>{{ dataset.ds_meta_data.title }}</b></h1>
+                    <div>
+                        <span class="badge bg-secondary">{{ dataset.get_cleaned_publication_type() }}</span>
+                        <span class="badge bg-info">CSV</span>
+                    </div>
+                </div>
+                <p class="text-secondary">{{ dataset.created_at.strftime('%B %d, %Y at %I:%M %p') }}</p>
+
+                <!-- ✅ CORRECCIÓN AQUÍ -->
+                {% include 'partials/_common_metadata.html' %}
+
+                <!-- Info específica del CSV -->
+                {% set meta = dataset.meta_data %}
+                {% if meta %}
+                <hr>
+                <div class="row mb-2">
+                    <div class="col-md-4 col-12">
+                        <span class="text-secondary">Format</span>
+                    </div>
+                    <div class="col-md-8 col-12">
+                        <span class="badge bg-info">CSV</span>
+                    </div>
+                </div>
+
+                <div class="row mb-2">
+                    <div class="col-md-4 col-12">
+                        <span class="text-secondary">Dimensions</span>
+                    </div>
+                    <div class="col-md-8 col-12">
+                        <b>{{ meta.n_rows }}</b> rows x <b>{{ meta.n_cols }}</b> columns
+                    </div>
+                </div>
+
+                <div class="row mb-2">
+                    <div class="col-md-4 col-12">
+                        <span class="text-secondary">Encoding</span>
+                    </div>
+                    <div class="col-md-8 col-12">
+                        {{ meta.encoding|default('utf-8') }}
+                    </div>
+                </div>
+
+                <div class="row mb-2">
+                    <div class="col-md-4 col-12">
+                        <span class="text-secondary">Delimiter</span>
+                    </div>
+                    <div class="col-md-8 col-12">
+                        <code>{{ meta.delimiter|default(',') }}</code>
+                    </div>
+                </div>
+
+                <div class="row mb-2">
+                    <div class="col-md-4 col-12">
+                        <span class="text-secondary">Has Header</span>
+                    </div>
+                    <div class="col-md-8 col-12">
+                        <span class="badge bg-{{ 'success' if meta.has_header else 'secondary' }}">
+                            {{ 'Yes' if meta.has_header else 'No' }}
+                        </span>
+                    </div>
+                </div>
+                {% endif %}
+
+            </div>
+
+            <!-- Botón DOI -->
+            {% if dataset.ds_meta_data.dataset_doi %}
+            <div class="card-body" style="padding-top: 0px">
+                <div id="dataset_doi_uvlhub" style="display: none">{{ dataset.get_uvlhub_doi() }}</div>
+                <button type="button" class="btn doi_button btn-sm" onclick="copyText('dataset_doi_uvlhub')">
+                    <span class="button_doi_id">
+                        <i data-feather="clipboard" class="center-button-icon"></i>
+                        <b>DOI</b>
+                    </span>
+                    <span class="doi_text">{{ dataset.get_uvlhub_doi() }}</span>
+                </button>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- ✅ CORRECCIÓN AQUÍ -->
+        {% include 'partials/_version_history.html' %}
+
+        <!-- COLUMN STATISTICS -->
+        {% if meta and meta.columns %}
+        <div class="card mt-3">
+            <div class="card-header">
+                <h5 class="mb-0">Column Statistics</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-striped table-sm">
+                        <thead>
+                            <tr>
+                                <th>Column</th>
+                                <th>Type</th>
+                                <th>Nulls</th>
+                                <th>Unique</th>
+                                <th>Stats</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for col in meta.columns %}
+                            <tr>
+                                <td><code>{{ col.name }}</code></td>
+                                <td><span class="badge bg-info">{{ col.dtype }}</span></td>
+                                <td>
+                                    {{ col.null_count }} 
+                                    ({{ "%.2f"|format((col.null_count / meta.n_rows) * 100) if meta.n_rows > 0 else 0 }}%)
+                                </td>
+                                <td>{{ col.unique_count }}</td>
+                                <td>
+                                    {% if col.stats %}
+                                    <small>
+                                        Min: {{ col.stats.min }}, Max: {{ col.stats.max }}<br>
+                                        Mean: {{ "%.2f"|format(col.stats.mean) }}
+                                    </small>
+                                    {% else %}<span class="text-muted">-</span>{% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- DATA PREVIEW -->
+        {% if meta and meta.sample_rows %}
+        <div class="card mt-3">
+            <div class="card-header d-flex justify-content-between">
+                <h5 class="mb-0">Data Preview</h5>
+                <span class="badge bg-secondary">{{ meta.sample_rows|length }} / {{ meta.n_rows }} rows</span>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive" style="max-height: 400px; overflow: auto;">
+                    <table class="table table-bordered table-sm">
+                        <thead class="table-light" style="position: sticky; top: 0; background-color: #f1f3f5; z-index: 10;">
+                            <tr>
+                                {% for col in meta.columns %}
+                                <th><code>{{ col.name }}</code></th>
+                                {% endfor %}
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for row in meta.sample_rows %}
+                            <tr>
+                                {% for cell in row %}
+                                <td>{{ cell }}</td>
+                                {% endfor %}
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- QUALITY METRICS -->
+        {% if dataset.metrics %}
+        <div class="card mt-3">
+            <div class="card-header">
+                <h5 class="mb-0">Data Quality Metrics</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <span class="text-secondary">Null Ratio:</span>
+                        {% set null_pct = (dataset.metrics.null_ratio * 100) if dataset.metrics.null_ratio else 0 %}
+                        <span class="badge bg-{{ 'danger' if null_pct > 10 else 'success' }}">
+                            {{ "%.2f"|format(null_pct) }}%
+                        </span>
+                    </div>
+                    <div class="col-md-6">
+                        <span class="text-secondary">Avg Cardinality:</span>
+                        {{ "%.2f"|format(dataset.metrics.avg_cardinality) if dataset.metrics.avg_cardinality else 'N/A' }}
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+    </div>
+
+    <!-- Sidebar derecho -->
+    <div class="col-xl-4 col-lg-12 col-md-12 col-sm-12">
+        <div class="card">
+            <div class="card-header">
+                <h5>Options</h5>
+            </div>
+            <div class="list-group list-group-flush">
+                <a href="{{ url_for('dataset.download_dataset', dataset_id=dataset.id) }}" 
+                   class="list-group-item list-group-item-action">
+                    <i data-feather="download"></i> 
+                    Download CSV
+                </a>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+    feather.replace();
+    
+    function copyText(textId) {
+        const text = document.getElementById(textId).innerText;
+        navigator.clipboard.writeText(text).then(() => {
+            alert('DOI copiado al portapapeles');
+        });
+    }
+</script>
+{% endblock %}
