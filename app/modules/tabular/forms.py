@@ -1,6 +1,6 @@
 from flask_wtf import FlaskForm
-from wtforms import BooleanField, IntegerField, StringField, FileField
-from wtforms.validators import DataRequired, Optional, NumberRange, Regexp, ValidationError
+from wtforms import BooleanField, FileField, IntegerField, StringField
+from wtforms.validators import DataRequired, NumberRange, Optional, Regexp, ValidationError
 
 
 class TabularDatasetForm(FlaskForm):

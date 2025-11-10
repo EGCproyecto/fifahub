@@ -1,11 +1,13 @@
 import os
 import uuid
-from flask import current_app, flash, render_template, request, abort
+
+from flask import abort, current_app, flash, render_template, request
 from flask_login import current_user, login_required
 from werkzeug.utils import secure_filename
 
 from app import db
 from app.modules.dataset.models import DSMetaData, PublicationType
+
 from . import tabular_bp
 from .forms import TabularDatasetForm
 from .ingest import TabularIngestor
@@ -122,11 +124,7 @@ def upload():
 @login_required
 def my_tabular():
     """Listado de tabulares del usuario"""
-    items = (
-        TabularDataset.query.filter_by(user_id=current_user.id)
-        .order_by(TabularDataset.id.desc())
-        .all()
-    )
+    items = TabularDataset.query.filter_by(user_id=current_user.id).order_by(TabularDataset.id.desc()).all()
     return render_template("modules/tabular/list_tabular.html", items=items)
 
 
