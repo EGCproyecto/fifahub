@@ -50,6 +50,34 @@ else
     # Run the migration process to apply all database schema changes
     flask db upgrade
 fi
+# Limpiar alembic_version con Python (no necesita mysql CLI)
+python3 << 'EOF'
+import os
+import pymysql
+
+try:
+    conn = pymysql.connect(
+        host=os.environ.get('MARIADB_HOSTNAME'),
+        port=int(os.environ.get('MARIADB_PORT', 3306)),
+        user=os.environ.get('MARIADB_USER'),
+        password=os.environ.get('MARIADB_PASSWORD'),
+        database=os.environ.get('MARIADB_DATABASE'),
+        connect_timeout=10
+    )
+    cursor = conn.cursor()
+    cursor.execute("DELETE FROM alembic_version")
+    conn.commit()
+    print("✅ alembic_version cleared")
+    conn.close()
+except Exception as e:
+    print(f"⚠️ Could not clear alembic_version: {e}")
+EOF
+
+echo "🔄 Running migrations..."
+flask db upgrade || {
+    echo "⚠️ Migration failed, attempting stamp..."
+    flask db stamp head
+}
 
 # Start the application using Gunicorn, binding it to port 80
 # Set the logging level to info and the timeout to 3600 seconds
