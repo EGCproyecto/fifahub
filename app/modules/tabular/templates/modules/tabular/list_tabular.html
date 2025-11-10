@@ -1,0 +1,36 @@
+{% extends "base_template.html" %}
+{% block content %}
+<div class="container mt-4">
+  <h2>My Tabular Datasets</h2>
+  {% if items %}
+  <div class="table-responsive">
+    <table class="table table-sm table-striped align-middle">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Title</th>
+          <th>Rows</th>
+          <th>Cols</th>
+          <th>Updated</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for d in items %}
+        <tr>
+          <td>{{ d.id }}</td>
+          <td>{{ d.ds_meta_data.title if d.ds_meta_data else "-" }}</td>
+          <td>{{ d.tabular_metadata.n_rows if d.tabular_metadata else "-" }}</td>
+          <td>{{ d.tabular_metadata.n_cols if d.tabular_metadata else "-" }}</td>
+          <td>{{ d.updated_at if d.updated_at else "-" }}</td>
+          <td><a class="btn btn-primary btn-sm" href="{{ url_for('tabular.detail', dataset_id=d.id) }}">View</a></td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+    <p class="text-muted">No tienes datasets tabulares aún.</p>
+  {% endif %}
+</div>
+{% endblock %}
