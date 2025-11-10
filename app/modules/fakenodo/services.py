@@ -42,17 +42,40 @@ class FakenodoService(BaseService):
             f"{publication_doi}/dataset{deposition_id}" if publication_doi else f"10.5281/fakenodo.{deposition_id}"
         )
 
-        metadata = self._build_metadata(dataset)
+        # Inline metadata creation
+        ds = dataset.ds_meta_data
+        metadata = {
+            "title": ds.title,
+            "upload_type": "dataset" if ds.publication_type.value == "none" else "publication",
+            "description": ds.description,
+            "file_type": "text/csv",
+            "creators": [
+                {
+                    "name": author.name,
+                    **({"affiliation": author.affiliation} if author.affiliation else {}),
+                    **({"orcid": author.orcid} if author.orcid else {}),
+                }
+                for author in ds.authors
+            ],
+            "keywords": (["fakenodo", "csv"] if not ds.tags else ds.tags.split(", ") + ["fakenodo", "csv"]),
+            "access_right": "open",
+            "license": "CC-BY-4.0",
+        }
+
         deposition = self.repository.create_new_deposition(meta_data=metadata, doi=fake_doi)
-
         logger.info(f"FakenodoService: Created deposition {fake_doi}")
-        return self._build_response(
-            deposition,
-            metadata,
-            "Deposition created successfully.",
-            fake_doi,
-        )
 
+        # Inline response building
+        return {
+            "deposition_id": deposition.id,
+            "doi": fake_doi,
+            "meta_data": metadata,
+            "message": "Deposition created successfully.",
+        }
+
+    # -------------------------------------------------------------
+    # Upload CSV to deposition
+    # -------------------------------------------------------------
     def upload_file(
         self,
         dataset: DataSet,
@@ -105,13 +128,15 @@ class FakenodoService(BaseService):
             "file": file_name,
         }
 
+    # -------------------------------------------------------------
+    # Publish a deposition
+    # -------------------------------------------------------------
     def publish_deposition(self, deposition_id: int) -> dict:
         """Simulate publishing a deposition by reading its CSVs."""
         deposition = self.repository.get_deposition(deposition_id)
         if not deposition:
             raise Exception(f"Deposition {deposition_id} not found.")
 
-        # Retrieve attached files
         files = getattr(deposition, "files", [])
         if not files:
             return {
@@ -131,7 +156,10 @@ class FakenodoService(BaseService):
                 num_rows = len(rows)
                 num_cols = len(rows[0]) if num_rows > 0 else 0
 
-            checksum = self._calculate_checksum(file_path)
+            # Inline checksum calculation
+            with open(file_path, "rb") as file:
+                checksum = hashlib.sha256(file.read()).hexdigest()
+
             csv_summaries.append(
                 {
                     "file_name": file_name,
@@ -154,18 +182,28 @@ class FakenodoService(BaseService):
             "csv_files_info": csv_summaries,
         }
 
+    # -------------------------------------------------------------
+    # Get deposition
+    # -------------------------------------------------------------
     def get_deposition(self, deposition_id: int):
         deposition = self.repository.get_deposition(deposition_id)
         return deposition if deposition else None
 
+    # -------------------------------------------------------------
+    # Get DOI
+    # -------------------------------------------------------------
     def get_doi(self, deposition_id: int) -> str:
         deposition = self.repository.get_deposition(deposition_id)
         if not deposition:
             raise Exception(f"Deposition {deposition_id} not found.")
         if not deposition.doi:
-            deposition.doi = self._generate_doi(deposition_id)
+            # Inline DOI generation
+            deposition.doi = f"10.5281/fakenodo.{deposition_id}"
         return deposition.doi
 
+    # -------------------------------------------------------------
+    # Delete deposition
+    # -------------------------------------------------------------
     def delete_deposition(self, deposition_id: int) -> dict:
         deposition = self.repository.get_deposition(deposition_id)
         if not deposition:
@@ -184,40 +222,3 @@ class FakenodoService(BaseService):
             return {"message": f"Deposition {deposition_id} deleted successfully."}
 
         raise Exception(f"Deposition {deposition_id} not found.")
-
-    # Helper methods
-
-    def _build_metadata(self, dataset: DataSet) -> dict:
-        ds = dataset.ds_meta_data
-        return {
-            "title": ds.title,
-            "upload_type": ("dataset" if ds.publication_type.value == "none" else "publication"),
-            "description": ds.description,
-            "file_type": "text/csv",
-            "creators": [
-                {
-                    "name": author.name,
-                    **({"affiliation": author.affiliation} if author.affiliation else {}),
-                    **({"orcid": author.orcid} if author.orcid else {}),
-                }
-                for author in ds.authors
-            ],
-            "keywords": (["fakenodo", "csv"] if not ds.tags else ds.tags.split(", ") + ["fakenodo", "csv"]),
-            "access_right": "open",
-            "license": "CC-BY-4.0",
-        }
-
-    def _build_response(self, deposition, meta_data, message, doi) -> dict:
-        return {
-            "deposition_id": deposition.id,
-            "doi": doi,
-            "meta_data": meta_data,
-            "message": message,
-        }
-
-    def _calculate_checksum(self, file_path: str) -> str:
-        with open(file_path, "rb") as file:
-            return hashlib.sha256(file.read()).hexdigest()
-
-    def _generate_doi(self, deposition_id: int) -> str:
-        return f"10.5281/fakenodo.{deposition_id}"

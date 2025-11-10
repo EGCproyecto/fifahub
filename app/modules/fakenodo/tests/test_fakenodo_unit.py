@@ -216,9 +216,11 @@ def test_service_get_doi_new(service):
     fake_dep.id = 1
     fake_dep.doi = None
     service.repository.get_deposition.return_value = fake_dep
-    with patch.object(service, "_generate_doi", return_value="10.5281/fakenodo.123"):
-        doi = service.get_doi(1)
-    assert doi == "10.5281/fakenodo.123"
+
+    doi = service.get_doi(1)
+
+    assert doi == "10.5281/fakenodo.1"
+    assert fake_dep.doi == "10.5281/fakenodo.1"
 
 
 def test_service_get_doi_existing(service):
