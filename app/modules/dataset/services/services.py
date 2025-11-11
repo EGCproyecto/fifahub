@@ -10,7 +10,6 @@ from flask import request
 from sqlalchemy import func
 
 from app import db
-from app import db
 from app.modules.auth.services import AuthenticationService
 from app.modules.dataset.models import BaseDataset, DataSet, DSMetaData, DSViewRecord
 from app.modules.dataset.repositories import (
