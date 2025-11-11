@@ -244,6 +244,7 @@ def download_dataset(dataset_id):
     return resp
 
 
+<<<<<<< HEAD
 @dataset_bp.route("/datasets/<int:dataset_id>/stats", methods=["GET"])
 def dataset_stats(dataset_id):
     dataset = dataset_service.get_or_404(dataset_id)
@@ -254,6 +255,24 @@ def dataset_stats(dataset_id):
             "downloads": dataset.download_count or 0,
             "views": views,
         }
+=======
+@dataset_bp.route("/dataset/view/<int:dataset_id>", methods=["GET"])
+@login_required
+def view_dataset(dataset_id: int):
+    dataset = BaseDataset.query.get_or_404(dataset_id)
+
+    if dataset.user_id != current_user.id:
+        abort(403)
+
+    detail_template, detail_ctx = render_detail(dataset.type, dataset)
+    versions = DatasetVersion.query.filter_by(dataset_id=dataset.id).order_by(DatasetVersion.created_at.desc()).all()
+
+    return render_template(
+        "dataset/view_dataset.html",
+        detail_template=detail_template,
+        versions=versions,
+        **detail_ctx,
+>>>>>>> featuretask/WI0-terminar-metadatos
     )
 
 

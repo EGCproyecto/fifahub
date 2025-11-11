@@ -12,7 +12,7 @@ class TabularDetailRenderer:
         meta = dataset.meta_data
 
         return (
-            "view_tabular.html",
+            "modules/tabular/_detail_tabular.html",
             {
                 "dataset": dataset,
                 "meta": meta,
@@ -22,5 +22,7 @@ class TabularDetailRenderer:
 
 class TabularFacetProvider:
     def get_facets(self):
-        # Extiende con facetas reales cuando las tengas.
-        return {"dtype": ["int", "float", "string", "bool"]}
+        return {
+            "dtype": ["int", "float", "string", "bool"],
+            "has_nulls": ["yes", "no"],
+        }

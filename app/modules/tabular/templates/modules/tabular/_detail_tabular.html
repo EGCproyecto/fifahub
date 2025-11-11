@@ -1,0 +1,72 @@
+{% if meta %}
+<div class="card mt-3">
+  <div class="card-header"><b>Tabular preview</b></div>
+  <div class="card-body">
+    <p class="mb-3">
+      Rows: <b>{{ meta.n_rows or 0 }}</b> — Cols: <b>{{ meta.n_cols or 0 }}</b>
+    </p>
+
+    {% if meta.columns %}
+      <div class="table-responsive mb-3">
+        <table class="table table-sm">
+          <thead class="table-light">
+            <tr>
+              <th>Name</th>
+              <th>Type</th>
+              <th>Nulls</th>
+              <th>Unique</th>
+              <th>Stats</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for col in meta.columns %}
+              <tr>
+                <td><code>{{ col.name }}</code></td>
+                <td><span class="badge bg-info">{{ col.dtype }}</span></td>
+                <td>{{ col.null_count }}</td>
+                <td>{{ col.unique_count }}</td>
+                <td>
+                  {% if col.stats %}
+                    <small>
+                      Min: {{ col.stats.min }},
+                      Max: {{ col.stats.max }},
+                      Mean: {{ "%.2f"|format(col.stats.mean) if col.stats.mean is not none else "-" }}
+                    </small>
+                  {% else %}
+                    <span class="text-muted">—</span>
+                  {% endif %}
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% endif %}
+
+    {% if meta.sample_rows %}
+      <div class="table-responsive">
+        <table class="table table-bordered table-sm">
+          <thead class="table-light">
+            <tr>
+              {% if meta.columns %}
+                {% for col in meta.columns %}
+                  <th><code>{{ col.name }}</code></th>
+                {% endfor %}
+              {% endif %}
+            </tr>
+          </thead>
+          <tbody>
+            {% for row in meta.sample_rows %}
+              <tr>
+                {% for cell in row %}
+                  <td>{{ cell }}</td>
+                {% endfor %}
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% endif %}
+  </div>
+</div>
+{% endif %}
