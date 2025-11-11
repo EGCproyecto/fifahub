@@ -244,6 +244,19 @@ def download_dataset(dataset_id):
     return resp
 
 
+@dataset_bp.route("/datasets/<int:dataset_id>/stats", methods=["GET"])
+def dataset_stats(dataset_id):
+    dataset = dataset_service.get_or_404(dataset_id)
+    views = ds_view_record_service.count_for_dataset(dataset.id)
+    return jsonify(
+        {
+            "dataset_id": dataset.id,
+            "downloads": dataset.download_count or 0,
+            "views": views,
+        }
+    )
+
+
 @dataset_bp.route("/doi/<path:doi>/", methods=["GET"])
 def subdomain_index(doi):
 
