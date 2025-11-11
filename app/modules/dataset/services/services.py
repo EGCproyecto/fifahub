@@ -3,10 +3,12 @@ import logging
 import os
 import shutil
 import uuid
+from datetime import datetime
 from typing import Optional
 
 from flask import request
 
+from app import db
 from app.modules.auth.services import AuthenticationService
 from app.modules.dataset.models import DataSet, DSMetaData, DSViewRecord
 from app.modules.dataset.repositories import (
@@ -156,6 +158,29 @@ class AuthorService(BaseService):
 class DSDownloadRecordService(BaseService):
     def __init__(self):
         super().__init__(DSDownloadRecordRepository())
+
+    def record_download(self, dataset: DataSet, user_cookie: str, user_id: Optional[int] = None):
+        try:
+            dataset.download_count = (dataset.download_count or 0) + 1
+            record = self.repository.create(
+                commit=False,
+                user_id=user_id,
+                dataset_id=dataset.id,
+                download_date=datetime.utcnow(),
+                download_cookie=user_cookie,
+            )
+            db.session.commit()
+            logger.info(
+                "Dataset %s download counter updated to %s (cookie=%s)",
+                dataset.id,
+                dataset.download_count,
+                user_cookie,
+            )
+            return record
+        except Exception:
+            db.session.rollback()
+            logger.exception("Transaction failed while recording download for dataset_id=%s", dataset.id)
+            raise
 
 
 class DSMetaDataService(BaseService):

@@ -151,6 +151,26 @@
                     </div>
 
                 </div>
+                <div class="row mb-2">
+                    <div class="col-md-4 col-12">
+                        <span class="text-secondary">
+                            Descargas
+                        </span>
+                    </div>
+                    <div class="col-md-8 col-12">
+                        <div class="d-flex align-items-center">
+                            <i data-feather="download" class="me-2 text-primary"></i>
+                            <span class="text-secondary me-1">Descargas:</span>
+                            <span
+                                id="download-counter"
+                                class="fw-bold"
+                                data-dataset-id="{{ dataset.id }}"
+                            >
+                                {{ dataset.download_count }}
+                            </span>
+                        </div>
+                    </div>
+                </div>
 
             </div>
 
@@ -373,7 +393,12 @@
         
         
     
-        <a href="/dataset/download/{{ dataset.id }}" class="btn btn-primary mt-3" style="border-radius: 5px;">
+        <a
+            href="/dataset/download/{{ dataset.id }}"
+            class="btn btn-primary mt-3"
+            style="border-radius: 5px;"
+            id="download-all-btn"
+        >
             <i data-feather="download" class="center-button-icon"></i>
             Download all ({{ dataset.get_file_total_size_for_human() }})
         </a>
@@ -414,6 +439,7 @@
 <script>
     document.addEventListener('DOMContentLoaded', function () {
         feather.replace();
+        setupDownloadCounter();
     });
 
     var currentFileId;
@@ -538,6 +564,41 @@
         }).catch(err => {
             console.error('Failed to copy text: ', err);
         });
+    }
+
+    function setupDownloadCounter() {
+        const counterEl = document.getElementById("download-counter");
+        if (!counterEl || !window.fetch) {
+            return;
+        }
+
+        const datasetId = counterEl.getAttribute("data-dataset-id");
+        const statsUrl = `/datasets/${datasetId}/stats`;
+
+        const refreshStats = () => {
+            fetch(statsUrl, { headers: { Accept: "application/json" } })
+                .then((response) => (response.ok ? response.json() : null))
+                .then((data) => {
+                    if (data && typeof data.downloads === "number") {
+                        counterEl.textContent = data.downloads;
+                    }
+                })
+                .catch((error) => console.debug("Dataset stats refresh skipped:", error));
+        };
+
+        refreshStats();
+        const downloadBtn = document.getElementById("download-all-btn");
+        if (downloadBtn) {
+            downloadBtn.addEventListener("click", () => {
+                setTimeout(refreshStats, 4000);
+            });
+        }
+        document.addEventListener("visibilitychange", () => {
+            if (!document.hidden) {
+                refreshStats();
+            }
+        });
+        setInterval(refreshStats, 15000);
     }
 </script>
 
