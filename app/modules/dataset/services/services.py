@@ -192,6 +192,9 @@ class DSViewRecordService(BaseService):
 
         return user_cookie
 
+    def count_for_dataset(self, dataset_id: int) -> int:
+        return self.repository.count_for_dataset(dataset_id)
+
 
 class DOIMappingService(BaseService):
     def __init__(self):

@@ -63,6 +63,9 @@ class DSViewRecordRepository(BaseRepository):
             view_cookie=user_cookie,
         )
 
+    def count_for_dataset(self, dataset_id: int) -> int:
+        return self.model.query.filter_by(dataset_id=dataset_id).count()
+
 
 class DataSetRepository(BaseRepository):
     def __init__(self):

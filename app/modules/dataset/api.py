@@ -19,3 +19,21 @@ def init_blueprint_api(bp):
             return data
 
         return jsonify([as_dict(x) for x in items])
+
+    @bp.route("/api/datasets/<int:dataset_id>", methods=["GET"])
+    def dataset_detail(dataset_id):
+        dataset = BaseDataset.query.get_or_404(dataset_id)
+        payload = {
+            "id": dataset.id,
+            "type": dataset.type,
+            "title": dataset.ds_meta_data.title if dataset.ds_meta_data else None,
+            "download_count": dataset.download_count or 0,
+        }
+        if dataset.type == "tabular":
+            payload.update(
+                {
+                    "rows_count": getattr(dataset, "rows_count", None),
+                    "schema": getattr(dataset, "schema_json", None),
+                }
+            )
+        return jsonify(payload)
