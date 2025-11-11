@@ -4,7 +4,6 @@ import os
 import shutil
 import tempfile
 import uuid
-from datetime import datetime, timezone
 from zipfile import ZipFile
 
 from flask import (
@@ -43,6 +42,7 @@ dsmetadata_service = DSMetaDataService()
 zenodo_service = ZenodoService()
 doi_mapping_service = DOIMappingService()
 ds_view_record_service = DSViewRecordService()
+ds_download_record_service = DSDownloadRecordService()
 
 
 @dataset_bp.route("/dataset/upload", methods=["GET", "POST"])
@@ -227,13 +227,19 @@ def download_dataset(dataset_id):
     ).first()
 
     if not existing_record:
-        # Record the download in your database
-        DSDownloadRecordService().create(
-            user_id=current_user.id if current_user.is_authenticated else None,
-            dataset_id=dataset_id,
-            download_date=datetime.now(timezone.utc),
-            download_cookie=user_cookie,
-        )
+        try:
+            ds_download_record_service.record_download(
+                dataset=dataset,
+                user_cookie=user_cookie,
+                user_id=current_user.id if current_user.is_authenticated else None,
+            )
+            logger.info(
+                "Recorded download for dataset_id=%s; new_count=%s",
+                dataset.id,
+                dataset.download_count,
+            )
+        except Exception:
+            logger.exception("Failed to record download for dataset_id=%s", dataset.id)
 
     return resp
 
