@@ -43,6 +43,7 @@ zenodo_service = ZenodoService()
 doi_mapping_service = DOIMappingService()
 ds_view_record_service = DSViewRecordService()
 ds_download_record_service = DSDownloadRecordService()
+ds_download_record_service = DSDownloadRecordService()
 
 
 @dataset_bp.route("/dataset/upload", methods=["GET", "POST"])
