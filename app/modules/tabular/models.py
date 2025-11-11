@@ -1,4 +1,6 @@
 # app/modules/tabular/models.py
+from flask import request
+
 from app import db
 from app.modules.dataset.models import BaseDataset
 
@@ -36,6 +38,38 @@ class TabularDataset(BaseDataset):
         from app.modules.dataset.services import DataSetService
 
         return DataSetService().get_uvlhub_doi(self)
+
+    def to_dict(self):
+        meta = self.meta_data
+        tags = self.ds_meta_data.tags.split(",") if self.ds_meta_data and self.ds_meta_data.tags else []
+        return {
+            "type": "tabular",
+            "dataset_type": "tabular",
+            "dataset_type_label": "CSV",
+            "dataset_badge_class": "bg-info",
+            "title": self.ds_meta_data.title if self.ds_meta_data else "",
+            "id": self.id,
+            "created_at": self.created_at,
+            "created_at_timestamp": int(self.created_at.timestamp()) if self.created_at else None,
+            "description": self.ds_meta_data.description if self.ds_meta_data else "",
+            "authors": [author.to_dict() for author in self.ds_meta_data.authors] if self.ds_meta_data else [],
+            "publication_type": self.get_cleaned_publication_type(),
+            "publication_doi": self.ds_meta_data.publication_doi if self.ds_meta_data else None,
+            "dataset_doi": self.ds_meta_data.dataset_doi if self.ds_meta_data else None,
+            "tags": tags,
+            "url": self.get_uvlhub_doi(),
+            "download": f"{request.host_url.rstrip('/')}/dataset/download/{self.id}",
+            "zenodo": None,
+            "files": [],
+            "files_count": 1,
+            "total_size_in_bytes": None,
+            "total_size_in_human_format": None,
+            "n_rows": meta.n_rows if meta else None,
+            "n_cols": meta.n_cols if meta else None,
+            "encoding": meta.encoding if meta else None,
+            "delimiter": meta.delimiter if meta else None,
+            "has_header": meta.has_header if meta is not None else None,
+        }
 
 
 class TabularMetaData(db.Model):

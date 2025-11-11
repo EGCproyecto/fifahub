@@ -1,7 +1,7 @@
 import os
 import uuid
 
-from flask import abort, current_app, flash, render_template, request
+from flask import abort, current_app, flash, redirect, render_template, request, url_for
 from flask_login import current_user, login_required
 from werkzeug.utils import secure_filename
 
@@ -12,7 +12,6 @@ from . import tabular_bp
 from .forms import TabularDatasetForm
 from .ingest import TabularIngestor
 from .models import TabularDataset
-from .renderers import TabularDetailRenderer
 
 try:
     from ..dataset.services.versioning_service import VersioningService  # type: ignore
@@ -115,9 +114,7 @@ def upload():
 
     db.session.commit()
 
-    renderer = TabularDetailRenderer()
-    template, ctx = renderer.render(dataset)
-    return render_template(template, **ctx), 201
+    return redirect(url_for("dataset.view_dataset", dataset_id=dataset.id))
 
 
 @tabular_bp.route("/my", methods=["GET"])
@@ -135,6 +132,4 @@ def detail(dataset_id: int):
     dataset = TabularDataset.query.filter_by(id=dataset_id, user_id=current_user.id).first()
     if not dataset:
         abort(404)
-    renderer = TabularDetailRenderer()
-    template, ctx = renderer.render(dataset)
-    return render_template(template, **ctx)
+    return redirect(url_for("dataset.view_dataset", dataset_id=dataset.id))

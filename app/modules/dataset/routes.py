@@ -238,6 +238,25 @@ def download_dataset(dataset_id):
     return resp
 
 
+@dataset_bp.route("/dataset/view/<int:dataset_id>", methods=["GET"])
+@login_required
+def view_dataset(dataset_id: int):
+    dataset = BaseDataset.query.get_or_404(dataset_id)
+
+    if dataset.user_id != current_user.id:
+        abort(403)
+
+    detail_template, detail_ctx = render_detail(dataset.type, dataset)
+    versions = DatasetVersion.query.filter_by(dataset_id=dataset.id).order_by(DatasetVersion.created_at.desc()).all()
+
+    return render_template(
+        "dataset/view_dataset.html",
+        detail_template=detail_template,
+        versions=versions,
+        **detail_ctx,
+    )
+
+
 @dataset_bp.route("/doi/<path:doi>/", methods=["GET"])
 def subdomain_index(doi):
 

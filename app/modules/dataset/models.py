@@ -139,6 +139,10 @@ class UVLDataset(BaseDataset):
 
     def to_dict(self):
         return {
+            "type": "uvl",
+            "dataset_type": "uvl",
+            "dataset_type_label": "UVL",
+            "dataset_badge_class": "bg-primary",
             "title": self.ds_meta_data.title,
             "id": self.id,
             "created_at": self.created_at,
