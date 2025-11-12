@@ -111,19 +111,16 @@
                     </div>
                 </div>
                 {% endif %}
-
                 <div class="row mb-2">
                     <div class="col-md-4 col-12">
-                        <span class="text-secondary">Tags</span>
+                        <span class="text-secondary">
+                            Descargas
+                        </span>
                     </div>
                     <div class="col-md-8 col-12">
-                        {% if dataset.ds_meta_data.tags %}
-                            {% for tag in dataset.ds_meta_data.tags.split(',') %}
-                                <span class="badge bg-secondary me-1">{{ tag.strip() }}</span>
-                            {% endfor %}
-                        {% else %}
-                            <span class="text-muted">No tags</span>
-                        {% endif %}
+                        {% for tag in dataset.ds_meta_data.tags.split(',') %}
+                        <span class="badge bg-secondary">{{ tag.strip() }}</span>
+                        {% endfor %}
                     </div>
                 </div>
                 <div class="row mb-2">
@@ -134,11 +131,11 @@
                     </div>
                     <div class="col-md-8 col-12">
                         <div class="d-flex align-items-center">
-                            <i data-feather="download" class="me-2 text-primary"></i>
-                            <span class="text-secondary me-1">Descargas:</span>
+                            <i data-feather="download" class="mr-2 text-primary"></i>
+                            <span class="text-secondary mr-1">Descargas:</span>
                             <span
                                 id="download-counter"
-                                class="fw-bold"
+                                class="font-weight-bold"
                                 data-dataset-id="{{ dataset.id }}"
                             >
                                 {{ dataset.download_count }}
@@ -528,17 +525,20 @@
         };
 
         refreshStats();
+
         const downloadBtn = document.getElementById("download-all-btn");
         if (downloadBtn) {
             downloadBtn.addEventListener("click", () => {
                 setTimeout(refreshStats, 4000);
             });
         }
+
         document.addEventListener("visibilitychange", () => {
             if (!document.hidden) {
                 refreshStats();
             }
         });
+
         setInterval(refreshStats, 15000);
     }
 </script>
