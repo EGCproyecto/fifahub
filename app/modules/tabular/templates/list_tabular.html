@@ -23,7 +23,12 @@
           <td>{{ d.meta_data.n_rows if d.meta_data else "-" }}</td>
           <td>{{ d.meta_data.n_cols if d.meta_data else "-" }}</td>
           <td>{{ d.created_at if d.created_at else "-" }}</td>
-          <td><a class="btn btn-primary btn-sm" href="{{ url_for('dataset.view_dataset', dataset_id=d.id) }}">View</a></td>
+          <td>
+            <a class="btn btn-primary btn-sm"
+               href="{{ url_for('tabular.detail', dataset_id=d.id) }}">
+              View
+            </a>
+          </td>
         </tr>
         {% endfor %}
       </tbody>

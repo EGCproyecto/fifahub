@@ -28,8 +28,6 @@
 
 <div class="row">
     <div class="col-xl-8 col-lg-12 col-md-12 col-sm-12">
-
-        <!-- CARD PRINCIPAL -->
         <div class="card">
             <div class="card-body">
                 <div class="d-flex align-items-center justify-content-between">
@@ -41,10 +39,8 @@
                 </div>
                 <p class="text-secondary">{{ dataset.created_at.strftime('%B %d, %Y at %I:%M %p') }}</p>
 
-                <!-- ✅ CORRECCIÓN AQUÍ -->
                 {% include 'partials/_common_metadata.html' %}
 
-                <!-- Info específica del CSV -->
                 {% set meta = dataset.meta_data %}
                 {% if meta %}
                 <hr>
@@ -95,10 +91,8 @@
                     </div>
                 </div>
                 {% endif %}
-
             </div>
 
-            <!-- Botón DOI -->
             {% if dataset.ds_meta_data.dataset_doi %}
             <div class="card-body" style="padding-top: 0px">
                 <div id="dataset_doi_uvlhub" style="display: none">{{ dataset.get_uvlhub_doi() }}</div>
@@ -113,10 +107,8 @@
             {% endif %}
         </div>
 
-        <!-- ✅ CORRECCIÓN AQUÍ -->
         {% include 'partials/_version_history.html' %}
 
-        <!-- COLUMN STATISTICS -->
         {% if meta and meta.columns %}
         <div class="card mt-3">
             <div class="card-header">
@@ -150,7 +142,9 @@
                                         Min: {{ col.stats.min }}, Max: {{ col.stats.max }}<br>
                                         Mean: {{ "%.2f"|format(col.stats.mean) }}
                                     </small>
-                                    {% else %}<span class="text-muted">-</span>{% endif %}
+                                    {% else %}
+                                    <span class="text-muted">-</span>
+                                    {% endif %}
                                 </td>
                             </tr>
                             {% endfor %}
@@ -161,7 +155,6 @@
         </div>
         {% endif %}
 
-        <!-- DATA PREVIEW -->
         {% if meta and meta.sample_rows %}
         <div class="card mt-3">
             <div class="card-header d-flex justify-content-between">
@@ -193,7 +186,6 @@
         </div>
         {% endif %}
 
-        <!-- QUALITY METRICS -->
         {% if dataset.metrics %}
         <div class="card mt-3">
             <div class="card-header">
@@ -216,10 +208,8 @@
             </div>
         </div>
         {% endif %}
-
     </div>
 
-    <!-- Sidebar derecho -->
     <div class="col-xl-4 col-lg-12 col-md-12 col-sm-12">
         <div class="card">
             <div class="card-header">
@@ -234,7 +224,6 @@
             </div>
         </div>
     </div>
-
 </div>
 
 {% endblock %}

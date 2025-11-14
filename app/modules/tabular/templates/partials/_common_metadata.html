@@ -1,4 +1,3 @@
-<!-- Metadata común -->
 <div class="row mb-4">
     <div class="col-md-4 col-12">
         <span class="text-secondary">Description</span>
@@ -52,18 +51,21 @@
     <div class="col-md-4 col-12">
         <span class="text-secondary">Zenodo record</span>
     </div>
+
     {% if FLASK_ENV == 'production' %}
     <div class="col-md-8 col-12">
         <a href="https://zenodo.org/records/{{ dataset.ds_meta_data.deposition_id }}" target="_blank">
             https://zenodo.org/records/{{ dataset.ds_meta_data.deposition_id }}
         </a>
     </div>
+
     {% elif FLASK_ENV == 'development' %}
     <div class="col-md-8 col-12">
         <a href="https://sandbox.zenodo.org/records/{{ dataset.ds_meta_data.deposition_id }}" target="_blank">
             https://sandbox.zenodo.org/records/{{ dataset.ds_meta_data.deposition_id }}
         </a>
     </div>
+
     {% else %}
     <div class="col-md-8 col-12">
         <a href="https://zenodo.org/records/{{ dataset.ds_meta_data.deposition_id }}" target="_blank">
@@ -74,13 +76,14 @@
 </div>
 {% endif %}
 
-{% if dataset.ds_meta_data.tags %}
+{% set tags = dataset.ds_meta_data.tags or '' %}
+{% if tags %}
 <div class="row mb-2">
     <div class="col-md-4 col-12">
         <span class="text-secondary">Tags</span>
     </div>
     <div class="col-md-8 col-12">
-        {% for tag in dataset.ds_meta_data.tags.split(',') %}
+        {% for tag in tags.split(',') %}
         <span class="badge bg-secondary">{{ tag.strip() }}</span>
         {% endfor %}
     </div>
