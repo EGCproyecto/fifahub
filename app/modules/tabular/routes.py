@@ -15,7 +15,7 @@ from .models import TabularDataset
 
 try:
     from ..dataset.services.versioning_service import VersioningService  # type: ignore
-except Exception:  # pragma: no cover
+except Exception:
     VersioningService = None  # type: ignore
 
 
@@ -44,7 +44,6 @@ def _save_uploaded_file(file_storage) -> str:
 @tabular_bp.route("/upload", methods=["GET", "POST"])
 @login_required
 def upload():
-    """Subida e ingesta de CSV tabular"""
     form = TabularDatasetForm()
 
     if request.method == "GET":
@@ -114,13 +113,12 @@ def upload():
 
     db.session.commit()
 
-    return redirect(url_for("dataset.view_dataset", dataset_id=dataset.id))
+    return redirect(url_for("tabular.detail", dataset_id=dataset.id))
 
 
 @tabular_bp.route("/my", methods=["GET"])
 @login_required
 def my_tabular():
-    """Listado de tabulares del usuario"""
     items = TabularDataset.query.filter_by(user_id=current_user.id).order_by(TabularDataset.id.desc()).all()
     return render_template("list_tabular.html", items=items)
 
@@ -128,8 +126,7 @@ def my_tabular():
 @tabular_bp.route("/<int:dataset_id>", methods=["GET"])
 @login_required
 def detail(dataset_id: int):
-    """Vista de detalle de un tabular"""
     dataset = TabularDataset.query.filter_by(id=dataset_id, user_id=current_user.id).first()
     if not dataset:
         abort(404)
-    return redirect(url_for("dataset.view_dataset", dataset_id=dataset.id))
+    return render_template("view_tabular.html", dataset=dataset)
