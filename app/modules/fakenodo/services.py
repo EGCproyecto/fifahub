@@ -2,6 +2,7 @@ import csv
 import hashlib
 import logging
 import os
+import uuid
 
 from dotenv import load_dotenv
 from flask_login import current_user
@@ -37,7 +38,7 @@ class FakenodoService(BaseService):
     # -------------------------------------------------------------
     def create_new_deposition(self, dataset: DataSet, publication_doi: str = None) -> dict:
         """Create a new deposition in Fakenodo."""
-        deposition_id = dataset.id
+        deposition_id = uuid.uuid4()
         fake_doi = (
             f"{publication_doi}/dataset{deposition_id}" if publication_doi else f"10.5281/fakenodo.{deposition_id}"
         )
