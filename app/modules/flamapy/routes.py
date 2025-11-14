@@ -4,11 +4,7 @@ import tempfile
 
 from antlr4 import CommonTokenStream, FileStream
 from antlr4.error.ErrorListener import ErrorListener
-from flamapy.metamodels.fm_metamodel.transformations import (
-    GlencoeWriter,
-    SPLOTWriter,
-    UVLReader,
-)
+from flamapy.metamodels.fm_metamodel.transformations import GlencoeWriter, SPLOTWriter, UVLReader
 from flamapy.metamodels.pysat_metamodel.transformations import DimacsWriter, FmToPysat
 from flask import jsonify, send_file
 from uvl.UVLCustomLexer import UVLCustomLexer

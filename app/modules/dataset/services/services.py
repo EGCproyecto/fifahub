@@ -20,10 +20,7 @@ from app.modules.dataset.repositories import (
     DSMetaDataRepository,
     DSViewRecordRepository,
 )
-from app.modules.featuremodel.repositories import (
-    FeatureModelRepository,
-    FMMetaDataRepository,
-)
+from app.modules.featuremodel.repositories import FeatureModelRepository, FMMetaDataRepository
 from app.modules.hubfile.repositories import (
     HubfileDownloadRecordRepository,
     HubfileRepository,

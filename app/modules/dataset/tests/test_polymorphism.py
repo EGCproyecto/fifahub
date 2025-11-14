@@ -1,11 +1,6 @@
 from app import create_app, db
 from app.modules.auth.models import User
-from app.modules.dataset.models import (
-    BaseDataset,
-    DSMetaData,
-    PublicationType,
-    UVLDataset,
-)
+from app.modules.dataset.models import BaseDataset, DSMetaData, PublicationType, UVLDataset
 from app.modules.tabular.models import TabularDataset
 
 

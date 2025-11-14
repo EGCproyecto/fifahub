@@ -11,7 +11,7 @@ dataset_repo = DataSetRepository()
 
 
 @bp.route("/depositions", methods=["POST"])
-@login_required
+# @login_required
 def create_deposition():
     data = request.get_json() or {}
     ds_id = data.get("dataset_id")
@@ -29,7 +29,7 @@ def create_deposition():
 
 
 @bp.route("/depositions/<int:dep_id>/upload", methods=["POST"])
-@login_required
+# @login_required
 def upload_file(dep_id: int):
     data = request.get_json() or {}
     ds_id = data.get("dataset_id")
@@ -44,14 +44,14 @@ def upload_file(dep_id: int):
 
 
 @bp.route("/depositions/<int:dep_id>/publish", methods=["POST"])
-@login_required
+# @login_required
 def publish_deposition(dep_id: int):
     resp = fakenodo_service.publish_deposition(dep_id)
     return jsonify(resp), 200
 
 
 @bp.route("/depositions/<int:dep_id>", methods=["DELETE"])
-@login_required
+# @login_required
 def delete_deposition(dep_id: int):
     resp = fakenodo_service.delete_deposition(dep_id)
     return jsonify(resp), 200
