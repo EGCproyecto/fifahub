@@ -1,10 +1,10 @@
 <div style="text-align: center;">
-  <img src="https://github.com/EGCproyecto/fifahub/blob/e088df0bfbb1c1208bf134426631f2f107392aa8/app/static/img/logos/logo-fifahub-definitivo.png" alt="Logo">
+  <img src="/home/practica/fifahub/fifahub/app/static/img/logos/fifa-hub.svg" alt="Logo" width="180">
 </div>
 
-# fifahub
+# Fifahub
 
-Repository for feature models, datasets with Fakenodo integrated.
+Fifahub is a repository for feature models, datasets with Fakenodo integrated.
 
 # WI-fakenodo - Fakenodo service implementation
 
@@ -17,8 +17,7 @@ Fakenodo enables:
 
 - Creation of dataset depositions  
 - File upload 
-- Automatic DOI generation using UUID4 
-- Complete CRUD lifecycle  
+- Automatic DOI generation using UUID4
 - Integration with the fifahub dataset metadata model  
 
 It is designed for local development, CI/CD, and testing workflows.
@@ -41,16 +40,52 @@ Each deposition is represented in the `Fakenodo` table:
 The DOI format is: 10.5281/fakenodo.<uuid4>
 This guarantees uniqueness even under extreme concurrency or Locust load tests.
 
-# Fakenodo API Endpoints
+## Fakenodo API Endpoints
 
-## 1. Create a Deposition
+### 1. Create a Deposition
 **POST** `/fakenodo/depositions`
-
 Creates a new deposition tied to an existing dataset.
 The responses are: 201 if created, 400 for bad request and 404 if not found.
 
+### 2. Upload a file to a deposition
+**POST** `/fakenodo/depositions/<dep_id>/upload`
+Used typically after creating a deposition to upload a file.
+The responses are: 200 ok and 404 if not found.
 
-## WI-105 - Download counter
+### 3. Publish a deposition
+**POST** `/fakenodo/depositions/<dep_id>/publish`
+Changes a deposition from draft to published, making it immutable.
+The responses are: 200 ok and 404 if not found.
+
+### 4. Delete Deposition
+**DELETE** `/fakenodo/depositions/<dep_id>`
+Deletes a deposition and its metadata.
+The responses are: 200 ok and 404 if not found.
+
+## Internal workflow
+The Fakenodo module follows a clean multi-layer architecture:
+
+Route (HTTP layer) → Service (logic) → Repository (DB access) → Model
+
+### Creation flow
+
+1. Route Layer
+The client sends a `POST /fakenodo/depositions` request containing a `dataset_id`.
+The route validates the input, retrieves the dataset using the `DataSetRepository`, and then forwards the request to the `FakenodoService`.
+
+2. Service Layer
+The `create_new_deposition()` method generates a unique DOI using a UUID, constructs the deposition metadata based on the dataset fields, and prepares the data needed, DOI and metadata, to create the deposition. Once everything is ready, it calls the repository.
+
+3. Repository Layer
+The repository creates a new `Fakenodo` object with the metadata, DOI, and the `draft` default status.
+It adds this object to the SQLAlchemy session, commits to the database, and returns the created deposition.
+
+4. Model Layer
+The `Fakenodo` model defines the database schema for depositions, including the fields `id`, `meta_data`, `status`, and `doi`.
+
+## Testing
+
+# WI-105 - Download counter
 
 - `data_set.download_count` contabiliza cada descarga registrada desde `/dataset/download/<id>`, visible en la ficha del dataset y en la API (`/api/datasets/<id>` y `/datasets/<id>/stats`).
 - Suite de pruebas: `source venv/bin/activate && python -m rosemary test dataset -k download` valida el servicio y el endpoint.
