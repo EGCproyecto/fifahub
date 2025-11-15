@@ -1,5 +1,5 @@
 <div style="text-align: center;">
-  <img src="/home/practica/fifahub/fifahub/app/static/img/logos/fifa-hub.svg" alt="Logo" width="180">
+  <img src="https://github.com/EGCproyecto/fifahub/blob/8612385a9c809cdbd583ba2a7941e2be5e6f3541/app/static/img/logos/fifa-hub.svg" alt="Logo" width="180">
 </div>
 
 # Fifahub
@@ -84,6 +84,14 @@ It adds this object to the SQLAlchemy session, commits to the database, and retu
 The `Fakenodo` model defines the database schema for depositions, including the fields `id`, `meta_data`, `status`, and `doi`.
 
 ## Testing
+
+The Fakenodo module supports both unit testing and load testing with Locust. These tests are designed to validate functionality, API behavior and performance.
+
+To run all fakenodo unit tests: 
+- `rosemary test fakenodo`
+To run Locust load testing: 
+- `locust -f path/locustfile.py`
+- Then open `http://localhost:8089` and start the load testing.
 
 # WI-105 - Download counter
 
