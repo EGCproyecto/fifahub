@@ -1,5 +1,5 @@
 <div style="text-align: center;">
-  <img src="https://github.com/EGCproyecto/fifahub/blob/8612385a9c809cdbd583ba2a7941e2be5e6f3541/app/static/img/logos/fifa-hub.svg" alt="Logo" width="180">
+  <img src="https://github.com/EGCproyecto/fifahub/blob/8612385a9c809cdbd583ba2a7941e2be5e6f3541/app/static/img/logos/fifa-hub.svg" alt="Logo" width="200">
 </div>
 
 # Fifahub
@@ -77,11 +77,11 @@ The route validates the input, retrieves the dataset using the `DataSetRepositor
 The `create_new_deposition()` method generates a unique DOI using a UUID, constructs the deposition metadata based on the dataset fields, and prepares the data needed, DOI and metadata, to create the deposition. Once everything is ready, it calls the repository.
 
 3. Repository Layer
-The repository creates a new `Fakenodo` object with the metadata, DOI, and the `draft` default status.
+The repository creates a new Fakenodo object with the metadata, DOI, and the `draft` default status.
 It adds this object to the SQLAlchemy session, commits to the database, and returns the created deposition.
 
 4. Model Layer
-The `Fakenodo` model defines the database schema for depositions, including the fields `id`, `meta_data`, `status`, and `doi`.
+The Fakenodo model defines the database schema for depositions, including the fields `id`, `meta_data`, `status`, and `doi`.
 
 ## Testing
 
@@ -89,6 +89,7 @@ The Fakenodo module supports both unit testing and load testing with Locust. The
 
 To run all fakenodo unit tests: 
 - `rosemary test fakenodo`
+
 To run Locust load testing: 
 - `locust -f path/locustfile.py`
 - Then open `http://localhost:8089` and start the load testing.
