@@ -26,7 +26,7 @@ repos:
 
       - id: pytest-no-mariadb
         name: pytest (no MariaDB)
-        entry: pytest -m "not requires_db"
+        entry: pytest --ignore-glob "*selenium*" -m "not requires_db"
         language: system
         pass_filenames: false
         stages: [push]
