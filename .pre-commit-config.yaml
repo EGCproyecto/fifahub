@@ -1,0 +1,32 @@
+minimum_pre_commit_version: "3.8.0"
+default_language_version:
+  python: python3.12
+
+repos:
+  - repo: https://github.com/compilerla/conventional-pre-commit
+    rev: v3.5.0
+    hooks:
+      - id: conventional-pre-commit
+        stages: [commit-msg]
+
+  - repo: local
+    hooks:
+      - id: black-check
+        name: black (pyproject settings)
+        entry: black --check --diff
+        language: system
+        types_or: [python, pyi]
+        require_serial: true
+
+      - id: isort-check
+        name: isort (imports)
+        entry: isort --profile black --line-length 120 --check-only
+        language: system
+        types_or: [python, pyi]
+
+      - id: pytest-no-mariadb
+        name: pytest (no MariaDB)
+        entry: pytest -m "not requires_db"
+        language: system
+        pass_filenames: false
+        stages: [push]

@@ -21,8 +21,9 @@ class FakenodoRepository:
             Fakenodo: The newly created database object.
         """
         if meta_data is None:
-            meta_data = {}
 
+            meta_data = {}
+        # Testing hooks here dont mind this message
         deposition = Fakenodo(meta_data=meta_data, doi=doi)
         db.session.add(deposition)
         db.session.commit()
