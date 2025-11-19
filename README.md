@@ -6,6 +6,66 @@
 
 Fifahub is a repository for feature models, datasets with Fakenodo integrated.
 
+# Containerized deployment
+
+The repository now ships with a production-ready `Dockerfile` and a top-level `docker-compose.yml` stack that provisions the Flask app together with MariaDB.
+
+## 1. Configure the environment
+
+1. Install Docker Engine 24+ and Docker Compose v2.
+2. Copy one of the provided samples and tailor the values:
+   - Local: `cp .env.docker.example .env`
+   - Staging/Production: `cp .env.docker.production.example .env`
+3. Set the `MARIADB_*` secrets to match your database of choice and adjust `APP_PORT` if you need to expose the API on a port other than 5000. The Compose file automatically loads the `.env` file for both services.
+
+## 2. Build and run the API image
+
+```bash
+docker build -t fifahub:latest .
+```
+
+The resulting image expects the same `.env` file:
+
+```bash
+# Optional: boot the bundled database first
+docker compose up -d db
+
+docker run --rm \
+  --env-file .env \
+  --network=fifahub_default \
+  -p "${APP_PORT:-5000}:5000" \
+  fifahub:latest
+```
+
+The bundled entrypoint waits for MariaDB, applies Alembic migrations, and starts Gunicorn.
+
+## 3. Orchestrate the full stack with Docker Compose
+
+```bash
+# Build images (only needed the first time or after changing dependencies)
+docker compose --env-file .env build
+
+# Start every service
+docker compose --env-file .env up -d
+
+# Stream logs
+docker compose logs -f app
+```
+
+- `app` exposes `APP_PORT` on the host and bind-mounts `./uploads` so user assets persist outside the container.
+- `db` stores its files in the named `mariadb_data` volume. Run `docker compose down -v` to reset it.
+- Update code or dependencies and rebuild with `docker compose up -d --build`.
+- If you already run MariaDB on your host, change `DB_PORT_HOST` in `.env` (for example `3307`) so the Compose database binds to a free port while the containers keep talking over `MARIADB_PORT=3306`.
+
+## Deployment recipes
+
+1. **Local development** – Use `.env.docker.example`, keep `APP_PORT=5000`, and run `docker compose up -d` to get Flask+MariaDB locally.
+2. **Server/Staging** – Base `.env` on `.env.docker.production.example`, supply domains/secrets, then either:
+   - Build locally and push the `fifahub:latest` image to your registry, or
+   - Build remotely: `docker build -t registry.example.com/fifahub:$(git rev-parse --short HEAD) .`
+
+   Once the image is available on the server, run `docker compose --env-file .env up -d` (or target specific services such as `app`). The entrypoint keeps migrations in sync, so deployments are idempotent.
+
 # WI-fakenodo - Fakenodo service implementation
 
 The **Fakenodo** module is a lightweight internal service emulating Zenodo for development and testing.  

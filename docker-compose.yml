@@ -1,0 +1,35 @@
+name: fifahub
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    env_file:
+      - .env
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "${APP_PORT:-5000}:5000"
+    volumes:
+      - ./uploads:/app/uploads
+
+  db:
+    image: mariadb:11.4
+    restart: unless-stopped
+    env_file:
+      - .env
+    ports:
+      - "${DB_PORT_HOST:-3306}:3306"
+    volumes:
+      - mariadb_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mariadb-admin", "ping", "-h", "localhost"]
+      interval: 10s
+      retries: 5
+      start_period: 20s
+      timeout: 5s
+
+volumes:
+  mariadb_data:
