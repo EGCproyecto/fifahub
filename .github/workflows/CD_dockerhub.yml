@@ -31,9 +31,9 @@ jobs:
       - name: Build and push Docker image
         run: |
           TAG=${{ github.event.release.tag_name }}
-          IMAGE=${{ secrets.DOCKER_USER }}/uvlhub
+          IMAGE=${{ secrets.DOCKER_USER }}/fifahub
 
-          docker build --build-arg VERSION_TAG=$TAG -t $IMAGE:$TAG -f docker/images/Dockerfile.prod .
+          docker build --build-arg VERSION_TAG=$TAG -t $IMAGE:$TAG -f Dockerfile .
           docker push $IMAGE:$TAG
 
           docker tag $IMAGE:$TAG $IMAGE:latest
