@@ -257,7 +257,7 @@ jobs:
           docker build \
             --build-arg VERSION_TAG="$TAG" \
             -t "$IMAGE:$TAG" \
-            -f docker/images/Dockerfile.prod \
+            -f Dockerfile \
             .
           docker push "$IMAGE:$TAG"
           docker tag "$IMAGE:$TAG" "$IMAGE:latest"
