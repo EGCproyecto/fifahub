@@ -123,13 +123,4 @@ jobs:
       github.ref == 'refs/heads/trunk'
     steps:
       - name: Trigger staging webhook
-        env:
-          WEBHOOK_DOMAIN: ${{ secrets.RENDER_STAGING_DOMAIN }}
-          WEBHOOK_TOKEN:  ${{ secrets.RENDER_STAGING_TOKEN }}
-        run: |
-          set -e
-          curl -sS -X POST \
-            "https://${WEBHOOK_DOMAIN}/webhook/deploy" \
-            -H "Authorization: Bearer ${WEBHOOK_TOKEN}" \
-            -H "Content-Type: application/json" \
-            -d "{\"env\":\"staging\",\"repo\":\"${GITHUB_REPOSITORY}\",\"commit\":\"${GITHUB_SHA}\",\"ref\":\"${GITHUB_REF}\"}"
+        run: curl "${{ secrets.RENDER_STAGING_DEPLOY_HOOK_URL }}"

@@ -218,16 +218,4 @@ jobs:
     if: needs.dockerhub_publish.result == 'success'
     steps:
       - name: Trigger production webhook
-        env:
-          WEBHOOK_DOMAIN: ${{ secrets.RENDER_PROD_DOMAIN }}
-          WEBHOOK_TOKEN:  ${{ secrets.RENDER_PROD_TOKEN }}
-          TAG: ${{ needs.release_automation.outputs.new_version }}
-        run: |
-          set -e
-          echo "Deploying tag: $TAG"
-
-          curl -sS -X POST \
-            "https://${WEBHOOK_DOMAIN}/webhook/deploy" \
-            -H "Authorization: Bearer ${WEBHOOK_TOKEN}" \
-            -H "Content-Type: application/json" \
-            -d "{\"env\":\"production\",\"repo\":\"${GITHUB_REPOSITORY}\",\"tag\":\"${TAG}\"}"
+        run: curl "${{ secrets.RENDER_PROD_DEPLOY_HOOK_URL }}"
