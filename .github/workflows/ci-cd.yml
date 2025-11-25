@@ -10,8 +10,6 @@ on:
     branches:
       - trunk
       - main
-  release:
-    types: [published]
   workflow_dispatch:
 
 concurrency:
@@ -45,7 +43,7 @@ jobs:
         uses: webiny/action-conventional-commits@v1.3.0
 
   # --------------------------------------------------------------------------
-  # 1) Estilo y formato (Black + isort) — siempre en push/PR
+  # 1) Estilo y formato (Black + isort)
   # --------------------------------------------------------------------------
   style:
     name: Style (black/isort)
@@ -129,7 +127,12 @@ jobs:
     name: Deploy to Render (staging)
     runs-on: ubuntu-24.04
     needs: [pytest]
-    if: ${{ needs.pytest.result == 'success' && github.event_name == 'push' && github.ref == 'refs/heads/trunk' }}
+    if: >
+      ${{
+        needs.pytest.result == 'success' &&
+        github.event_name == 'push' &&
+        github.ref == 'refs/heads/trunk'
+      }}
     steps:
       - name: Trigger staging webhook
         env:
@@ -238,9 +241,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   # --------------------------------------------------------------------------
-  # 5) Docker Hub (build & push)
-  #    - cuando se publica la release (evento release)
-  #    - o cuando hay push a main con tests OK y release calculada
+  # 5) Docker Hub (build & push) — solo en push a main
   # --------------------------------------------------------------------------
   dockerhub_publish:
     name: Docker Hub Publish
@@ -248,16 +249,10 @@ jobs:
     needs: [pytest, release_automation]
     if: >
       ${{
-        (
-          github.event_name == 'release' &&
-          github.event.action == 'published'
-        ) ||
-        (
-          github.event_name == 'push' &&
-          github.ref == 'refs/heads/main' &&
-          needs.pytest.result == 'success' &&
-          needs.release_automation.outputs.skip != 'true'
-        )
+        github.event_name == 'push' &&
+        github.ref == 'refs/heads/main' &&
+        needs.pytest.result == 'success' &&
+        needs.release_automation.outputs.skip != 'true'
       }}
     steps:
       - uses: actions/checkout@v4
@@ -270,11 +265,9 @@ jobs:
 
       - name: Build & Push
         env:
-          TAG_FROM_RELEASE: ${{ github.event.release.tag_name }}
-          TAG_FROM_PUSH: ${{ needs.release_automation.outputs.new_version }}
+          TAG: ${{ needs.release_automation.outputs.new_version }}
           IMAGE: ${{ secrets.DOCKER_USER }}/fifahub
         run: |
-          TAG="${TAG_FROM_RELEASE:-$TAG_FROM_PUSH}"
           echo "Using tag: $TAG"
 
           docker build \
@@ -288,23 +281,26 @@ jobs:
           docker push "$IMAGE:latest"
 
   # --------------------------------------------------------------------------
-  # 6) Deploy PRODUCCIÓN (Render) tras publicar imagen
+  # 6) Deploy PRODUCCIÓN (Render) tras publicar imagen — solo en main
   # --------------------------------------------------------------------------
   deploy_prod_render:
     name: Deploy to Render (production)
     runs-on: ubuntu-24.04
     needs: [dockerhub_publish, release_automation]
-    if: ${{ needs.dockerhub_publish.result == 'success' }}
+    if: >
+      ${{
+        github.event_name == 'push' &&
+        github.ref == 'refs/heads/main' &&
+        needs.dockerhub_publish.result == 'success'
+      }}
     steps:
       - name: Trigger production webhook
         env:
           WEBHOOK_DOMAIN: ${{ secrets.RENDER_PROD_DOMAIN }}
           WEBHOOK_TOKEN:  ${{ secrets.RENDER_PROD_TOKEN }}
-          TAG_FROM_RELEASE: ${{ github.event.release.tag_name }}
-          TAG_FROM_PUSH: ${{ needs.release_automation.outputs.new_version }}
+          TAG: ${{ needs.release_automation.outputs.new_version }}
         run: |
           set -e
-          TAG="${TAG_FROM_RELEASE:-$TAG_FROM_PUSH}"
           echo "Deploying tag: $TAG"
 
           curl -sS -X POST \
