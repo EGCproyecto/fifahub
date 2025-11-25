@@ -266,20 +266,25 @@ jobs:
   # --------------------------------------------------------------------------
   # 6) Deploy PRODUCCIÓN (Render) tras publicar imagen
   # --------------------------------------------------------------------------
-  deploy_prod_render:
+    deploy_prod_render:
     name: Deploy to Render (production)
     runs-on: ubuntu-24.04
-    needs: [dockerhub_publish]
+    needs: [pytest, release_automation, dockerhub_publish]
+    if: ${{ needs.dockerhub_publish.result == 'success' }}
     steps:
       - name: Trigger production webhook
         env:
           WEBHOOK_DOMAIN: ${{ secrets.RENDER_PROD_DOMAIN }}
           WEBHOOK_TOKEN:  ${{ secrets.RENDER_PROD_TOKEN }}
+          TAG_FROM_RELEASE: ${{ github.event.release.tag_name }}
+          TAG_FROM_PUSH: ${{ needs.release_automation.outputs.new_version }}
         run: |
           set -e
+          TAG="${TAG_FROM_RELEASE:-$TAG_FROM_PUSH}"
+          echo "Deploying tag: $TAG"
+
           curl -sS -X POST \
             "https://${WEBHOOK_DOMAIN}/webhook/deploy" \
             -H "Authorization: Bearer ${WEBHOOK_TOKEN}" \
             -H "Content-Type: application/json" \
-            -d "{\"env\":\"production\",\"repo\":\"${GITHUB_REPOSITORY}\",\"tag\":\"${{ github.event.release.tag_name }}\"}"
-
+            -d "{\"env\":\"production\",\"repo\":\"${GITHUB_REPOSITORY}\",\"tag\":\"${TAG}\"}"
