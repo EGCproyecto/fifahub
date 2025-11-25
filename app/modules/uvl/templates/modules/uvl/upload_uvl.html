@@ -1,0 +1,20 @@
+{% extends "base_template.html" %}
+
+{% block content %}
+<div class="container mt-4">
+  <h2>Upload UVL dataset</h2>
+  <form method="POST">
+    {{ form.hidden_tag() }}
+
+    <div class="mb-3">
+      <label class="form-label" for="{{ form.name.id }}">{{ form.name.label }}</label>
+      {{ form.name(class="form-control", placeholder="My UVL dataset") }}
+      {% for error in form.name.errors %}
+        <div class="text-danger small">{{ error }}</div>
+      {% endfor %}
+    </div>
+
+    <button type="submit" class="btn btn-primary">Create dataset</button>
+  </form>
+</div>
+{% endblock %}

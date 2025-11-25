@@ -1,0 +1,21 @@
+<div class="card mt-3">
+  <div class="card-header"><b>UVL models</b></div>
+  <div class="card-body p-0">
+    {% if dataset.feature_models and dataset.feature_models|length %}
+      <ul class="list-group list-group-flush">
+        {% for feature_model in dataset.feature_models %}
+          {% for file in feature_model.files %}
+            <li class="list-group-item d-flex justify-content-between">
+              <span>{{ file.name }}</span>
+              <small class="text-muted">{{ file.get_formatted_size() if file.get_formatted_size else file.size or "" }}</small>
+            </li>
+          {% endfor %}
+        {% endfor %}
+      </ul>
+    {% else %}
+      <div class="p-3">
+        <em>No UVL files.</em>
+      </div>
+    {% endif %}
+  </div>
+</div>

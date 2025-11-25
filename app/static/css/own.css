@@ -43,7 +43,7 @@
 
 .center-button-icon {
     vertical-align: middle;
-    margin-top: -2px
+    margin-top: -2px;
 }
 
 .card-header-slim {
@@ -51,38 +51,121 @@
 }
 
 .card-body-slim {
-    padding-top: 0px
+    padding-top: 0px;
 }
 
-.card-dark {
-    background-color: #2B3947 !important;
-    color: #ffffff;
+.sidebar {
+    background: linear-gradient(180deg, #2B2B2B 0%, #1A1A1A 100%) !important;
+    background-color: #1A1A1A !important;
+    color: #EEE !important;
 }
 
-.card-header-dark {
-    background: inherit;
-    color: inherit !important;
+.sidebar-content {
+    background: linear-gradient(180deg, #2B2B2B 0%, #1A1A1A 100%) !important;
+    background-color: #1A1A1A !important;
 }
 
-.card-welcome{
-    background: #F68017 radial-gradient(circle at center left, rgba(255, 255, 255, 0), rgba(255, 255, 255, 0.5));
-    color: #ffffff;
+.sidebar .sidebar-item a,
+.sidebar .sidebar-link {
+    color: #CCCCCC !important;
 }
 
-.card-note{
-    background: #1ab7ea radial-gradient(circle at center right, rgba(255, 255, 255, 0), rgba(255, 255, 255, 0.5));
-    color: #ffffff;
+.sidebar .sidebar-item.active > a {
+    background: linear-gradient(90deg, #F7C325 0%, #D9A91E 100%) !important;
+    color: #1F1F1F !important;
+    font-weight: 600;
 }
 
-.card-header-welcome {
-    background: inherit;
-    color: inherit !important;
+.sidebar .sidebar-header {
+    color: #F7C325 !important;
+}
+
+.sidebar-brand img {
+    filter: brightness(1.1);
+}
+
+.navbar-bg {
+    background-color: #FFFFFF !important;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+}
+
+#search-query {
+    background-color: #F4F4F4;
+    border: 1px solid #DDD !important;
+}
+
+#search-query::placeholder {
+    color: #999;
+}
+
+.card {
+    border: none !important;
+    border-radius: 12px !important;
+    background-color: #FFFFFF !important;
+    box-shadow: 0 3px 6px rgba(0,0,0,0.08) !important;
+    transition: transform 0.1s ease;
+}
+
+.card:hover {
+    transform: scale(1.01);
+}
+
+.card-title,
+h1, h2, h3, h4 {
+    color: #1F1F1F !important;
+}
+
+.btn-primary {
+    background-color: #D9A91E !important;
+    border-color: #D9A91E !important;
+    color: #1F1F1F !important;
+    font-weight: bold;
+}
+
+.btn-primary:hover {
+    background-color: #C99712 !important;
+    border-color: #C99712 !important;
+}
+
+.btn-outline-primary {
+    color: #D9A91E !important;
+    border-color: #D9A91E !important;
+}
+
+.btn-outline-primary:hover {
+    background-color: #D9A91E !important;
+    color: #1F1F1F !important;
+}
+
+.btn-outline-primary.btn-sm {
+    border-width: 2px !important;
+    background-color: #FFF8E1;
+}
+
+.btn-outline-primary.btn-sm:hover {
+    background-color: #F7C325 !important;
+    color: #1F1F1F !important;
+}
+
+.badge {
+    background-color: #1F1F1F !important;
+    border-radius: 8px !important;
+}
+
+.card-welcome {
+    background: #F7C325 radial-gradient(circle at center left, rgba(255,255,255,0), rgba(255,255,255,0.5));
+    color: #1F1F1F;
+}
+
+.card-note {
+    background: #1F1F1F radial-gradient(circle at center right, rgba(255,255,255,0), rgba(255,255,255,0.5));
+    color: white;
 }
 
 .card-title-light {
     margin-left: 1.25rem;
     margin-top: 1.25rem;
-    color: white;
+    color: #1F1F1F;
     font-size: 17px;
 }
 
@@ -93,23 +176,25 @@
     font-size: 35px;
 }
 
-.custom-card-body {
-    height: 150px;
+.card-dark {
+    background-color: #FFFFFF !important;
+    color: #1F1F1F;
+    border: 1px solid #DDD !important;
 }
 
-.custom-img {
-    padding: 0px 20px;
-    max-height: 200px;
-    min-height: 200px;
+.card-dark .card-title-light {
+    color: #1F1F1F !important;
 }
 
-.stats-color {
-    color: #009688; 
+.card-dark strong,
+.card-dark p,
+.card-dark a {
+    color: #1F1F1F !important;
 }
 
 .doi_button {
-    background-color: #147ABB;
-    border-color: #147ABB;
+    background-color: #1F1F1F;
+    border-color: #1F1F1F;
     color: white;
     display: flex;
     align-items: center;
@@ -119,8 +204,8 @@
 }
 
 .doi_button:hover {
-    background-color: #075585;
-    border-color: #075585;
+    background-color: #000000;
+    border-color: #000000;
 }
 
 .button_doi_id {
@@ -130,34 +215,22 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 .doi_button:hover .button_doi_id {
-    background-color: #075585;
+    background-color: #000000;
     color: white;
 }
 
 .doi_text {
-    background-color: #147ABB;
+    background-color: #1F1F1F;
     padding: 10px;
     display: flex;
     align-items: center;
-    transition: background-color 0.3s ease;
 }
 
 .doi_button:hover .doi_text {
-    background-color: #4ebbff;
-    color: white;
-}
-
-.doi_button:active .doi_text {
-    background-color: #4ebbff;
-    color: white;
-}
-
-.doi_button:active .button_doi_id {
-    background-color: #075585;
+    background-color: #4b4b4b;
     color: white;
 }
 
@@ -184,4 +257,88 @@
     color: white;
     padding: 5px;
     border-radius: 3px;
+}
+
+.footer {
+    background-color: #FFFFFF;
+    border-top: 1px solid #DDD;
+}
+
+.footer p, .footer a {
+    color: #555 !important;
+}
+
+::-webkit-scrollbar {
+    width: 8px;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #C0C0C0;
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #A0A0A0;
+}
+
+body {
+    background-color: #F4F4F4 !important;
+    font-family: "Inter", sans-serif;
+}
+
+/* BOTONES DEL BLOQUE “LET’S GET STARTED!” */
+
+.card-welcome .btn-dark {
+    background-color: #F7C325 !important;
+    border-color: #F7C325 !important;
+    color: #1F1F1F !important;
+    font-weight: 600;
+}
+
+.card-welcome .btn-dark:hover {
+    background-color: #D9A91E !important;
+    border-color: #D9A91E !important;
+}
+
+.card-welcome .btn-outline-dark {
+    border-color: #F7C325 !important;
+    color: #F7C325 !important;
+    font-weight: 600;
+}
+
+.card-welcome .btn-outline-dark:hover {
+    background-color: #F7C325 !important;
+    color: #1F1F1F !important;
+}
+
+
+/* ⭐ NUEVO: BOTONES DEL SIDEBAR (NORMAL → TRANSPARENTE, HOVER → AMARILLO) */
+
+.sidebar .sidebar-item a {
+    background-color: transparent !important;
+    color: #CCCCCC !important;
+    border-radius: 6px;
+}
+
+.sidebar .sidebar-item a:hover {
+    background-color: rgba(247, 195, 37, 0.3) !important;
+    color: #F7C325 !important;
+}
+
+.sidebar .sidebar-item.active > a {
+    background-color: #F7C325 !important;
+    color: #1F1F1F !important;
+    font-weight: 600;
+}
+
+.sidebar .sidebar-item a i {
+    color: #CCCCCC !important;
+}
+
+.sidebar .sidebar-item a:hover i {
+    color: #F7C325 !important;
+}
+
+.sidebar .sidebar-item.active a i {
+    color: #1F1F1F !important;
 }

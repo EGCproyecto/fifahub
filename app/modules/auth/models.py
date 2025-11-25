@@ -4,6 +4,7 @@ from flask_login import UserMixin
 from werkzeug.security import check_password_hash, generate_password_hash
 
 from app import db
+from app.modules.dataset.models import BaseDataset, DSDownloadRecord, DSViewRecord
 
 
 class User(db.Model, UserMixin):
@@ -13,7 +14,7 @@ class User(db.Model, UserMixin):
     password = db.Column(db.String(256), nullable=False)
     created_at = db.Column(db.DateTime, nullable=False, default=lambda: datetime.now(timezone.utc))
 
-    data_sets = db.relationship("DataSet", backref="user", lazy=True)
+    data_sets = db.relationship("BaseDataset", backref="user", lazy=True)
     profile = db.relationship("UserProfile", backref="user", uselist=False)
 
     def __init__(self, **kwargs):

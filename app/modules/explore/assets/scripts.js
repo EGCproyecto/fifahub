@@ -1,5 +1,18 @@
 document.addEventListener('DOMContentLoaded', () => {
     send_query();
+    const datasetTypeSelect = document.getElementById('dataset_type');
+    if (datasetTypeSelect) {
+        datasetTypeSelect.addEventListener('change', (event) => {
+            event.stopPropagation();
+            const url = new URL(window.location.href);
+            if (datasetTypeSelect.value === 'any') {
+                url.searchParams.delete('type');
+            } else {
+                url.searchParams.set('type', datasetTypeSelect.value);
+            }
+            window.location.href = url.toString();
+        });
+    }
 });
 
 function send_query() {
@@ -16,11 +29,26 @@ function send_query() {
         filter.addEventListener('input', () => {
             const csrfToken = document.getElementById('csrf_token').value;
 
+            const datasetTypeSelect = document.getElementById('dataset_type');
+            const facetInputs = document.querySelectorAll('[data-facet-input]');
+            const facetsPayload = {};
+            facetInputs.forEach((input) => {
+                if (input.checked) {
+                    const facetName = input.getAttribute('data-facet');
+                    if (!facetsPayload[facetName]) {
+                        facetsPayload[facetName] = [];
+                    }
+                    facetsPayload[facetName].push(input.value);
+                }
+            });
+
             const searchCriteria = {
                 csrf_token: csrfToken,
                 query: document.querySelector('#query').value,
                 publication_type: document.querySelector('#publication_type').value,
                 sorting: document.querySelector('[name="sorting"]:checked').value,
+                dataset_type: datasetTypeSelect ? datasetTypeSelect.value : 'any',
+                facets: facetsPayload,
             };
 
             console.log(document.querySelector('#publication_type').value);
@@ -52,6 +80,7 @@ function send_query() {
 
 
                     data.forEach(dataset => {
+                        const downloadLabel = dataset.total_size_in_human_format ? `Download (${dataset.total_size_in_human_format})` : 'Download';
                         let card = document.createElement('div');
                         card.className = 'col-12';
                         card.innerHTML = `
@@ -59,7 +88,8 @@ function send_query() {
                                 <div class="card-body">
                                     <div class="d-flex align-items-center justify-content-between">
                                         <h3><a href="${dataset.url}">${dataset.title}</a></h3>
-                                        <div>
+                                        <div class="d-flex gap-2">
+                                            <span class="badge ${dataset.dataset_badge_class || 'bg-primary'}">${dataset.dataset_type_label || 'Dataset'}</span>
                                             <span class="badge bg-primary" style="cursor: pointer;" onclick="set_publication_type_as_query('${dataset.publication_type}')">${dataset.publication_type}</span>
                                         </div>
                                     </div>
@@ -116,7 +146,7 @@ function send_query() {
                                                 View dataset
                                             </a>
                                             <a href="/dataset/download/${dataset.id}" class="btn btn-outline-primary btn-sm" id="search" style="border-radius: 5px;">
-                                                Download (${dataset.total_size_in_human_format})
+                                                ${downloadLabel}
                                             </a>
                                         </div>
 
@@ -177,6 +207,10 @@ function clearFilters() {
     sortingOptions.forEach(option => {
         option.checked = option.value == "newest"; // replace "default" with whatever your default value is
         // option.dispatchEvent(new Event('input', {bubbles: true}));
+    });
+
+    document.querySelectorAll('[data-facet-input]').forEach((checkbox) => {
+        checkbox.checked = false;
     });
 
     // Perform a new search with the reset filters

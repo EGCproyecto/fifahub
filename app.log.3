@@ -1,0 +1,103 @@
+2025-11-09 17:48:33,194 - app - ERROR - Exception on /fakenodo/depositions [POST]
+Traceback (most recent call last):
+  File "/home/practica/Escritorio/EGC/proyecto/fifahub/venv/lib/python3.12/site-packages/flask/app.py", line 1511, in wsgi_app
+    response = self.full_dispatch_request()
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/practica/Escritorio/EGC/proyecto/fifahub/venv/lib/python3.12/site-packages/flask/app.py", line 919, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/practica/Escritorio/EGC/proyecto/fifahub/venv/lib/python3.12/site-packages/flask_restful/__init__.py", line 298, in error_router
+    return original_handler(e)
+           ^^^^^^^^^^^^^^^^^^^
+  File "/home/practica/Escritorio/EGC/proyecto/fifahub/venv/lib/python3.12/site-packages/flask/app.py", line 917, in full_dispatch_request
+    rv = self.dispatch_request()
+         ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/practica/Escritorio/EGC/proyecto/fifahub/venv/lib/python3.12/site-packages/flask/app.py", line 902, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/practica/Escritorio/EGC/proyecto/fifahub/app/modules/fakenodo/routes.py", line 12, in create_deposition
+    resp = fakenodo_service.create_new_deposition(dataset=None, publication_doi=publication_doi)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/practica/Escritorio/EGC/proyecto/fifahub/app/modules/fakenodo/services.py", line 42, in create_new_deposition
+    deposition_id = dataset.id
+                    ^^^^^^^^^^
+AttributeError: 'NoneType' object has no attribute 'id'
+2025-11-09 17:48:33,206 - app - ERROR - Internal Server Error: 500 Internal Server Error: The server encountered an internal error and was unable to complete your request. Either the server is overloaded or there is an error in the application.
+2025-11-09 17:49:24,464 - app - ERROR - Exception on /fakenodo/depositions [POST]
+Traceback (most recent call last):
+  File "/home/practica/Escritorio/EGC/proyecto/fifahub/venv/lib/python3.12/site-packages/flask/app.py", line 1511, in wsgi_app
+    response = self.full_dispatch_request()
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/practica/Escritorio/EGC/proyecto/fifahub/venv/lib/python3.12/site-packages/flask/app.py", line 919, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/practica/Escritorio/EGC/proyecto/fifahub/venv/lib/python3.12/site-packages/flask_restful/__init__.py", line 298, in error_router
+    return original_handler(e)
+           ^^^^^^^^^^^^^^^^^^^
+  File "/home/practica/Escritorio/EGC/proyecto/fifahub/venv/lib/python3.12/site-packages/flask/app.py", line 917, in full_dispatch_request
+    rv = self.dispatch_request()
+         ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/practica/Escritorio/EGC/proyecto/fifahub/venv/lib/python3.12/site-packages/flask/app.py", line 902, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/practica/Escritorio/EGC/proyecto/fifahub/app/modules/fakenodo/routes.py", line 12, in create_deposition
+    resp = fakenodo_service.create_new_deposition(dataset=None, publication_doi=publication_doi)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/practica/Escritorio/EGC/proyecto/fifahub/app/modules/fakenodo/services.py", line 42, in create_new_deposition
+    deposition_id = dataset.id
+                    ^^^^^^^^^^
+AttributeError: 'NoneType' object has no attribute 'id'
+2025-11-09 17:49:24,465 - app - ERROR - Internal Server Error: 500 Internal Server Error: The server encountered an internal error and was unable to complete your request. Either the server is overloaded or there is an error in the application.
+2025-11-09 18:07:24,916 - app - ERROR - Exception on /fakenodo/depositions [POST]
+Traceback (most recent call last):
+  File "/home/practica/Escritorio/EGC/proyecto/fifahub/venv/lib/python3.12/site-packages/flask/app.py", line 1511, in wsgi_app
+    response = self.full_dispatch_request()
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/practica/Escritorio/EGC/proyecto/fifahub/venv/lib/python3.12/site-packages/flask/app.py", line 919, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/practica/Escritorio/EGC/proyecto/fifahub/venv/lib/python3.12/site-packages/flask_restful/__init__.py", line 298, in error_router
+    return original_handler(e)
+           ^^^^^^^^^^^^^^^^^^^
+  File "/home/practica/Escritorio/EGC/proyecto/fifahub/venv/lib/python3.12/site-packages/flask/app.py", line 917, in full_dispatch_request
+    rv = self.dispatch_request()
+         ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/practica/Escritorio/EGC/proyecto/fifahub/venv/lib/python3.12/site-packages/flask/app.py", line 902, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/practica/Escritorio/EGC/proyecto/fifahub/app/modules/fakenodo/routes.py", line 12, in create_deposition
+    resp = fakenodo_service.create_new_deposition(dataset=None, publication_doi=publication_doi)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/practica/Escritorio/EGC/proyecto/fifahub/app/modules/fakenodo/services.py", line 42, in create_new_deposition
+    deposition_id = dataset.id
+                    ^^^^^^^^^^
+AttributeError: 'NoneType' object has no attribute 'id'
+2025-11-09 18:07:24,927 - app - ERROR - Internal Server Error: 500 Internal Server Error: The server encountered an internal error and was unable to complete your request. Either the server is overloaded or there is an error in the application.
+2025-11-09 18:27:01,323 - app - ERROR - Exception on /fakenodo/depositions/1/upload [POST]
+Traceback (most recent call last):
+  File "/home/practica/Escritorio/EGC/proyecto/fifahub/venv/lib/python3.12/site-packages/flask/app.py", line 1511, in wsgi_app
+    response = self.full_dispatch_request()
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/practica/Escritorio/EGC/proyecto/fifahub/venv/lib/python3.12/site-packages/flask/app.py", line 919, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/practica/Escritorio/EGC/proyecto/fifahub/venv/lib/python3.12/site-packages/flask_restful/__init__.py", line 298, in error_router
+    return original_handler(e)
+           ^^^^^^^^^^^^^^^^^^^
+  File "/home/practica/Escritorio/EGC/proyecto/fifahub/venv/lib/python3.12/site-packages/flask/app.py", line 917, in full_dispatch_request
+    rv = self.dispatch_request()
+         ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/practica/Escritorio/EGC/proyecto/fifahub/venv/lib/python3.12/site-packages/flask/app.py", line 902, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/practica/Escritorio/EGC/proyecto/fifahub/venv/lib/python3.12/site-packages/flask_login/utils.py", line 290, in decorated_view
+    return current_app.ensure_sync(func)(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/practica/Escritorio/EGC/proyecto/fifahub/app/modules/fakenodo/routes.py", line 41, in upload_file
+    resp = fakenodo_service.upload_file(dataset, dep_id, feature_model=None)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/practica/Escritorio/EGC/proyecto/fifahub/app/modules/fakenodo/services.py", line 73, in upload_file
+    file_name = getattr(feature_model.fm_meta_data, "csv_filename", "dataset.csv")
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'NoneType' object has no attribute 'fm_meta_data'
+2025-11-09 18:27:01,345 - app - ERROR - Internal Server Error: 500 Internal Server Error: The server encountered an internal error and was unable to complete your request. Either the server is overloaded or there is an error in the application.

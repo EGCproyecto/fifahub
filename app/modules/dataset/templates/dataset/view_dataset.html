@@ -19,86 +19,71 @@
 {% block content %}
 
 <div class="row mb-3">
-
-    <div class="col-6">
+    <div class="col-12 d-flex justify-content-between align-items-center">
         <a href="/explore" class="btn btn-primary btn-sm" id="search" style="border-radius: 5px;">
             <i data-feather="search" class="center-button-icon"></i>
             Explore more datasets
         </a>
+        <a href="{{ url_for('dataset.download_dataset', dataset_id=dataset.id) }}" class="btn btn-outline-primary btn-sm" style="border-radius: 5px;">
+            <i data-feather="download" class="center-button-icon"></i>
+            Download dataset
+        </a>
     </div>
-
 </div>
 
 <div class="row">
-
-    <div class="col-xl-8 col-lg-12 col-md-12 col-sm-12">
-
-        <div class="card">
+    <div class="col-12 col-xxl-10">
+        <div class="card mb-3">
             <div class="card-body">
-                <div class="d-flex align-items-center justify-content-between">
-                    <h1><b>{{ dataset.ds_meta_data.title }}</b></h1>
-                    <div>
+                <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
+                    <h1 class="mb-0"><b>{{ dataset.ds_meta_data.title }}</b></h1>
+                    <div class="d-flex flex-wrap gap-2">
                         <span class="badge bg-secondary">{{ dataset.get_cleaned_publication_type() }}</span>
                     </div>
                 </div>
-                <p class="text-secondary">{{ dataset.created_at.strftime('%B %d, %Y at %I:%M %p') }}</p>
+                <p class="text-secondary mb-4">{{ dataset.created_at.strftime('%B %d, %Y at %I:%M %p') }}</p>
 
-                <div class="row mb-4">
-
+                <div class="row mb-3">
                     <div class="col-md-4 col-12">
-                        <span class=" text-secondary">
-                            Description
-                        </span>
+                        <span class="text-secondary">Description</span>
                     </div>
                     <div class="col-md-8 col-12">
                         <p class="card-text">{{ dataset.ds_meta_data.description }}</p>
                     </div>
-
                 </div>
 
                 <div class="row mb-2">
-
                     <div class="col-md-4 col-12">
-                        <span class=" text-secondary">
-                            Uploaded by
-                        </span>
+                        <span class="text-secondary">Uploaded by</span>
                     </div>
                     <div class="col-md-8 col-12">
                         <a href="#">{{ dataset.user.profile.surname }}, {{ dataset.user.profile.name }}</a>
                     </div>
-
                 </div>
 
                 <div class="row mb-2">
-
                     <div class="col-md-4 col-12">
-                        <span class=" text-secondary">
-                            Authors
-                        </span>
+                        <span class="text-secondary">Authors</span>
                     </div>
                     <div class="col-md-8 col-12">
-                        {% for author in dataset.ds_meta_data.authors %}
-                        <p class="p-0 m-0">
-                            {{ author.name }}
-                            {% if author.affiliation %}
-                            ({{ author.affiliation }})
-                            {% endif %}
-                            {% if author.orcid %}
-                            ({{ author.orcid }})
-                            {% endif %}
-                        </p>
-                        {% endfor %}
+                        {% if dataset.ds_meta_data.authors %}
+                            {% for author in dataset.ds_meta_data.authors %}
+                                <p class="p-0 m-0">
+                                    {{ author.name }}
+                                    {% if author.affiliation %} ({{ author.affiliation }}){% endif %}
+                                    {% if author.orcid %} ({{ author.orcid }}){% endif %}
+                                </p>
+                            {% endfor %}
+                        {% else %}
+                            <span class="text-muted">No authors available</span>
+                        {% endif %}
                     </div>
-
-
                 </div>
 
                 {% if dataset.ds_meta_data.publication_doi %}
                 <div class="row mb-2">
                     <div class="col-md-4 col-12">
-                        <span class="text-secondary">
-                            Publication DOI
-                        </span>
+                        <span class="text-secondary">Publication DOI</span>
                     </div>
                     <div class="col-md-8 col-12">
                         <a href="{{ dataset.ds_meta_data.publication_doi }}">
@@ -110,40 +95,26 @@
 
                 {% if dataset.ds_meta_data.dataset_doi %}
                 <div class="row mb-2">
-                    
-                        <div class="col-md-4 col-12">
-                            <span class=" text-secondary">
-                                Zenodo record
-                            </span>
-                        </div>
-
-                        {% if FLASK_ENV == 'production' %}
-                            <div class="col-md-8 col-12">
-                                <a href="https://zenodo.org/records/{{ dataset.ds_meta_data.deposition_id }}" target="_blank">
-                                    https://zenodo.org/records/{{ dataset.ds_meta_data.deposition_id }}
-                                </a>
-                            </div>
-                        {% elif FLASK_ENV == 'development' %}
-                            <div class="col-md-8 col-12">
-                                <a href="https://sandbox.zenodo.org/records/{{ dataset.ds_meta_data.deposition_id }}" target="_blank">
-                                    https://sandbox.zenodo.org/records/{{ dataset.ds_meta_data.deposition_id }}
-                                </a>
-                            </div>
+                    <div class="col-md-4 col-12">
+                        <span class="text-secondary">Zenodo record</span>
+                    </div>
+                    <div class="col-md-8 col-12">
+                        {% if FLASK_ENV == 'development' %}
+                            <a href="https://sandbox.zenodo.org/records/{{ dataset.ds_meta_data.deposition_id }}" target="_blank">
+                                https://sandbox.zenodo.org/records/{{ dataset.ds_meta_data.deposition_id }}
+                            </a>
                         {% else %}
-                            <div class="col-md-8 col-12">
-                                <a href="https://zenodo.org/records/{{ dataset.ds_meta_data.deposition_id }}" target="_blank">
-                                    https://sandbox.zenodo.org/records/{{ dataset.ds_meta_data.deposition_id }}
-                                </a>
-                            </div>
+                            <a href="https://zenodo.org/records/{{ dataset.ds_meta_data.deposition_id }}" target="_blank">
+                                https://zenodo.org/records/{{ dataset.ds_meta_data.deposition_id }}
+                            </a>
                         {% endif %}
-
+                    </div>
                 </div>
                 {% endif %}
                 <div class="row mb-2">
-
                     <div class="col-md-4 col-12">
-                        <span class=" text-secondary">
-                            Tags
+                        <span class="text-secondary">
+                            Descargas
                         </span>
                     </div>
                     <div class="col-md-8 col-12">
@@ -151,41 +122,80 @@
                         <span class="badge bg-secondary">{{ tag.strip() }}</span>
                         {% endfor %}
                     </div>
-
                 </div>
-
-                
+                <div class="row mb-2">
+                    <div class="col-md-4 col-12">
+                        <span class="text-secondary">
+                            Descargas
+                        </span>
+                    </div>
+                    <div class="col-md-8 col-12">
+                        <div class="d-flex align-items-center">
+                            <i data-feather="download" class="mr-2 text-primary"></i>
+                            <span class="text-secondary mr-1">Descargas:</span>
+                            <span
+                                id="download-counter"
+                                class="font-weight-bold"
+                                data-dataset-id="{{ dataset.id }}"
+                            >
+                                {{ dataset.download_count }}
+                            </span>
+                        </div>
+                    </div>
+                </div>
 
             </div>
 
             {% if dataset.ds_meta_data.dataset_doi %}
-            <div class="card-body" style="padding-top: 0px">
-
-                <div id="dataset_doi_uvlhub" style="display: none">
-                    {{ dataset.get_uvlhub_doi() }}
-                </div>
-
+            <div class="card-body pt-0">
+                <div id="dataset_doi_uvlhub" style="display: none">{{ dataset.get_uvlhub_doi() }}</div>
                 <button type="button" class="btn doi_button btn-sm" onclick="copyText('dataset_doi_uvlhub')">
                     <span class="button_doi_id">
                         <i data-feather="clipboard" class="center-button-icon" style="cursor: pointer"></i>
                         <b>DOI</b>
                     </span>
-                    <span class="doi_text">
-                        {{ dataset.get_uvlhub_doi() }}
-                    </span>
+                    <span class="doi_text">{{ dataset.get_uvlhub_doi() }}</span>
                 </button>
-                
-                <div id="dataset_doi_uvlhub" style="display: none">
-                    {{ dataset.get_uvlhub_doi() }}
-                </div>
-                
             </div>
             {% endif %}
-
         </div>
 
-        <div class="card">
+        {% if detail_template %}
+            {% include detail_template %}
+        {% endif %}
 
+        <div class="card mt-3">
+            <div class="card-header d-flex align-items-center justify-content-between">
+                <h5 class="mb-0">Version history</h5>
+                {% if versions and versions|length > 0 %}
+                    <span class="badge bg-secondary">{{ versions|length }}</span>
+                {% endif %}
+            </div>
+            <div class="list-group list-group-flush">
+                {% if versions and versions|length > 0 %}
+                    {% for v in versions %}
+                        <div class="list-group-item">
+                            <div class="d-flex w-100 justify-content-between">
+                                <h6 class="mb-1">v{{ v.version }}</h6>
+                                <small>{{ v.created_at.strftime('%Y-%m-%d %H:%M') if v.created_at else '-' }}</small>
+                            </div>
+                            {% if v.change_note %}
+                                <p class="mb-1">{{ v.change_note }}</p>
+                            {% endif %}
+                            {% if v.snapshot and v.snapshot.metrics %}
+                                <small class="text-muted d-block">
+                                    Metrics: total rows {{ v.snapshot.metrics.total_rows }}, max columns {{ v.snapshot.metrics.max_columns }}
+                                </small>
+                            {% endif %}
+                        </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="list-group-item text-muted">No versions yet</div>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="card mt-3">
             <div class="card-body">
 
                 <h3> Related publication </h3>
@@ -326,7 +336,12 @@
         
         
     
-        <a href="/dataset/download/{{ dataset.id }}" class="btn btn-primary mt-3" style="border-radius: 5px;">
+        <a
+            href="/dataset/download/{{ dataset.id }}"
+            class="btn btn-primary mt-3"
+            style="border-radius: 5px;"
+            id="download-all-btn"
+        >
             <i data-feather="download" class="center-button-icon"></i>
             Download all ({{ dataset.get_file_total_size_for_human() }})
         </a>
@@ -349,12 +364,7 @@
                         style="margin-right: 5px; margin-bottom: 5px; border-radius: 5px;">
                         <i data-feather="copy"></i>
                     </button>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-            </div>
-            <div class="modal-body" style="overflow-y: auto; height: calc(100vh - 50px);">
-                <pre id="fileContent" style="height: 100%; overflow-y: auto; white-space: pre-wrap; word-wrap: break-word; background-color: #f5f5f5; padding: 20px; border-radius: 5px; border: 1px solid #ccc;"></pre>
-
             </div>
         </div>
     </div>
@@ -367,6 +377,7 @@
 <script>
     document.addEventListener('DOMContentLoaded', function () {
         feather.replace();
+        setupDownloadCounter();
     });
 
     var currentFileId;
@@ -492,6 +503,46 @@
             console.error('Failed to copy text: ', err);
         });
     }
+
+    function setupDownloadCounter() {
+        const counterEl = document.getElementById("download-counter");
+        if (!counterEl || !window.fetch) {
+            return;
+        }
+
+        const datasetId = counterEl.getAttribute("data-dataset-id");
+        const statsUrl = `/datasets/${datasetId}/stats`;
+
+        const refreshStats = () => {
+            fetch(statsUrl, { headers: { Accept: "application/json" } })
+                .then((response) => (response.ok ? response.json() : null))
+                .then((data) => {
+                    if (data && typeof data.downloads === "number") {
+                        counterEl.textContent = data.downloads;
+                    }
+                })
+                .catch((error) => console.debug("Dataset stats refresh skipped:", error));
+        };
+
+        refreshStats();
+
+        const downloadBtn = document.getElementById("download-all-btn");
+        if (downloadBtn) {
+            downloadBtn.addEventListener("click", () => {
+                setTimeout(refreshStats, 4000);
+            });
+        }
+
+        document.addEventListener("visibilitychange", () => {
+            if (!document.hidden) {
+                refreshStats();
+            }
+        });
+
+        setInterval(refreshStats, 15000);
+    }
 </script>
 
 {% endblock %}
+
+    

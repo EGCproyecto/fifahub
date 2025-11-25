@@ -64,14 +64,54 @@ class DSMetaData(db.Model):
     authors = db.relationship("Author", backref="ds_meta_data", lazy=True, cascade="all, delete")
 
 
-class DataSet(db.Model):
+class BaseDataset(db.Model):
+    __tablename__ = "data_set"
+
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False)
-
     ds_meta_data_id = db.Column(db.Integer, db.ForeignKey("ds_meta_data.id"), nullable=False)
     created_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+    type = db.Column(db.String(50), nullable=False, server_default="uvl", index=True)
+    download_count = db.Column(db.Integer, nullable=False, default=0, server_default="0")
 
     ds_meta_data = db.relationship("DSMetaData", backref=db.backref("data_set", uselist=False))
+
+    __mapper_args__ = {
+        "polymorphic_on": type,
+        "polymorphic_identity": "base",
+        "with_polymorphic": "*",
+    }
+
+    versions = db.relationship(
+        "DatasetVersion",
+        backref="dataset",
+        lazy=True,
+        cascade="all, delete-orphan",
+        order_by="DatasetVersion.created_at.desc()",
+    )
+
+    def validate_domain(self):
+        pass
+
+    def ui_blocks(self):
+        return ["common-meta", "versioning"]
+
+    def get_cleaned_publication_type(self):
+        """Retorna el publication_type formateado - COMÚN para UVL y Tabular"""
+        if not self.ds_meta_data or not self.ds_meta_data.publication_type:
+            return "Unknown"
+        return self.ds_meta_data.publication_type.name.replace("_", " ").title()
+
+    def get_uvlhub_doi(self):
+        """Retorna el DOI de UVLHub - COMÚN para UVL y Tabular"""
+        from app.modules.dataset.services import DataSetService
+
+        return DataSetService().get_uvlhub_doi(self)
+
+
+class UVLDataset(BaseDataset):
+    __mapper_args__ = {"polymorphic_identity": "uvl"}
+
     feature_models = db.relationship("FeatureModel", backref="data_set", lazy=True, cascade="all, delete")
 
     def name(self):
@@ -83,9 +123,6 @@ class DataSet(db.Model):
     def delete(self):
         db.session.delete(self)
         db.session.commit()
-
-    def get_cleaned_publication_type(self):
-        return self.ds_meta_data.publication_type.name.replace("_", " ").title()
 
     def get_zenodo_url(self):
         return f"https://zenodo.org/record/{self.ds_meta_data.deposition_id}" if self.ds_meta_data.dataset_doi else None
@@ -101,13 +138,12 @@ class DataSet(db.Model):
 
         return SizeService().get_human_readable_size(self.get_file_total_size())
 
-    def get_uvlhub_doi(self):
-        from app.modules.dataset.services import DataSetService
-
-        return DataSetService().get_uvlhub_doi(self)
-
     def to_dict(self):
         return {
+            "type": "uvl",
+            "dataset_type": "uvl",
+            "dataset_type_label": "UVL",
+            "dataset_badge_class": "bg-primary",
             "title": self.ds_meta_data.title,
             "id": self.id,
             "created_at": self.created_at,
@@ -136,7 +172,7 @@ class DSDownloadRecord(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=True)
     dataset_id = db.Column(db.Integer, db.ForeignKey("data_set.id"))
     download_date = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
-    download_cookie = db.Column(db.String(36), nullable=False)  # Assuming UUID4 strings
+    download_cookie = db.Column(db.String(36), nullable=False)
 
     def __repr__(self):
         return (
@@ -152,7 +188,7 @@ class DSViewRecord(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=True)
     dataset_id = db.Column(db.Integer, db.ForeignKey("data_set.id"))
     view_date = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
-    view_cookie = db.Column(db.String(36), nullable=False)  # Assuming UUID4 strings
+    view_cookie = db.Column(db.String(36), nullable=False)
 
     def __repr__(self):
         return f"<View id={self.id} dataset_id={self.dataset_id} date={self.view_date} cookie={self.view_cookie}>"
@@ -162,3 +198,23 @@ class DOIMapping(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     dataset_doi_old = db.Column(db.String(120))
     dataset_doi_new = db.Column(db.String(120))
+
+
+DataSet = UVLDataset
+
+
+class DatasetVersion(db.Model):
+    __tablename__ = "dataset_version"
+
+    id = db.Column(db.Integer, primary_key=True)
+    dataset_id = db.Column(db.Integer, db.ForeignKey("data_set.id"), nullable=False, index=True)
+    version = db.Column(db.String(32), nullable=False)
+    created_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+    author_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=True)
+    change_note = db.Column(db.Text, nullable=True)
+
+    # ⚠️ 'metadata' es reservado en SQLAlchemy; usamos 'snapshot' (columna 'metadata' en BD)
+    snapshot = db.Column("metadata", db.JSON, nullable=True)
+
+    def __repr__(self):
+        return f"DatasetVersion<{self.dataset_id}:{self.version}>"
