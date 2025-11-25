@@ -1,27 +1,20 @@
-name: CI/CD
+name: CD-main
 
 on:
   push:
     branches:
       - main
-      - trunk
-      - 'feature/**'
-  pull_request:
-    branches:
-      - trunk
-      - main
   workflow_dispatch:
 
 concurrency:
-  group: ci-${{ github.workflow }}-${{ github.ref }}
+  group: cd-main-${{ github.ref }}
   cancel-in-progress: true
 
 permissions:
-  contents: read
+  contents: write
 
 env:
   PYTHON_VERSION: "3.12"
-  # Variables de test DB (MariaDB)
   MARIADB_ROOT_PASSWORD: fifahub_root_password
   MARIADB_DATABASE: fifahubdb_test
   MARIADB_TEST_DATABASE: fifahubdb_test
@@ -31,25 +24,19 @@ env:
   MARIADB_PORT: "3306"
 
 jobs:
-  # --------------------------------------------------------------------------
   # 0) Conventional commits
-  # --------------------------------------------------------------------------
   commits:
     name: Conventional Commits
     runs-on: ubuntu-24.04
-    if: ${{ github.event_name == 'push' || github.event_name == 'pull_request' }}
     steps:
       - name: Validate commit messages
         uses: webiny/action-conventional-commits@v1.3.0
 
-  # --------------------------------------------------------------------------
-  # 1) Estilo y formato (Black + isort)
-  # --------------------------------------------------------------------------
+  # 1) Estilo
   style:
     name: Style (black/isort)
     runs-on: ubuntu-24.04
     needs: [commits]
-    if: ${{ github.event_name == 'push' || github.event_name == 'pull_request' }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -65,25 +52,11 @@ jobs:
       - name: Check import order with isort
         run: isort --check-only --profile black app rosemary core
 
-  # --------------------------------------------------------------------------
   # 2) Tests (pytest + MariaDB)
-  #    - PR a trunk/main
-  #    - push a trunk/main
-  #    - push a feature/**
-  # --------------------------------------------------------------------------
   pytest:
     name: Tests (pytest + MariaDB)
     runs-on: ubuntu-24.04
     needs: [style]
-    if: >
-      ${{
-        (github.event_name == 'pull_request' && (github.base_ref == 'trunk' || github.base_ref == 'main')) ||
-        (github.event_name == 'push' && (
-            github.ref == 'refs/heads/trunk' ||
-            github.ref == 'refs/heads/main'  ||
-            startsWith(github.ref, 'refs/heads/feature/')
-        ))
-      }}
     services:
       mariadb:
         image: mariadb:12.0.2
@@ -120,48 +93,11 @@ jobs:
       - name: Run pytest
         run: pytest app/modules/ --ignore-glob='*selenium*'
 
-  # --------------------------------------------------------------------------
-  # 3) Deploy STAGING (Render) en push a trunk si tests OK
-  # --------------------------------------------------------------------------
-  deploy_staging_render:
-    name: Deploy to Render (staging)
-    runs-on: ubuntu-24.04
-    needs: [pytest]
-    if: >
-      ${{
-        needs.pytest.result == 'success' &&
-        github.event_name == 'push' &&
-        github.ref == 'refs/heads/trunk'
-      }}
-    steps:
-      - name: Trigger staging webhook
-        env:
-          WEBHOOK_DOMAIN: ${{ secrets.RENDER_STAGING_DOMAIN }}
-          WEBHOOK_TOKEN:  ${{ secrets.RENDER_STAGING_TOKEN }}
-        run: |
-          set -e
-          curl -sS -X POST \
-            "https://${WEBHOOK_DOMAIN}/webhook/deploy" \
-            -H "Authorization: Bearer ${WEBHOOK_TOKEN}" \
-            -H "Content-Type: application/json" \
-            -d "{\"env\":\"staging\",\"repo\":\"${GITHUB_REPOSITORY}\",\"commit\":\"${GITHUB_SHA}\",\"ref\":\"${GITHUB_REF}\"}"
-
-  # --------------------------------------------------------------------------
-  # 4) Release Automation (push a main, tras tests OK)
-  #    Detecta tipo de release con Conventional Commits y crea vX.Y.Z
-  # --------------------------------------------------------------------------
+  # 3) Release Automation (SemVer) SOLO main 
   release_automation:
     name: Create Release (SemVer from commits)
     runs-on: ubuntu-24.04
     needs: [pytest]
-    if: >
-      ${{
-        needs.pytest.result == 'success' &&
-        github.event_name == 'push' &&
-        github.ref == 'refs/heads/main'
-      }}
-    permissions:
-      contents: write
     outputs:
       new_version: ${{ steps.newver.outputs.new_version }}
       skip: ${{ steps.newver.outputs.skip }}
@@ -240,20 +176,14 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-  # --------------------------------------------------------------------------
-  # 5) Docker Hub (build & push) — solo en push a main
-  # --------------------------------------------------------------------------
+  # 4) Docker Hub Publish (solo si release OK)
   dockerhub_publish:
     name: Docker Hub Publish
     runs-on: ubuntu-24.04
     needs: [pytest, release_automation]
     if: >
-      ${{
-        github.event_name == 'push' &&
-        github.ref == 'refs/heads/main' &&
-        needs.pytest.result == 'success' &&
-        needs.release_automation.outputs.skip != 'true'
-      }}
+      needs.pytest.result == 'success' &&
+      needs.release_automation.outputs.skip != 'true'
     steps:
       - uses: actions/checkout@v4
 
@@ -280,19 +210,12 @@ jobs:
           docker tag "$IMAGE:$TAG" "$IMAGE:latest"
           docker push "$IMAGE:latest"
 
-  # --------------------------------------------------------------------------
-  # 6) Deploy PRODUCCIÓN (Render) tras publicar imagen — solo en main
-  # --------------------------------------------------------------------------
+  # 5) Deploy PRODUCCIÓN (Render)
   deploy_prod_render:
     name: Deploy to Render (production)
     runs-on: ubuntu-24.04
     needs: [dockerhub_publish, release_automation]
-    if: >
-      ${{
-        github.event_name == 'push' &&
-        github.ref == 'refs/heads/main' &&
-        needs.dockerhub_publish.result == 'success'
-      }}
+    if: needs.dockerhub_publish.result == 'success'
     steps:
       - name: Trigger production webhook
         env:

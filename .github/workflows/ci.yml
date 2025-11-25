@@ -1,0 +1,135 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - trunk
+      - 'feature/**'
+  pull_request:
+    branches:
+      - trunk
+      - main
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  PYTHON_VERSION: "3.12"
+  # Variables de test DB (MariaDB)
+  MARIADB_ROOT_PASSWORD: fifahub_root_password
+  MARIADB_DATABASE: fifahubdb_test
+  MARIADB_TEST_DATABASE: fifahubdb_test
+  MARIADB_USER: fifahub_user
+  MARIADB_PASSWORD: fifahub_password
+  MARIADB_HOSTNAME: 127.0.0.1
+  MARIADB_PORT: "3306"
+
+jobs:
+  # --------------------------------------------------------------------------
+  # 0) Conventional commits
+  # --------------------------------------------------------------------------
+  commits:
+    name: Conventional Commits
+    runs-on: ubuntu-24.04
+    if: ${{ github.event_name == 'push' || github.event_name == 'pull_request' }}
+    steps:
+      - name: Validate commit messages
+        uses: webiny/action-conventional-commits@v1.3.0
+
+  # --------------------------------------------------------------------------
+  # 1) Estilo y formato (Black + isort)
+  # --------------------------------------------------------------------------
+  style:
+    name: Style (black/isort)
+    runs-on: ubuntu-24.04
+    needs: [commits]
+    if: ${{ github.event_name == 'push' || github.event_name == 'pull_request' }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
+      - name: Install formatters
+        run: |
+          python -m pip install --upgrade pip
+          pip install black isort
+      - name: Check formatting with black
+        run: black --check app rosemary core
+      - name: Check import order with isort
+        run: isort --check-only --profile black app rosemary core
+
+  # --------------------------------------------------------------------------
+  # 2) Tests (pytest + MariaDB)
+  # --------------------------------------------------------------------------
+  pytest:
+    name: Tests (pytest + MariaDB)
+    runs-on: ubuntu-24.04
+    needs: [style]
+    if: >
+      github.event_name == 'pull_request' ||
+      github.event_name == 'push'
+    services:
+      mariadb:
+        image: mariadb:12.0.2
+        env:
+          MARIADB_ROOT_PASSWORD: ${{ env.MARIADB_ROOT_PASSWORD }}
+          MARIADB_DATABASE: ${{ env.MARIADB_DATABASE }}
+          MARIADB_USER: ${{ env.MARIADB_USER }}
+          MARIADB_PASSWORD: ${{ env.MARIADB_PASSWORD }}
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mariadb-admin ping -h 127.0.0.1 -u root -p${MARIADB_ROOT_PASSWORD}"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
+
+      - name: Delete rosemary editable mode (si procede)
+        run: sed -i '/rosemary @ file:\/\/\/app/d' requirements.txt
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Run pytest
+        run: pytest app/modules/ --ignore-glob='*selenium*'
+
+  # --------------------------------------------------------------------------
+  # 3) Deploy STAGING (Render) — SOLO en trunk
+  # --------------------------------------------------------------------------
+  deploy_staging_render:
+    name: Deploy to Render (staging)
+    runs-on: ubuntu-24.04
+    needs: [pytest]
+    if: >
+      needs.pytest.result == 'success' &&
+      github.event_name == 'push' &&
+      github.ref == 'refs/heads/trunk'
+    steps:
+      - name: Trigger staging webhook
+        env:
+          WEBHOOK_DOMAIN: ${{ secrets.RENDER_STAGING_DOMAIN }}
+          WEBHOOK_TOKEN:  ${{ secrets.RENDER_STAGING_TOKEN }}
+        run: |
+          set -e
+          curl -sS -X POST \
+            "https://${WEBHOOK_DOMAIN}/webhook/deploy" \
+            -H "Authorization: Bearer ${WEBHOOK_TOKEN}" \
+            -H "Content-Type: application/json" \
+            -d "{\"env\":\"staging\",\"repo\":\"${GITHUB_REPOSITORY}\",\"commit\":\"${GITHUB_SHA}\",\"ref\":\"${GITHUB_REF}\"}"
