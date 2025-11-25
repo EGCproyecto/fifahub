@@ -5,7 +5,10 @@ from pathlib import Path
 import click
 
 
-@click.command("zip", help="Generates a zip file named egc_<uvus>_entrega.zip excluding unnecessary files.")
+@click.command(
+    "zip",
+    help="Generates a zip file named egc_<uvus>_entrega.zip excluding unnecessary files.",
+)
 @click.argument("uvus", required=True)
 def create_zip(uvus):
     project_root = Path(os.getenv("WORKING_DIR", ""))
@@ -14,7 +17,10 @@ def create_zip(uvus):
 
     # Check if the zip file already exists
     if zip_path.exists():
-        if click.confirm(f"The zip file {zip_name} already exists. Do you want to overwrite it?", default=False):
+        if click.confirm(
+            f"The zip file {zip_name} already exists. Do you want to overwrite it?",
+            default=False,
+        ):
             try:
                 zip_path.unlink()  # Remove the existing zip file
                 click.echo(click.style(f"Existing zip file {zip_name} removed.", fg="yellow"))
@@ -29,7 +35,10 @@ def create_zip(uvus):
     pdf_files = list(project_root.glob("*.pdf"))
     if len(pdf_files) != 1:
         click.echo(
-            click.style(f"Error: Expected exactly one .pdf file in the project root. Found {len(pdf_files)}.", fg="red")
+            click.style(
+                f"Error: Expected exactly one .pdf file in the project root. Found {len(pdf_files)}.",
+                fg="red",
+            )
         )
         return
 

@@ -94,7 +94,10 @@ class DataSetSeeder(BaseSeeder):
         self.seed(fm_authors)
 
         feature_models = [
-            FeatureModel(data_set_id=seeded_datasets[i // 3].id, fm_meta_data_id=seeded_fm_meta_data[i].id)
+            FeatureModel(
+                data_set_id=seeded_datasets[i // 3].id,
+                fm_meta_data_id=seeded_fm_meta_data[i].id,
+            )
             for i in range(12)
         ]
         seeded_feature_models = self.seed(feature_models)

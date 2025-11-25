@@ -1,0 +1,49 @@
+{% extends "base_template.html" %}
+{% block content %}
+<div class="container mt-4">
+  <h2>Subir dataset (Tabular)</h2>
+
+  <form method="POST" enctype="multipart/form-data">
+    {{ form.hidden_tag() }}
+
+    <div class="mb-3">
+      <label class="form-label">{{ form.name.label }}</label>
+      {{ form.name(class="form-control", placeholder="players_fifa.csv") }}
+      {% for e in form.name.errors %}<div class="text-danger small">{{ e }}</div>{% endfor %}
+    </div>
+
+    <div class="mb-3">
+      <label class="form-label">{{ form.csv_file.label }}</label>
+      {{ form.csv_file(class="form-control") }}
+      {% for e in form.csv_file.errors %}<div class="text-danger small">{{ e }}</div>{% endfor %}
+    </div>
+
+    <div class="row">
+      <div class="col-md-4 mb-3">
+        <label class="form-label">{{ form.delimiter.label }}</label>
+        {{ form.delimiter(class="form-control", maxlength="1") }}
+        <div class="form-text">Ej: , ; | : (pulsa TAB para tabulador real)</div>
+        {% for e in form.delimiter.errors %}<div class="text-danger small">{{ e }}</div>{% endfor %}
+      </div>
+
+      <div class="col-md-4 mb-3">
+        <label class="form-label">{{ form.sample_rows.label }}</label>
+        {{ form.sample_rows(class="form-control") }}
+        {% for e in form.sample_rows.errors %}<div class="text-danger small">{{ e }}</div>{% endfor %}
+      </div>
+
+      <div class="col-md-4 mb-3">
+        <label class="form-label">{{ form.encoding.label }}</label>
+        {{ form.encoding(class="form-control") }}
+      </div>
+    </div>
+
+    <div class="form-check mb-3">
+      {{ form.has_header(class="form-check-input") }}
+      <label class="form-check-label" for="{{ form.has_header.id }}">{{ form.has_header.label.text }}</label>
+    </div>
+
+    <button type="submit" class="btn btn-primary">Subir y procesar</button>
+  </form>
+</div>
+{% endblock %}

@@ -4,24 +4,15 @@ import os
 import shutil
 import tempfile
 import uuid
-from datetime import datetime, timezone
 from zipfile import ZipFile
 
-from flask import (
-    abort,
-    jsonify,
-    make_response,
-    redirect,
-    render_template,
-    request,
-    send_from_directory,
-    url_for,
-)
+from flask import abort, jsonify, make_response, redirect, render_template, request, send_from_directory, url_for
 from flask_login import current_user, login_required
 
+from app import db
 from app.modules.dataset import dataset_bp
 from app.modules.dataset.forms import DataSetForm
-from app.modules.dataset.models import DSDownloadRecord
+from app.modules.dataset.models import BaseDataset, DatasetVersion
 from app.modules.dataset.services import (
     AuthorService,
     DataSetService,
@@ -30,6 +21,7 @@ from app.modules.dataset.services import (
     DSMetaDataService,
     DSViewRecordService,
 )
+from app.modules.dataset.services.resolvers import render_detail
 from app.modules.zenodo.services import ZenodoService
 
 logger = logging.getLogger(__name__)
@@ -41,6 +33,8 @@ dsmetadata_service = DSMetaDataService()
 zenodo_service = ZenodoService()
 doi_mapping_service = DOIMappingService()
 ds_view_record_service = DSViewRecordService()
+ds_download_record_service = DSDownloadRecordService()
+ds_download_record_service = DSDownloadRecordService()
 
 
 @dataset_bp.route("/dataset/upload", methods=["GET", "POST"])
@@ -61,7 +55,10 @@ def create_dataset():
             dataset_service.move_feature_models(dataset)
         except Exception as exc:
             logger.exception(f"Exception while create dataset data in local {exc}")
-            return jsonify({"Exception while create dataset data in local: ": str(exc)}), 400
+            return (
+                jsonify({"Exception while create dataset data in local: ": str(exc)}),
+                400,
+            )
 
         # send dataset as deposition to Zenodo
         data = {}
@@ -214,23 +211,49 @@ def download_dataset(dataset_id):
             mimetype="application/zip",
         )
 
-    # Check if the download record already exists for this cookie
-    existing_record = DSDownloadRecord.query.filter_by(
-        user_id=current_user.id if current_user.is_authenticated else None,
-        dataset_id=dataset_id,
-        download_cookie=user_cookie,
-    ).first()
-
-    if not existing_record:
-        # Record the download in your database
-        DSDownloadRecordService().create(
+    try:
+        ds_download_record_service.record_download(
+            dataset=dataset,
+            user_cookie=user_cookie,
             user_id=current_user.id if current_user.is_authenticated else None,
-            dataset_id=dataset_id,
-            download_date=datetime.now(timezone.utc),
-            download_cookie=user_cookie,
         )
+        logger.info("Recorded download for dataset_id=%s; new_count=%s", dataset.id, dataset.download_count)
+    except Exception:
+        logger.exception("Failed to record download for dataset_id=%s", dataset.id)
 
     return resp
+
+
+@dataset_bp.route("/datasets/<int:dataset_id>/stats", methods=["GET"])
+def dataset_stats(dataset_id):
+    dataset = dataset_service.get_or_404(dataset_id)
+    views = ds_view_record_service.count_for_dataset(dataset.id)
+    return jsonify(
+        {
+            "dataset_id": dataset.id,
+            "downloads": dataset.download_count or 0,
+            "views": views,
+        }
+    )
+
+
+@dataset_bp.route("/dataset/view/<int:dataset_id>", methods=["GET"])
+@login_required
+def view_dataset(dataset_id: int):
+    dataset = BaseDataset.query.get_or_404(dataset_id)
+
+    if dataset.user_id != current_user.id:
+        abort(403)
+
+    detail_template, detail_ctx = render_detail(dataset.type, dataset)
+    versions = DatasetVersion.query.filter_by(dataset_id=dataset.id).order_by(DatasetVersion.created_at.desc()).all()
+
+    return render_template(
+        "dataset/view_dataset.html",
+        detail_template=detail_template,
+        versions=versions,
+        **detail_ctx,
+    )
 
 
 @dataset_bp.route("/doi/<path:doi>/", methods=["GET"])
@@ -251,9 +274,23 @@ def subdomain_index(doi):
     # Get dataset
     dataset = ds_meta_data.data_set
 
-    # Save the cookie to the user's browser
+    # cookie de vistas
     user_cookie = ds_view_record_service.create_cookie(dataset=dataset)
-    resp = make_response(render_template("dataset/view_dataset.html", dataset=dataset))
+
+    # resolver de detalle (tu flujo original)
+    detail_template, detail_ctx = render_detail(dataset.type, dataset)
+
+    # 🔹 NUEVO: versiones ordenadas (últimas primero) y pasadas a la plantilla
+    versions = DatasetVersion.query.filter_by(dataset_id=dataset.id).order_by(DatasetVersion.created_at.desc()).all()
+
+    resp = make_response(
+        render_template(
+            "dataset/view_dataset.html",
+            detail_template=detail_template,
+            versions=versions,  # <- aquí van las versiones
+            **detail_ctx,  # meta=..., dataset=..., etc.
+        )
+    )
     resp.set_cookie("view_cookie", user_cookie)
 
     return resp
@@ -263,10 +300,19 @@ def subdomain_index(doi):
 @login_required
 def get_unsynchronized_dataset(dataset_id):
 
-    # Get dataset
     dataset = dataset_service.get_unsynchronized_dataset(current_user.id, dataset_id)
 
     if not dataset:
         abort(404)
 
-    return render_template("dataset/view_dataset.html", dataset=dataset)
+    detail_template, detail_ctx = render_detail(dataset.type, dataset)
+
+    # 🔹 NUEVO: versiones también para no sincronizados (si existen)
+    versions = DatasetVersion.query.filter_by(dataset_id=dataset.id).order_by(DatasetVersion.created_at.desc()).all()
+
+    return render_template(
+        "dataset/view_dataset.html",
+        detail_template=detail_template,
+        versions=versions,  # <- aquí van las versiones
+        **detail_ctx,  # meta=..., dataset=..., etc.
+    )

@@ -57,6 +57,18 @@
 
                         <div class="col-lg-6">
                             <div class="mb-3">
+                                <label class="form-label" for="dataset_type">Dataset type</label>
+                                <select class="form-control" id="dataset_type" name="dataset_type">
+                                    <option value="any" {{ 'selected' if type_key == 'any' else '' }}>Any</option>
+                                    {% for dtype in dataset_types or [] %}
+                                        <option value="{{ dtype }}" {{ 'selected' if type_key == dtype else '' }}>{{ dtype|capitalize }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="col-lg-6">
+                            <div class="mb-3">
                                 <label class="form-label" for="publication_type">Filter by publication
                                     type</label>
                                 <select class="form-control" id="publication_type" name="publication_type"
@@ -130,6 +142,30 @@
 
 
                             </div>
+
+                            {% if facets %}
+                                <div class="card mt-3">
+                                    <div class="card-body">
+                                        <h6 class="mb-3">Facets</h6>
+                                        {% for facet_name, options in facets.items() %}
+                                            <div class="mb-3" data-facet-group="{{ facet_name }}">
+                                                <span class="text-secondary d-block mb-1">{{ facet_name.replace('_', ' ')|title }}</span>
+                                                {% for option in options %}
+                                                    <div class="form-check">
+                                                        <input class="form-check-input" type="checkbox"
+                                                               value="{{ option }}"
+                                                               id="facet-{{ facet_name }}-{{ loop.index }}"
+                                                               data-facet-input data-facet="{{ facet_name }}">
+                                                        <label class="form-check-label" for="facet-{{ facet_name }}-{{ loop.index }}">
+                                                            {{ option|title }}
+                                                        </label>
+                                                    </div>
+                                                {% endfor %}
+                                            </div>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                            {% endif %}
 
                         </div>
                     </div>

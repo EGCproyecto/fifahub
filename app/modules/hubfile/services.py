@@ -24,13 +24,23 @@ class HubfileService(BaseService):
         return self.repository.get_dataset_by_hubfile(hubfile)
 
     def get_path_by_hubfile(self, hubfile: Hubfile) -> str:
+        """
+        Devuelve la ruta absoluta de un Hubfile según la estructura:
+        uploads/user_<user_id>/dataset_<dataset_id>/<hubfile.name>
+
+        Si WORKING_DIR no está definido en el entorno, usa '' para evitar errores.
+        """
 
         hubfile_user = self.get_owner_user_by_hubfile(hubfile)
         hubfile_dataset = self.get_dataset_by_hubfile(hubfile)
-        working_dir = os.getenv("WORKING_DIR")
+        working_dir = os.getenv("WORKING_DIR") or ""  # ✅ evita TypeError cuando es None
 
         path = os.path.join(
-            working_dir, "uploads", f"user_{hubfile_user.id}", f"dataset_{hubfile_dataset.id}", hubfile.name
+            working_dir,
+            "uploads",
+            f"user_{hubfile_user.id}",
+            f"dataset_{hubfile_dataset.id}",
+            hubfile.name,
         )
 
         return path

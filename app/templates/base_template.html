@@ -6,12 +6,10 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <meta name="description"
-          content="Repository of feature models in UVL format integrated with Zenodo and FlamaPy">
+          content="Repository of feature models in CSV format integrated with Fakenodo">
     <meta name="author" content="University of Seville">
     <meta name="keywords"
-          content="diversolab, uvl, feature models, software product line, university of seville,
-           university of malaga, university of ulm, david romero, david benavides, jose a galindo, jose miguel horcas,
-chico sundermann">
+          content="fifahub">
 
     <link rel="preconnect" href="https://fonts.gstatic.com">
     <link rel="shortcut icon" href="{{ url_for("static", filename="img/icons/icon-250x250.png") }}"/>
@@ -41,7 +39,7 @@ chico sundermann">
     <nav id="sidebar" class="sidebar js-sidebar">
         <div class="sidebar-content js-simplebar">
             <a class="sidebar-brand" href="{{ url_for('public.index') }}">
-                <img src="{{ url_for("static", filename="img/logos/logo-dark.svg") }}" class="d-block"
+                <img src="{{ url_for("static", filename="img/logos/logo-fifahub-definitivo.png") }}" class="d-block"
                      style="max-width: 100%; height: auto;">
             </a>
 
@@ -96,15 +94,15 @@ chico sundermann">
                         Datasets
                     </li>
 
-                    <li class="sidebar-item {{ 'active' if request.endpoint == 'dataset.create_dataset' else '' }}">
-                        <a class="sidebar-link" href="{{ url_for('dataset.create_dataset') }}">
+                    <li class="sidebar-item {{ 'active' if request.endpoint == 'tabular.upload' else '' }}">
+                        <a class="sidebar-link" href="{{ url_for('tabular.upload') }}">
                             <i class="align-middle" data-feather="upload"></i> <span
                                 class="align-middle">Upload dataset</span>
                         </a>
                     </li>
 
-                    <li class="sidebar-item {{ 'active' if request.endpoint == 'dataset.list_dataset' else '' }}">
-                        <a class="sidebar-link" href="{{ url_for('dataset.list_dataset') }}">
+                    <li class="sidebar-item {{ 'active' if request.endpoint == 'tabular.my_tabular' else '' }}">
+                        <a class="sidebar-link" href="{{ url_for('tabular.my_tabular') }}">
                             <i class="align-middle" data-feather="list"></i> <span
                                 class="align-middle">My datasets</span>
                         </a>
@@ -207,8 +205,7 @@ chico sundermann">
                 <div class="row text-muted">
                     <div class="col-6 text-start">
                         <p class="mb-0">
-                            <strong>{{ FLASK_APP_NAME }} </strong> University of Seville · University of Malaga ·
-                            University of Ulm
+                            <strong>{{ FLASK_APP_NAME }} </strong> University of Seville
                         </p>
                     </div>
                     <div class="col-6 text-end">
