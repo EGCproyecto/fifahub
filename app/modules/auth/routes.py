@@ -1,5 +1,5 @@
-from flask import redirect, render_template, request, url_for
-from flask_login import current_user, login_user, logout_user
+from flask import jsonify, redirect, render_template, request, url_for
+from flask_login import current_user, login_required, login_user, logout_user
 
 from app.modules.auth import auth_bp
 from app.modules.auth.forms import LoginForm, SignupForm
@@ -52,3 +52,13 @@ def login():
 def logout():
     logout_user()
     return redirect(url_for("public.index"))
+
+
+@auth_bp.route("/2fa/setup", methods=["POST"])
+@login_required
+def two_factor_setup():
+    try:
+        data = authentication_service.generate_two_factor_setup(current_user)
+    except Exception:
+        return jsonify({"message": "Unable to generate 2FA setup"}), 500
+    return jsonify(data)

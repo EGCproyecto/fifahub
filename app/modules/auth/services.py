@@ -1,5 +1,9 @@
+import base64
 import os
+from io import BytesIO
 
+import pyotp
+import qrcode
 from flask_login import current_user, login_user
 
 from app.modules.auth.models import User
@@ -76,3 +80,23 @@ class AuthenticationService(BaseService):
 
     def temp_folder_by_user(self, user: User) -> str:
         return os.path.join(uploads_folder_name(), "temp", str(user.id))
+
+    def generate_two_factor_setup(self, user: User) -> dict:
+        if user is None:
+            raise ValueError("User required")
+        secret = pyotp.random_base32()
+        issuer = os.getenv("FLASK_APP_NAME", "FifaHub")
+        totp = pyotp.TOTP(secret)
+        otpauth_url = totp.provisioning_uri(name=user.email, issuer_name=issuer)
+        qr_image = qrcode.make(otpauth_url)
+        buffer = BytesIO()
+        qr_image.save(buffer, format="PNG")
+        qr_data = base64.b64encode(buffer.getvalue()).decode("ascii")
+        user.two_factor_secret = secret
+        user.two_factor_enabled = False
+        self.repository.session.commit()
+        return {
+            "secret": secret,
+            "otpauth_url": otpauth_url,
+            "qr_code": f"data:image/png;base64,{qr_data}",
+        }
