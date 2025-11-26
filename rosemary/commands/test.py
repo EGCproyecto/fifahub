@@ -1,5 +1,6 @@
 import os
 import subprocess
+import sys
 
 import click
 
@@ -20,7 +21,7 @@ def test(module_name, keyword):
     else:
         click.echo("Running tests for all modules...")
 
-    pytest_cmd = ["pytest", "-v", "--ignore-glob=*selenium*", test_path]
+    pytest_cmd = [sys.executable, "-m", "pytest", "-v", "--ignore-glob=*selenium*", test_path]
 
     if keyword:
         pytest_cmd.extend(["-k", keyword])
