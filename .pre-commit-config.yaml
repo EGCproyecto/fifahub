@@ -24,9 +24,9 @@ repos:
         language: system
         types_or: [python, pyi]
 
-      - id: pytest-no-mariadb
-        name: pytest (no MariaDB)
-        entry: pytest --ignore-glob "*selenium*" -m "not requires_db"
+      - id: rosemary-test-no-mariadb
+        name: rosemary test (no MariaDB)
+        entry: rosemary test
         language: system
         pass_filenames: false
         stages: [push]
