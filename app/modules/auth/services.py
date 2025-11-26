@@ -2,9 +2,9 @@ import base64
 import os
 from io import BytesIO
 
-from flask_login import current_user, login_user
 import pyotp
 import qrcode
+from flask_login import current_user, login_user
 
 from app.modules.auth.models import User
 from app.modules.auth.repositories import UserRepository
