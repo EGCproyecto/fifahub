@@ -21,6 +21,7 @@ from app.modules.dataset.services import (
     DSMetaDataService,
     DSViewRecordService,
 )
+from app.modules.dataset.services.recommendation_service import RecommendationService
 from app.modules.dataset.services.resolvers import render_detail
 from app.modules.zenodo.services import ZenodoService
 
@@ -35,6 +36,7 @@ doi_mapping_service = DOIMappingService()
 ds_view_record_service = DSViewRecordService()
 ds_download_record_service = DSDownloadRecordService()
 ds_download_record_service = DSDownloadRecordService()
+recommendation_service = RecommendationService()
 
 
 @dataset_bp.route("/dataset/upload", methods=["GET", "POST"])
@@ -246,6 +248,7 @@ def view_dataset(dataset_id: int):
         abort(403)
 
     detail_template, detail_ctx = render_detail(dataset.type, dataset)
+    detail_ctx["related_datasets"] = recommendation_service.get_related_datasets(dataset.id)
     versions = DatasetVersion.query.filter_by(dataset_id=dataset.id).order_by(DatasetVersion.created_at.desc()).all()
 
     return render_template(
@@ -279,6 +282,7 @@ def subdomain_index(doi):
 
     # resolver de detalle (tu flujo original)
     detail_template, detail_ctx = render_detail(dataset.type, dataset)
+    detail_ctx["related_datasets"] = recommendation_service.get_related_datasets(dataset.id)
 
     # 🔹 NUEVO: versiones ordenadas (últimas primero) y pasadas a la plantilla
     versions = DatasetVersion.query.filter_by(dataset_id=dataset.id).order_by(DatasetVersion.created_at.desc()).all()
@@ -306,6 +310,7 @@ def get_unsynchronized_dataset(dataset_id):
         abort(404)
 
     detail_template, detail_ctx = render_detail(dataset.type, dataset)
+    detail_ctx["related_datasets"] = recommendation_service.get_related_datasets(dataset.id)
 
     # 🔹 NUEVO: versiones también para no sincronizados (si existen)
     versions = DatasetVersion.query.filter_by(dataset_id=dataset.id).order_by(DatasetVersion.created_at.desc()).all()
