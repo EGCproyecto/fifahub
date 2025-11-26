@@ -13,9 +13,17 @@ class User(db.Model, UserMixin):
     email = db.Column(db.String(256), unique=True, nullable=False)
     password = db.Column(db.String(256), nullable=False)
     created_at = db.Column(db.DateTime, nullable=False, default=lambda: datetime.now(timezone.utc))
+    two_factor_enabled = db.Column(db.Boolean, nullable=False, default=False)
+    two_factor_secret = db.Column(db.String(512), nullable=True)
 
     data_sets = db.relationship("BaseDataset", backref="user", lazy=True)
     profile = db.relationship("UserProfile", backref="user", uselist=False)
+    recovery_codes = db.relationship(
+        "UserTwoFactorRecoveryCode",
+        backref="user",
+        cascade="all, delete-orphan",
+        lazy=True,
+    )
 
     def __init__(self, **kwargs):
         super(User, self).__init__(**kwargs)
@@ -35,3 +43,9 @@ class User(db.Model, UserMixin):
         from app.modules.auth.services import AuthenticationService
 
         return AuthenticationService().temp_folder_by_user(self)
+
+
+class UserTwoFactorRecoveryCode(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False, index=True)
+    encrypted_code = db.Column(db.String(512), nullable=False)
