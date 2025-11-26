@@ -9,7 +9,7 @@ depends_on = None
 
 
 def upgrade():
-    pass # NO foreign keys aquí. Se añaden en la siguiente migración.
+    pass  # NO foreign keys aquí. Se añaden en la siguiente migración.
 
 
 def downgrade():
