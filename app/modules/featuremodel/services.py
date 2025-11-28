@@ -8,6 +8,11 @@ class FeatureModelService(BaseService):
         super().__init__(FeatureModelRepository())
         self.hubfile_service = HubfileService()
 
+    @staticmethod
+    def should_skip_feature_extraction(file_name: str | None) -> bool:
+        """Return True when the feature extraction flow should be bypassed (e.g., CSV tabular files)."""
+        return bool(file_name and file_name.lower().endswith(".csv"))
+
     def total_feature_model_views(self) -> int:
         return self.hubfile_service.total_hubfile_views()
 

@@ -29,7 +29,11 @@ def _uploads_dir() -> str:
 
 
 def _save_uploaded_file(file_storage) -> str:
-    filename = secure_filename(file_storage.filename or f"upload-{uuid.uuid4().hex}.csv")
+    original = secure_filename(file_storage.filename or "")
+    base, ext = os.path.splitext(original)
+    base = base or "upload"
+    ext = ext or ".csv"
+    filename = f"{base}-{uuid.uuid4().hex}{ext}"
     path = os.path.join(_uploads_dir(), filename)
     file_storage.save(path)
     if os.path.getsize(path) == 0:
