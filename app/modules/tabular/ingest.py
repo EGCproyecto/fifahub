@@ -29,6 +29,15 @@ class TabularIngestor:
                 raise ValueError("Debes pasar file_path o un hubfile_id con resolve_path definido.")
             file_path = self._resolve_path(hubfile_id)
 
+        existing_meta = TabularMetaData.query.filter_by(dataset_id=dataset_id).first()
+        existing_metrics = TabularMetrics.query.filter_by(dataset_id=dataset_id).first()
+        if existing_meta:
+            db.session.delete(existing_meta)
+        if existing_metrics:
+            db.session.delete(existing_metrics)
+        if existing_meta or existing_metrics:
+            db.session.flush()
+
         parsed = parse_csv_metadata(
             file_path=file_path,
             delimiter=delimiter,

@@ -15,7 +15,14 @@
     <div class="mb-3">
       <label class="form-label">{{ form.csv_file.label }}</label>
       {{ form.csv_file(class="form-control") }}
-      {% for e in form.csv_file.errors %}<div class="text-danger small">{{ e }}</div>{% endfor %}
+      <div class="form-text">Only official FIFA CSV datasets are accepted.</div>
+      {% if form.csv_file.errors %}
+        <div class="alert alert-danger mt-2" role="alert">
+          {% for e in form.csv_file.errors %}
+            <div>{{ e }}</div>
+          {% endfor %}
+        </div>
+      {% endif %}
     </div>
 
     <div class="row">
