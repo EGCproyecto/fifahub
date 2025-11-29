@@ -1,3 +1,4 @@
+import pyotp
 import pytest
 from flask import url_for
 
@@ -122,3 +123,56 @@ def test_service_create_with_profile_fail_no_password(clean_database):
 
     assert UserRepository().count() == 0
     assert UserProfileRepository().count() == 0
+
+
+def _prepare_user_with_two_factor(email: str):
+    service = AuthenticationService()
+    user = service.create_with_profile(name="Foo", surname="Bar", email=email, password="test1234")
+    setup = service.generate_two_factor_setup(user)
+    totp = pyotp.TOTP(setup["secret"])
+    codes = service.verify_two_factor_setup(user, totp.now())
+    return service, user, codes
+
+
+def test_recovery_codes_generated_and_returned(clean_database):
+    service, user, codes = _prepare_user_with_two_factor("recover1@example.com")
+
+    assert user.two_factor_enabled is True
+    assert len(codes) == 8
+    assert all(len(code) == 10 for code in codes)
+
+
+def test_recovery_code_consumed_after_use(clean_database):
+    service, user, codes = _prepare_user_with_two_factor("recover2@example.com")
+
+    assert service.use_recovery_code(user, codes[0]) is True
+    with pytest.raises(ValueError):
+        service.use_recovery_code(user, codes[0])
+
+
+def test_regenerate_recovery_codes_replaces_previous(clean_database):
+    service, user, codes = _prepare_user_with_two_factor("recover3@example.com")
+
+    new_codes = service.regenerate_recovery_codes(user)
+
+    assert len(new_codes) == 8
+    assert new_codes != codes
+    with pytest.raises(ValueError):
+        service.use_recovery_code(user, codes[0])
+    assert service.use_recovery_code(user, new_codes[0]) is True
+
+
+def test_regenerate_requires_enabled_two_factor(clean_database):
+    service = AuthenticationService()
+    user = service.create_with_profile(name="Foo", surname="Bar", email="recover4@example.com", password="abc1234")
+
+    with pytest.raises(ValueError):
+        service.regenerate_recovery_codes(user)
+
+
+def test_recovery_code_invalid_value(clean_database):
+    service, user, codes = _prepare_user_with_two_factor("recover5@example.com")
+
+    with pytest.raises(ValueError):
+        service.use_recovery_code(user, "invalid")
+    assert service.use_recovery_code(user, codes[1]) is True

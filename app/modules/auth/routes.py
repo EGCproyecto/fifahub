@@ -76,3 +76,29 @@ def verify_two_factor_setup():
     except Exception:
         return jsonify({"message": "Unable to verify 2FA setup"}), 500
     return jsonify({"recovery_codes": codes})
+
+
+@auth_bp.route("/2fa/recovery/regenerate", methods=["POST"])
+@login_required
+def regenerate_recovery_codes():
+    try:
+        codes = authentication_service.regenerate_recovery_codes(current_user)
+    except ValueError as exc:
+        return jsonify({"message": str(exc)}), 400
+    except Exception:
+        return jsonify({"message": "Unable to regenerate recovery codes"}), 500
+    return jsonify({"recovery_codes": codes})
+
+
+@auth_bp.route("/2fa/recovery/verify", methods=["POST"])
+@login_required
+def verify_recovery_code():
+    payload = request.get_json(silent=True) or {}
+    code = payload.get("code", "")
+    try:
+        authentication_service.use_recovery_code(current_user, code)
+    except ValueError as exc:
+        return jsonify({"message": str(exc)}), 400
+    except Exception:
+        return jsonify({"message": "Unable to verify recovery code"}), 500
+    return jsonify({"message": "Recovery code accepted"})

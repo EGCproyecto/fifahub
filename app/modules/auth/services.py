@@ -96,7 +96,7 @@ class AuthenticationService(BaseService):
         qr_data = base64.b64encode(buffer.getvalue()).decode("ascii")
         user.two_factor_secret = encrypt_text(secret)
         user.two_factor_enabled = False
-        self.repository.session.query(UserTwoFactorRecoveryCode).filter_by(user_id=user.id).delete()
+        self._recovery_codes_query(user).delete()
         self.repository.session.commit()
         return {
             "secret": secret,
@@ -104,8 +104,11 @@ class AuthenticationService(BaseService):
             "qr_code": f"data:image/png;base64,{qr_data}",
         }
 
+    def _recovery_codes_query(self, user: User):
+        return self.repository.session.query(UserTwoFactorRecoveryCode).filter_by(user_id=user.id)
+
     def _generate_recovery_codes(self, user: User, count: int = 8) -> list[str]:
-        self.repository.session.query(UserTwoFactorRecoveryCode).filter_by(user_id=user.id).delete()
+        self._recovery_codes_query(user).delete()
         codes: list[str] = []
         for _ in range(count):
             code = secrets.token_hex(5)
@@ -114,6 +117,35 @@ class AuthenticationService(BaseService):
             self.repository.session.add(record)
             codes.append(code)
         return codes
+
+    def regenerate_recovery_codes(self, user: User) -> list[str]:
+        if user is None:
+            raise ValueError("User required")
+        if not user.two_factor_enabled:
+            raise ValueError("2FA no activada")
+        codes = self._generate_recovery_codes(user)
+        self.repository.session.commit()
+        return codes
+
+    def use_recovery_code(self, user: User, code: str) -> bool:
+        if user is None:
+            raise ValueError("User required")
+        candidate = (code or "").strip().lower()
+        if not candidate:
+            raise ValueError("Código inválido")
+
+        records = self._recovery_codes_query(user).all()
+        for record in records:
+            try:
+                stored = decrypt_text(record.encrypted_code).lower()
+            except InvalidToken:
+                continue
+            if secrets.compare_digest(stored, candidate):
+                self.repository.session.delete(record)
+                self.repository.session.commit()
+                return True
+
+        raise ValueError("Código de recuperación inválido")
 
     def verify_two_factor_setup(self, user: User, code: str) -> list[str]:
         if user is None:
