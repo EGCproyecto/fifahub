@@ -6,7 +6,6 @@ import os
 
 from cryptography.fernet import Fernet, InvalidToken
 
-
 _fernet_instance: Fernet | None = None
 
 
