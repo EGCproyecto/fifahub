@@ -62,3 +62,17 @@ def two_factor_setup():
     except Exception:
         return jsonify({"message": "Unable to generate 2FA setup"}), 500
     return jsonify(data)
+
+
+@auth_bp.route("/2fa/verify-setup", methods=["POST"])
+@login_required
+def verify_two_factor_setup():
+    payload = request.get_json(silent=True) or {}
+    code = payload.get("code", "")
+    try:
+        codes = authentication_service.verify_two_factor_setup(current_user, code)
+    except ValueError as exc:
+        return jsonify({"message": str(exc)}), 400
+    except Exception:
+        return jsonify({"message": "Unable to verify 2FA setup"}), 500
+    return jsonify({"recovery_codes": codes})

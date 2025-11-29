@@ -1,17 +1,19 @@
 import base64
 import os
+import secrets
 from io import BytesIO
 
 import pyotp
 import qrcode
 from flask_login import current_user, login_user
 
-from app.modules.auth.models import User
+from app.modules.auth.models import User, UserTwoFactorRecoveryCode
 from app.modules.auth.repositories import UserRepository
 from app.modules.profile.models import UserProfile
 from app.modules.profile.repositories import UserProfileRepository
 from core.configuration.configuration import uploads_folder_name
 from core.services.BaseService import BaseService
+from core.services.encryption import InvalidToken, decrypt_text, encrypt_text
 
 
 class AuthenticationService(BaseService):
@@ -92,11 +94,44 @@ class AuthenticationService(BaseService):
         buffer = BytesIO()
         qr_image.save(buffer, format="PNG")
         qr_data = base64.b64encode(buffer.getvalue()).decode("ascii")
-        user.two_factor_secret = secret
+        user.two_factor_secret = encrypt_text(secret)
         user.two_factor_enabled = False
+        self.repository.session.query(UserTwoFactorRecoveryCode).filter_by(user_id=user.id).delete()
         self.repository.session.commit()
         return {
             "secret": secret,
             "otpauth_url": otpauth_url,
             "qr_code": f"data:image/png;base64,{qr_data}",
         }
+
+    def _generate_recovery_codes(self, user: User, count: int = 8) -> list[str]:
+        self.repository.session.query(UserTwoFactorRecoveryCode).filter_by(user_id=user.id).delete()
+        codes: list[str] = []
+        for _ in range(count):
+            code = secrets.token_hex(5)
+            encrypted = encrypt_text(code)
+            record = UserTwoFactorRecoveryCode(user_id=user.id, encrypted_code=encrypted)
+            self.repository.session.add(record)
+            codes.append(code)
+        return codes
+
+    def verify_two_factor_setup(self, user: User, code: str) -> list[str]:
+        if user is None:
+            raise ValueError("User required")
+        trimmed = (code or "").strip()
+        if len(trimmed) != 6 or not trimmed.isdigit():
+            raise ValueError("Código inválido")
+        if not user.two_factor_secret:
+            raise ValueError("No hay secreto configurado")
+        try:
+            secret = decrypt_text(user.two_factor_secret)
+        except InvalidToken as exc:
+            raise RuntimeError("Secreto inválido") from exc
+        totp = pyotp.TOTP(secret)
+        if not totp.verify(trimmed, valid_window=1):
+            raise ValueError("Código inválido")
+        user.two_factor_enabled = True
+        user.two_factor_secret = encrypt_text(secret)
+        codes = self._generate_recovery_codes(user)
+        self.repository.session.commit()
+        return codes
