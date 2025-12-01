@@ -29,21 +29,25 @@ def upgrade():
         "user_two_factor_recovery_code",
         ["user_id"],
     )
-    op.alter_column(
-        "user",
-        "two_factor_enabled",
-        server_default=None,
-        existing_type=sa.Boolean(),
-    )
+    bind = op.get_bind()
+    if bind.dialect.name != "sqlite":
+        op.alter_column(
+            "user",
+            "two_factor_enabled",
+            server_default=None,
+            existing_type=sa.Boolean(),
+        )
 
 
 def downgrade():
-    op.alter_column(
-        "user",
-        "two_factor_enabled",
-        server_default=sa.text("0"),
-        existing_type=sa.Boolean(),
-    )
+    bind = op.get_bind()
+    if bind.dialect.name != "sqlite":
+        op.alter_column(
+            "user",
+            "two_factor_enabled",
+            server_default=sa.text("0"),
+            existing_type=sa.Boolean(),
+        )
     op.drop_index("ix_user_two_factor_recovery_code_user_id", table_name="user_two_factor_recovery_code")
     op.drop_table("user_two_factor_recovery_code")
     op.drop_column("user", "two_factor_secret")
