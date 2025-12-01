@@ -168,9 +168,7 @@ def test_regenerate_recovery_codes_replaces_previous(test_app, clean_database):
 def test_regenerate_requires_enabled_two_factor(test_app, clean_database):
     with test_app.app_context():
         service = AuthenticationService()
-        user = service.create_with_profile(
-            name="Foo", surname="Bar", email="recover4@example.com", password="abc1234"
-        )
+        user = service.create_with_profile(name="Foo", surname="Bar", email="recover4@example.com", password="abc1234")
 
         with pytest.raises(ValueError):
             service.regenerate_recovery_codes(user)
