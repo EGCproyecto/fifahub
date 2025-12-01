@@ -1,4 +1,4 @@
-2025-11-28 13:40:36,653 - app - ERROR - Falló la ingesta tabular
+2025-11-28 13:40:36,665 - app - ERROR - Falló la ingesta tabular
 Traceback (most recent call last):
   File "/home/sergio/fifahub/env/lib/python3.12/site-packages/sqlalchemy/engine/base.py", line 1956, in _exec_single_context
     self.dialect.do_execute(
@@ -96,3 +96,51 @@ sqlalchemy.exc.IntegrityError: (pymysql.err.IntegrityError) (1062, "Duplicate en
 [SQL: INSERT INTO tabular_meta_data (hubfile_id, delimiter, encoding, has_header, n_rows, n_cols, primary_keys, index_cols, sample_rows, dataset_id) VALUES (%(hubfile_id)s, %(delimiter)s, %(encoding)s, %(has_header)s, %(n_rows)s, %(n_cols)s, %(primary_keys)s, %(index_cols)s, %(sample_rows)s, %(dataset_id)s)]
 [parameters: {'hubfile_id': None, 'delimiter': ',', 'encoding': 'utf-8', 'has_header': 0, 'n_rows': 2, 'n_cols': 15, 'primary_keys': 'null', 'index_cols': 'null', 'sample_rows': '[["ID", "Name", "Age", "Nationality", "Overall", "Potential", "Club", "Value", "Wage", "Preferred Foot", "Weak Foot", "Skill Moves", "Position", "Height", "Weight"], ["1", "Test Player", "25", "Country", "80", "85", "Club", "1000000", "50000", "Right", "4", "4", "ST", "180", "75"]]', 'dataset_id': 7}]
 (Background on this error at: https://sqlalche.me/e/20/gkpj)
+2025-11-28 13:45:19,326 - app - ERROR - Falló la ingesta tabular
+Traceback (most recent call last):
+  File "/home/sergio/fifahub/app/modules/tabular/routes.py", line 95, in upload
+    ingestor.ingest(
+  File "/home/sergio/fifahub/app/modules/tabular/ingest.py", line 41, in ingest
+    parsed = parse_csv_metadata(
+             ^^^^^^^^^^^^^^^^^^^
+  File "/home/sergio/fifahub/app/modules/tabular/utils/parser.py", line 27, in parse_csv_metadata
+    if os.path.getsize(file_path) == 0:
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<frozen genericpath>", line 62, in getsize
+FileNotFoundError: [Errno 2] No such file or directory: 'uploads/fifa.csv'
+2025-11-28 13:45:27,840 - app - ERROR - Falló la ingesta tabular
+Traceback (most recent call last):
+  File "/home/sergio/fifahub/app/modules/tabular/routes.py", line 95, in upload
+    ingestor.ingest(
+  File "/home/sergio/fifahub/app/modules/tabular/ingest.py", line 41, in ingest
+    parsed = parse_csv_metadata(
+             ^^^^^^^^^^^^^^^^^^^
+  File "/home/sergio/fifahub/app/modules/tabular/utils/parser.py", line 27, in parse_csv_metadata
+    if os.path.getsize(file_path) == 0:
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<frozen genericpath>", line 62, in getsize
+FileNotFoundError: [Errno 2] No such file or directory: 'uploads/fifa.csv'
+2025-11-28 13:45:27,840 - app - ERROR - Falló la ingesta tabular
+Traceback (most recent call last):
+  File "/home/sergio/fifahub/app/modules/tabular/routes.py", line 95, in upload
+    ingestor.ingest(
+  File "/home/sergio/fifahub/app/modules/tabular/ingest.py", line 41, in ingest
+    parsed = parse_csv_metadata(
+             ^^^^^^^^^^^^^^^^^^^
+  File "/home/sergio/fifahub/app/modules/tabular/utils/parser.py", line 27, in parse_csv_metadata
+    if os.path.getsize(file_path) == 0:
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<frozen genericpath>", line 62, in getsize
+FileNotFoundError: [Errno 2] No such file or directory: 'uploads/fifa.csv'
+2025-11-28 13:45:39,531 - app - ERROR - Falló la ingesta tabular
+Traceback (most recent call last):
+  File "/home/sergio/fifahub/app/modules/tabular/routes.py", line 95, in upload
+    ingestor.ingest(
+  File "/home/sergio/fifahub/app/modules/tabular/ingest.py", line 41, in ingest
+    parsed = parse_csv_metadata(
+             ^^^^^^^^^^^^^^^^^^^
+  File "/home/sergio/fifahub/app/modules/tabular/utils/parser.py", line 27, in parse_csv_metadata
+    if os.path.getsize(file_path) == 0:
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<frozen genericpath>", line 62, in getsize
+FileNotFoundError: [Errno 2] No such file or directory: 'uploads/fifa.csv'

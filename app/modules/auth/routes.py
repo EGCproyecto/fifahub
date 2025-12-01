@@ -54,6 +54,12 @@ def logout():
     return redirect(url_for("public.index"))
 
 
+@auth_bp.route("/2fa/settings", methods=["GET"])
+@login_required
+def two_factor_settings():
+    return render_template("auth/two_factor_setup.html")
+
+
 @auth_bp.route("/2fa/setup", methods=["POST"])
 @login_required
 def two_factor_setup():
