@@ -10,9 +10,10 @@ from flask import abort, jsonify, make_response, redirect, render_template, requ
 from flask_login import current_user, login_required
 
 from app import db
+from app.modules.auth.services import FollowService
 from app.modules.dataset import dataset_bp
 from app.modules.dataset.forms import DataSetForm
-from app.modules.dataset.models import BaseDataset, DatasetVersion
+from app.modules.dataset.models import Author, BaseDataset, DatasetVersion
 from app.modules.dataset.services import (
     AuthorService,
     DataSetService,
@@ -37,6 +38,7 @@ ds_view_record_service = DSViewRecordService()
 ds_download_record_service = DSDownloadRecordService()
 ds_download_record_service = DSDownloadRecordService()
 recommendation_service = RecommendationService()
+follow_service = FollowService()
 
 
 @dataset_bp.route("/dataset/upload", methods=["GET", "POST"])
@@ -320,4 +322,46 @@ def get_unsynchronized_dataset(dataset_id):
         detail_template=detail_template,
         versions=versions,  # <- aquí van las versiones
         **detail_ctx,  # meta=..., dataset=..., etc.
+    )
+
+
+@dataset_bp.route("/authors/<int:author_id>", methods=["GET"])
+def author_detail(author_id: int):
+    author = Author.query.get_or_404(author_id)
+
+    followers = follow_service.get_followers_for_author(author)
+    author_follower_count = len(followers)
+
+    is_following_author = False
+    if current_user.is_authenticated:
+        followed_authors = follow_service.get_followed_authors_for_user(current_user)
+        is_following_author = any(a.id == author.id for a in followed_authors)
+
+    return render_template(
+        "dataset/author_detail.html",
+        author=author,
+        author_follower_count=author_follower_count,
+        is_following_author=is_following_author,
+    )
+
+
+@dataset_bp.route("/communities/<string:community_id>", methods=["GET"])
+def community_detail(community_id: str):
+    community_identifier = (community_id or "").strip()
+    if not community_identifier:
+        abort(404)
+
+    followers = follow_service.get_followers_for_community(community_identifier)
+    community_follower_count = len(followers)
+
+    is_following_community = False
+    if current_user.is_authenticated:
+        followed_communities = follow_service.get_followed_communities_for_user(current_user)
+        is_following_community = community_identifier in followed_communities
+
+    return render_template(
+        "dataset/community_detail.html",
+        community_id=community_identifier,
+        community_follower_count=community_follower_count,
+        is_following_community=is_following_community,
     )
