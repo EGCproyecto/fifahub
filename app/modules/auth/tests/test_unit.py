@@ -1,5 +1,5 @@
-import pytest
 import pyotp
+import pytest
 from flask import url_for
 
 from app.modules.auth.repositories import UserRepository
