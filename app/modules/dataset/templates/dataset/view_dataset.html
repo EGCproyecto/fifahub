@@ -69,7 +69,9 @@
                         {% if dataset.ds_meta_data.authors %}
                             {% for author in dataset.ds_meta_data.authors %}
                                 <p class="p-0 m-0">
-                                    {{ author.name }}
+                                    <a href="{{ url_for('dataset.author_detail', author_id=author.id) }}">
+                                        {{ author.name }}
+                                    </a>
                                     {% if author.affiliation %} ({{ author.affiliation }}){% endif %}
                                     {% if author.orcid %} ({{ author.orcid }}){% endif %}
                                 </p>

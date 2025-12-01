@@ -3,11 +3,13 @@ from flask_login import current_user, login_required
 
 from app import db
 from app.modules.auth.models import User
-from app.modules.auth.services import AuthenticationService
-from app.modules.dataset.models import BaseDataset, DataSet
+from app.modules.auth.services import AuthenticationService, FollowService
+from app.modules.dataset.models import Author, BaseDataset, DataSet
 from app.modules.profile import profile_bp
 from app.modules.profile.forms import UserProfileForm
 from app.modules.profile.services import UserProfileService
+
+follow_service = FollowService()
 
 
 @profile_bp.route("/profile/edit", methods=["GET", "POST"])
@@ -40,6 +42,12 @@ def my_profile():
     page = request.args.get("page", 1, type=int)
     per_page = 5
 
+    followed_authors = []
+    followed_communities = []
+    if current_user.is_authenticated:
+        followed_authors = follow_service.get_followed_authors_for_user(current_user)
+        followed_communities = follow_service.get_followed_communities_for_user(current_user)
+
     user_datasets_pagination = (
         db.session.query(DataSet)
         .filter(DataSet.user_id == current_user.id)
@@ -58,6 +66,8 @@ def my_profile():
         datasets=user_datasets_pagination.items,
         pagination=user_datasets_pagination,
         total_datasets=total_datasets_count,
+        followed_authors=followed_authors,
+        followed_communities=followed_communities,
     )
 
 
