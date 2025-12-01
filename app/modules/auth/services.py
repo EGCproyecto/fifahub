@@ -2,13 +2,20 @@ import base64
 import os
 import secrets
 from io import BytesIO
+from typing import List
 
 import pyotp
 import qrcode
 from flask_login import current_user, login_user
+from sqlalchemy.exc import SQLAlchemyError
 
-from app.modules.auth.models import User, UserTwoFactorRecoveryCode
-from app.modules.auth.repositories import UserRepository
+from app.modules.auth.models import User, UserFollowAuthor, UserFollowCommunity, UserTwoFactorRecoveryCode
+from app.modules.auth.repositories import (
+    UserFollowAuthorRepository,
+    UserFollowCommunityRepository,
+    UserRepository,
+)
+from app.modules.dataset.models import Author
 from app.modules.profile.models import UserProfile
 from app.modules.profile.repositories import UserProfileRepository
 from core.configuration.configuration import uploads_folder_name
@@ -167,3 +174,107 @@ class AuthenticationService(BaseService):
         codes = self._generate_recovery_codes(user)
         self.repository.session.commit()
         return codes
+
+
+class FollowService(BaseService):
+    def __init__(self):
+        super().__init__(UserFollowAuthorRepository())
+        self.user_follow_author_repository = UserFollowAuthorRepository()
+        self.user_follow_community_repository = UserFollowCommunityRepository()
+
+    def _ensure_user(self, user: User):
+        if user is None:
+            raise ValueError("User is required")
+        if user.id is None:
+            raise ValueError("User must be persisted before using follow features")
+
+    def _ensure_author(self, author: Author):
+        if author is None:
+            raise ValueError("Author is required")
+        if author.id is None:
+            raise ValueError("Author must be persisted before being followed")
+
+    def _normalize_community_id(self, community) -> str:
+        if community is None:
+            raise ValueError("Community is required")
+        if isinstance(community, str):
+            return community
+        community_id = getattr(community, "id", None) or getattr(community, "name", None)
+        if community_id is None:
+            raise ValueError("Community identifier is required")
+        return str(community_id)
+
+    def follow_author(self, user: User, author: Author) -> UserFollowAuthor:
+        self._ensure_user(user)
+        self._ensure_author(author)
+        if user.id == getattr(author, "id", None):
+            raise ValueError("Users cannot follow themselves.")
+        existing = self.user_follow_author_repository.get_by_user_and_author(user.id, author.id)
+        if existing is not None:
+            return existing
+        try:
+            return self.user_follow_author_repository.create(
+                user_id=user.id,
+                author_id=author.id,
+            )
+        except SQLAlchemyError as exc:
+            raise RuntimeError("Failed to follow author") from exc
+
+    def unfollow_author(self, user: User, author: Author) -> bool:
+        self._ensure_user(user)
+        self._ensure_author(author)
+        try:
+            return self.user_follow_author_repository.delete_by_user_and_author(user.id, author.id)
+        except SQLAlchemyError as exc:
+            raise RuntimeError("Failed to unfollow author") from exc
+
+    def follow_community(self, user: User, community) -> UserFollowCommunity:
+        self._ensure_user(user)
+        community_id = self._normalize_community_id(community)
+        existing = self.user_follow_community_repository.get_by_user_and_community(user.id, community_id)
+        if existing is not None:
+            return existing
+        try:
+            return self.user_follow_community_repository.create(
+                user_id=user.id,
+                community_id=community_id,
+            )
+        except SQLAlchemyError as exc:
+            raise RuntimeError("Failed to follow community") from exc
+
+    def unfollow_community(self, user: User, community) -> bool:
+        self._ensure_user(user)
+        community_id = self._normalize_community_id(community)
+        try:
+            return self.user_follow_community_repository.delete_by_user_and_community(user.id, community_id)
+        except SQLAlchemyError as exc:
+            raise RuntimeError("Failed to unfollow community") from exc
+
+    def get_followed_authors_for_user(self, user: User) -> List[Author]:
+        self._ensure_user(user)
+        rows = self.user_follow_author_repository.get_for_user(user.id)
+        if not rows:
+            return []
+        author_ids = [row.author_id for row in rows]
+        return Author.query.filter(Author.id.in_(author_ids)).all()
+
+    def get_followed_communities_for_user(self, user: User) -> List[str]:
+        self._ensure_user(user)
+        rows = self.user_follow_community_repository.get_for_user(user.id)
+        return [row.community_id for row in rows]
+
+    def get_followers_for_author(self, author: Author) -> List[User]:
+        self._ensure_author(author)
+        rows = self.user_follow_author_repository.get_for_author(author.id)
+        if not rows:
+            return []
+        user_ids = [row.user_id for row in rows]
+        return User.query.filter(User.id.in_(user_ids)).all()
+
+    def get_followers_for_community(self, community) -> List[User]:
+        community_id = self._normalize_community_id(community)
+        rows = self.user_follow_community_repository.get_for_community(community_id)
+        if not rows:
+            return []
+        user_ids = [row.user_id for row in rows]
+        return User.query.filter(User.id.in_(user_ids)).all()
