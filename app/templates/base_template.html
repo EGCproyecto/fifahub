@@ -119,6 +119,13 @@
                         </a>
                     </li>
 
+                    <li class="sidebar-item {{ 'active' if request.endpoint == 'auth.two_factor_settings' else '' }}">
+                        <a class="sidebar-link" href="{{ url_for('auth.two_factor_settings') }}">
+                            <i class="align-middle" data-feather="shield"></i> <span
+                                class="align-middle">Security (2FA)</span>
+                        </a>
+                    </li>
+
                     <li class="sidebar-item">
                         <a class="sidebar-link" href="{{ url_for('auth.logout') }}">
                             <i class="align-middle" data-feather="log-out"></i> <span

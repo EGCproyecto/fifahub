@@ -1,0 +1,263 @@
+{% extends "base_template.html" %}
+
+{% block title %}Two-Factor Authentication{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card shadow-sm">
+            <div class="card-header">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Two-Factor Authentication</h5>
+                    <span id="twoFactorStatus" class="badge"></span>
+                </div>
+            </div>
+            <div class="card-body">
+                <p>
+                    Protect your account by requiring a verification code from your authenticator app
+                    when you sign in. Start by generating your QR code and scanning it with Google
+                    Authenticator, Authy, or any TOTP compatible app.
+                </p>
+
+                <div id="alertContainer"></div>
+
+                <div id="introSection" class="mb-4 {% if current_user.two_factor_enabled %}d-none{% endif %}">
+                    <button class="btn btn-primary" id="startSetupBtn">
+                        <i class="align-middle" data-feather="shield"></i>
+                        <span class="align-middle">Enable 2FA</span>
+                    </button>
+                </div>
+
+                <div id="setupSection" class="d-none">
+                    <div class="border rounded p-3 mb-3 bg-light">
+                        <h6 class="text-uppercase text-muted">1. Scan this QR code</h6>
+                        <div class="text-center py-3">
+                            <img id="qrImage" src="" alt="TOTP QR" class="img-fluid" style="max-width: 260px;">
+                        </div>
+                        <p class="text-muted small">
+                            Can't scan? Enter this secret manually in your authenticator app.
+                        </p>
+                        <div class="input-group mb-3">
+                            <input type="text" id="secretField" class="form-control" readonly>
+                            <button class="btn btn-outline-secondary" type="button" id="copySecretBtn">
+                                Copy
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="border rounded p-3 mb-3">
+                        <h6 class="text-uppercase text-muted">2. Confirm the setup</h6>
+                        <label class="form-label" for="totpInput">Enter the 6-digit code from your app</label>
+                        <input type="text" id="totpInput" class="form-control mb-3" maxlength="6" placeholder="123456">
+                        <div class="d-flex gap-2">
+                            <button class="btn btn-success" id="verifyCodeBtn">Verify code</button>
+                            <button class="btn btn-outline-secondary" id="cancelSetupBtn">Cancel</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="successSection" class="{% if not current_user.two_factor_enabled %}d-none{% endif %}">
+                    <div class="alert alert-success" id="statusMessage">
+                        Two-factor authentication is enabled for your account.
+                    </div>
+                    <div class="d-flex flex-wrap gap-2 mb-3">
+                        <button class="btn btn-outline-primary" id="regenerateBtn">
+                            Regenerate recovery codes
+                        </button>
+                        <button class="btn btn-outline-secondary d-none" id="downloadCodesBtn">
+                            Download recovery codes
+                        </button>
+                    </div>
+                    <div id="recoveryList" class="d-none">
+                        <h6>Recovery codes</h6>
+                        <p class="text-muted small">
+                            Store these codes in a safe place. Each code can be used once if you lose access to your authenticator device.
+                        </p>
+                        <ul class="list-group" id="codesContainer"></ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+    const state = {
+        enabled: {{ 'true' if current_user.two_factor_enabled else 'false' }},
+        codes: [],
+    };
+
+    const statusBadge = document.getElementById("twoFactorStatus");
+    const introSection = document.getElementById("introSection");
+    const setupSection = document.getElementById("setupSection");
+    const successSection = document.getElementById("successSection");
+    const alertContainer = document.getElementById("alertContainer");
+    const startBtn = document.getElementById("startSetupBtn");
+    const verifyBtn = document.getElementById("verifyCodeBtn");
+    const cancelBtn = document.getElementById("cancelSetupBtn");
+    const regenerateBtn = document.getElementById("regenerateBtn");
+    const downloadBtn = document.getElementById("downloadCodesBtn");
+    const codesContainer = document.getElementById("codesContainer");
+    const recoveryList = document.getElementById("recoveryList");
+    const statusMessage = document.getElementById("statusMessage");
+    const qrImage = document.getElementById("qrImage");
+    const secretField = document.getElementById("secretField");
+    const copySecretBtn = document.getElementById("copySecretBtn");
+    const totpInput = document.getElementById("totpInput");
+
+    const setStatus = (enabled) => {
+        state.enabled = enabled;
+        statusBadge.className = enabled ? "badge bg-success" : "badge bg-secondary";
+        statusBadge.textContent = enabled ? "Enabled" : "Disabled";
+        if (enabled) {
+            introSection.classList.add("d-none");
+            successSection.classList.remove("d-none");
+            setupSection.classList.add("d-none");
+        } else {
+            introSection.classList.remove("d-none");
+            successSection.classList.add("d-none");
+        }
+    };
+
+    const showAlert = (type, message) => {
+        alertContainer.innerHTML = `\n            <div class="alert alert-${type}" role="alert">${message}</div>\n        `;
+    };
+
+    const clearAlert = () => (alertContainer.innerHTML = "");
+
+    const toggleLoading = (button, loading, text = "") => {
+        if (!button) return;
+        if (loading) {
+            button.dataset.original = button.innerHTML;
+            button.innerHTML = `<span class="spinner-border spinner-border-sm me-2"></span>${text || "Loading"}`;
+            button.disabled = true;
+        } else if (button.dataset.original) {
+            button.innerHTML = button.dataset.original;
+            button.disabled = false;
+        }
+    };
+
+    const downloadCodes = () => {
+        if (!state.codes.length) return;
+        const blob = new Blob([state.codes.join("\n")], { type: "text/plain" });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = "recovery-codes.txt";
+        link.click();
+        URL.revokeObjectURL(url);
+    };
+
+    const renderCodes = (codes) => {
+        state.codes = codes;
+        codesContainer.innerHTML = codes.map((code) => `<li class="list-group-item">${code}</li>`).join("");
+        recoveryList.classList.remove("d-none");
+        downloadBtn.classList.remove("d-none");
+    };
+
+    const fetchJSON = async (url, options = {}) => {
+        const response = await fetch(url, {
+            method: "POST",
+            credentials: "same-origin",
+            headers: { "Content-Type": "application/json", ...(options.headers || {}) },
+            body: options.body ? JSON.stringify(options.body) : undefined,
+        });
+        if (!response.ok) {
+            let message = "Something went wrong";
+            try {
+                const data = await response.json();
+                if (data.message) message = data.message;
+            } catch (err) {
+                // ignore json parse errors
+            }
+            throw new Error(message);
+        }
+        return response.json();
+    };
+
+    const startSetup = async () => {
+        clearAlert();
+        toggleLoading(startBtn, true, "Generating QR code...");
+        try {
+            const data = await fetchJSON("{{ url_for('auth.two_factor_setup') }}");
+            qrImage.src = data.qr_code;
+            secretField.value = data.secret;
+            totpInput.value = "";
+            setupSection.classList.remove("d-none");
+            showAlert("info", "Scan the code and then enter the verification code to finish setup.");
+        } catch (error) {
+            showAlert("danger", error.message);
+        } finally {
+            toggleLoading(startBtn, false);
+        }
+    };
+
+    const verifyCode = async () => {
+        clearAlert();
+        const code = totpInput.value.trim();
+        if (code.length !== 6 || !/^[0-9]+$/.test(code)) {
+            showAlert("warning", "Enter a valid 6-digit code from your authenticator app.");
+            return;
+        }
+        toggleLoading(verifyBtn, true, "Verifying...");
+        try {
+            const data = await fetchJSON("{{ url_for('auth.verify_two_factor_setup') }}", {
+                body: { code },
+            });
+            renderCodes(data.recovery_codes);
+            statusMessage.textContent = "Two-factor authentication has been enabled.";
+            showAlert("success", "2FA activated successfully.");
+            setStatus(true);
+        } catch (error) {
+            showAlert("danger", error.message);
+        } finally {
+            toggleLoading(verifyBtn, false);
+        }
+    };
+
+    const regenerateCodes = async () => {
+        clearAlert();
+        toggleLoading(regenerateBtn, true, "Regenerating...");
+        try {
+            const data = await fetchJSON("{{ url_for('auth.regenerate_recovery_codes') }}");
+            renderCodes(data.recovery_codes);
+            showAlert("success", "Generated a new set of recovery codes.");
+        } catch (error) {
+            showAlert("danger", error.message);
+        } finally {
+            toggleLoading(regenerateBtn, false);
+        }
+    };
+
+    const cancelSetup = () => {
+        setupSection.classList.add("d-none");
+        secretField.value = "";
+        qrImage.src = "";
+        totpInput.value = "";
+        clearAlert();
+    };
+
+    const copySecret = () => {
+        if (!secretField.value) return;
+        navigator.clipboard.writeText(secretField.value).then(() => {
+            showAlert("success", "Secret copied to clipboard.");
+        }).catch(() => {
+            showAlert("warning", "Unable to copy the secret automatically.");
+        });
+    };
+
+    startBtn?.addEventListener("click", startSetup);
+    verifyBtn?.addEventListener("click", verifyCode);
+    cancelBtn?.addEventListener("click", cancelSetup);
+    regenerateBtn?.addEventListener("click", regenerateCodes);
+    downloadBtn?.addEventListener("click", downloadCodes);
+    copySecretBtn?.addEventListener("click", copySecret);
+
+    setStatus(state.enabled);
+});
+</script>
+{% endblock %}
