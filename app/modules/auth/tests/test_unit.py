@@ -176,3 +176,6 @@ def test_recovery_code_invalid_value(clean_database):
     with pytest.raises(ValueError):
         service.use_recovery_code(user, "invalid")
     assert service.use_recovery_code(user, codes[1]) is True
+@pytest.fixture(autouse=True)
+def set_two_factor_key(monkeypatch):
+    monkeypatch.setenv("TWO_FACTOR_ENCRYPTION_KEY", "test-two-factor-key")
