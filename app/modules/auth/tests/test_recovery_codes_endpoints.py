@@ -1,10 +1,10 @@
 import pyotp
 import pytest
 
+from app import db
+from app.modules.auth.models import User, UserTwoFactorRecoveryCode
 from app.modules.auth.services import AuthenticationService
 from app.modules.profile.models import UserProfile
-from app.modules.auth.models import UserTwoFactorRecoveryCode, User
-from app import db
 
 
 def _create_user(app, email: str, password: str = "secret1234"):
