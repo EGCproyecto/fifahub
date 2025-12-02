@@ -72,7 +72,8 @@ class BaseDataset(db.Model):
     ds_meta_data_id = db.Column(db.Integer, db.ForeignKey("ds_meta_data.id"), nullable=False)
     created_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
     type = db.Column(db.String(50), nullable=False, server_default="uvl", index=True)
-    download_count = db.Column(db.Integer, nullable=False, default=0, server_default="0")
+    view_count = db.Column(db.Integer, nullable=False, default=0, server_default="0", index=True)
+    download_count = db.Column(db.Integer, nullable=False, default=0, server_default="0", index=True)
 
     ds_meta_data = db.relationship("DSMetaData", backref=db.backref("data_set", uselist=False))
 
