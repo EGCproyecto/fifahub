@@ -11,7 +11,7 @@ from sqlalchemy.orm.attributes import InstrumentedAttribute
 from sqlalchemy.sql.elements import ClauseElement
 
 from app import db
-from app.modules.dataset.models import Author, DataSet, DSMetaData
+from app.modules.dataset.models import Author, BaseDataset, DSMetaData
 
 MAX_RESULTS = 5
 
@@ -47,10 +47,10 @@ class RecommendationService:
     """Provides related dataset recommendations based on shared metadata."""
 
     def __init__(self) -> None:
-        self._community_attribute = getattr(DataSet, "communities", None)
+        self._community_attribute = getattr(BaseDataset, "communities", None)
         self._community_identifier_column = self._resolve_community_identifier_column()
 
-    def get_related_datasets(self, dataset_id: int) -> list[DataSet]:
+    def get_related_datasets(self, dataset_id: int) -> list[BaseDataset]:
         """Return up to five datasets related to the provided dataset."""
         base_dataset = self._load_dataset(dataset_id)
         if base_dataset is None:
@@ -58,31 +58,60 @@ class RecommendationService:
 
         base_profile = self._collect_profile(base_dataset)
         if not base_profile.has_preferences():
-            return []
+            return self._fallback_recommendations(base_dataset)
 
         # 1. Fetch candidates (Subissue 1)
         candidates = self._fetch_candidates(base_dataset, base_profile)
+        if not candidates:
+            return self._fallback_recommendations(base_dataset, exclude_ids={base_dataset.id})
 
         # 2. Score and Sort (Subissue 2 - Implementado aquí)
         scored_candidates = self._score_candidates(base_profile, candidates)
+        if not scored_candidates:
+            return self._fallback_recommendations(base_dataset, exclude_ids={base_dataset.id})
 
         # Devolvemos solo los datasets, ya ordenados por relevancia
-        return [dataset for dataset, _ in scored_candidates[:MAX_RESULTS]]
+        results = [dataset for dataset, _ in scored_candidates[:MAX_RESULTS]]
 
-    def _load_dataset(self, dataset_id: int) -> DataSet | None:
-        options = [joinedload(DataSet.ds_meta_data).joinedload(DSMetaData.authors)]
+        # Completar con fallback si faltan slots (manteniendo pool común entre tipos)
+        if len(results) < MAX_RESULTS:
+            used_ids = {base_dataset.id} | {ds.id for ds in results if ds and ds.id}
+            missing = MAX_RESULTS - len(results)
+            fallback = self._fallback_recommendations(base_dataset, exclude_ids=used_ids, limit=missing)
+            results.extend(fallback)
+
+        return results[:MAX_RESULTS]
+
+    def _fallback_recommendations(
+        self, base_dataset: BaseDataset, exclude_ids: set[int] | None = None, limit: int | None = None
+    ) -> list[BaseDataset]:
+        """Fallback list when no profile preferences exist: top downloads excluding current dataset."""
+        exclude_ids = exclude_ids or set()
+        limit = limit or MAX_RESULTS
+        return (
+            db.session.query(BaseDataset)
+            .options(*self._candidate_joinedloads())
+            .join(DSMetaData)
+            .filter(~BaseDataset.id.in_(exclude_ids))
+            .order_by(BaseDataset.download_count.desc(), BaseDataset.created_at.desc())
+            .limit(limit)
+            .all()
+        )
+
+    def _load_dataset(self, dataset_id: int) -> BaseDataset | None:
+        options = [joinedload(BaseDataset.ds_meta_data).joinedload(DSMetaData.authors)]
         if self._community_attribute is not None:
             options.append(joinedload(self._community_attribute))
 
-        return db.session.query(DataSet).options(*options).filter(DataSet.id == dataset_id).one_or_none()
+        return db.session.query(BaseDataset).options(*options).filter(BaseDataset.id == dataset_id).one_or_none()
 
-    def _fetch_candidates(self, base_dataset: DataSet, profile: _DatasetProfile) -> list[DataSet]:
+    def _fetch_candidates(self, base_dataset: BaseDataset, profile: _DatasetProfile) -> list[BaseDataset]:
         """Fetch datasets that share at least one attribute with the base profile."""
         query = (
-            db.session.query(DataSet)
+            db.session.query(BaseDataset)
             .options(*self._candidate_joinedloads())
             .join(DSMetaData)
-            .filter(DataSet.id != base_dataset.id)
+            .filter(BaseDataset.id != base_dataset.id)
         )
 
         match_clauses: list[ClauseElement] = []
@@ -122,7 +151,7 @@ class RecommendationService:
         return query.filter(combined_clause).distinct().all()
 
     def _candidate_joinedloads(self) -> list[object]:
-        options: list[object] = [joinedload(DataSet.ds_meta_data).joinedload(DSMetaData.authors)]
+        options: list[object] = [joinedload(BaseDataset.ds_meta_data).joinedload(DSMetaData.authors)]
         if self._community_attribute is not None:
             options.append(joinedload(self._community_attribute))
         return options
@@ -152,10 +181,10 @@ class RecommendationService:
     def _score_candidates(
         self,
         base_profile: _DatasetProfile,
-        candidates: Sequence[DataSet],
-    ) -> list[tuple[DataSet, float]]:
+        candidates: Sequence[BaseDataset],
+    ) -> list[tuple[BaseDataset, float]]:
         """Calcula el score para cada candidato y ordena la lista."""
-        scored: list[tuple[DataSet, float]] = []
+        scored: list[tuple[BaseDataset, float]] = []
         for candidate in candidates:
             candidate_profile = self._collect_profile(candidate)
             score = self._compute_score(base_profile, candidate_profile)
@@ -220,7 +249,7 @@ class RecommendationService:
         freshness = max(1.0 - (days_old / 365.0), 0.0)
         return freshness * WEIGHTS["recency"]
 
-    def _sort_key(self, item: tuple[DataSet, float]) -> tuple[float, float, float, int]:
+    def _sort_key(self, item: tuple[BaseDataset, float]) -> tuple[float, float, float, int]:
         """Clave de ordenación para sort(). Negativo porque sort es ascendente por defecto."""
         dataset, score = item
         download_count = getattr(dataset, "download_count", 0) or 0

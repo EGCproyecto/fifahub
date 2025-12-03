@@ -7,6 +7,19 @@ repos:
     rev: v3.5.0
     hooks:
       - id: conventional-pre-commit
+        args:
+          - build
+          - chore
+          - ci
+          - docs
+          - feat
+          - fix
+          - perf
+          - refactor
+          - revert
+          - style
+          - test
+          - merge
         stages: [commit-msg]
 
   - repo: local
