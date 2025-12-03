@@ -17,7 +17,7 @@ def test_trending_widget_visible():
         host = get_host_for_selenium_testing()
         driver.get(f"{host}/")
         wait_for_page_to_load(driver)
-        time.sleep(1)  # allow async fetch/render
+        time.sleep(1)
 
         heading = driver.find_element(By.XPATH, "//h2[normalize-space()='Trending']")
         assert heading.is_displayed(), "Trending heading not visible on home page"
