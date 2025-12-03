@@ -4,6 +4,7 @@ import os
 import shutil
 import tempfile
 import uuid
+from datetime import datetime, timedelta, timezone
 from zipfile import ZipFile
 
 from flask import abort, jsonify, make_response, redirect, render_template, request, send_from_directory, url_for
@@ -39,6 +40,41 @@ ds_download_record_service = DSDownloadRecordService()
 ds_download_record_service = DSDownloadRecordService()
 recommendation_service = RecommendationService()
 follow_service = FollowService()
+
+# Simple in-memory cache for trending datasets
+_TRENDING_CACHE = None
+_TRENDING_CACHE_AT = None
+_TRENDING_CACHE_TTL = timedelta(hours=1)
+
+
+@dataset_bp.route("/datasets/trending", methods=["GET"])
+def trending_datasets():
+    global _TRENDING_CACHE, _TRENDING_CACHE_AT
+
+    now = datetime.now(timezone.utc)
+    if _TRENDING_CACHE and _TRENDING_CACHE_AT and now - _TRENDING_CACHE_AT < _TRENDING_CACHE_TTL:
+        return jsonify(_TRENDING_CACHE)
+
+    datasets = dataset_service.getTrendingDatasets()
+    payload = [
+        {
+            "id": ds.id,
+            "title": getattr(getattr(ds, "ds_meta_data", None), "title", None),
+            "author": (
+                getattr(getattr(ds, "ds_meta_data", None), "authors", None)[0].name
+                if getattr(getattr(ds, "ds_meta_data", None), "authors", None)
+                else None
+            ),
+            "download_count": ds.download_count or 0,
+            "created_at": ds.created_at.isoformat() if getattr(ds, "created_at", None) else None,
+        }
+        for ds in datasets
+    ]
+
+    _TRENDING_CACHE = payload
+    _TRENDING_CACHE_AT = now
+
+    return jsonify(payload)
 
 
 @dataset_bp.route("/dataset/upload", methods=["GET", "POST"])
