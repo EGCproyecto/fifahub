@@ -100,7 +100,7 @@ class DataSetService(BaseService):
         """
         Datasets de los últimos 30 días ordenados por descargas; si no hay, top descargas global.
         """
-        recent = self.repository.trending_recent(days=30, limit=limit)
+        recent = self.repository.trending_recent(days=7, limit=limit)
         if recent:
             return sorted(recent, key=lambda ds: ds.download_count or 0, reverse=True)
         fallback = self.repository.top_downloaded(limit=limit)

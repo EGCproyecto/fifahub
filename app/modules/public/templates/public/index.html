@@ -162,7 +162,7 @@
                     <div class="card" id="trending-card">
 
                         <div class="card-body">
-                            <h2><b>Trending</b></h2>
+                            <h2><b>Trending Datasets</b></h2>
                             <div class="list-group list-group-flush" id="trending-list">
                                 <div class="list-group-item px-0 text-muted small" id="trending-loading">
                                     Loading trending datasets...
@@ -280,7 +280,7 @@
                     return `/doi/${item.doi}/`;
                 }
                 if (item.id) {
-                    return `/dataset/download/${item.id}`;
+                    return `/dataset/view/${item.id}`;
                 }
                 return "#";
             };
@@ -298,10 +298,12 @@
                         <a href="${buildUrl(item)}" class="d-flex flex-column flex-sm-row align-items-sm-center justify-content-between gap-1 text-decoration-none">
                             <div class="text-truncate">
                                 <div class="fw-bold text-truncate">${item.title ?? "Untitled dataset"}</div>
-                                <div class="text-muted small text-truncate">${item.author ?? "Unknown author"}</div>
+                                <div class="text-muted small text-truncate">
+                                    ${item.author ?? "Unknown author"}${item.community ? " · " + item.community : ""}
+                                </div>
                             </div>
                             <div class="text-primary fw-semibold ms-sm-3">
-                                ${(item.download_count ?? item.downloads ?? 0)} downloads
+                                ${(item.metric_count ?? item.download_count ?? item.downloads ?? 0)} downloads
                             </div>
                         </a>
                     `;

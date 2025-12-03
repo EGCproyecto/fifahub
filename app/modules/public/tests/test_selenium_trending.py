@@ -19,8 +19,16 @@ def test_trending_widget_visible():
         wait_for_page_to_load(driver)
         time.sleep(1)
 
-        heading = driver.find_element(By.XPATH, "//h2[normalize-space()='Trending']")
+        heading = driver.find_element(By.XPATH, "//h2[normalize-space()='Trending Datasets']")
         assert heading.is_displayed(), "Trending heading not visible on home page"
+
+        cards = driver.find_elements(By.CSS_SELECTOR, "#trending-list a")
+        assert len(cards) >= 1, "No trending items rendered"
+
+        first = cards[0]
+        href = first.get_attribute("href")
+        assert href and ("/doi/" in href or "/dataset/" in href), "Trending link does not point to dataset detail"
+
     finally:
         close_driver(driver)
 
