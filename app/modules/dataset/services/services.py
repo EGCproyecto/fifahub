@@ -102,8 +102,9 @@ class DataSetService(BaseService):
         """
         recent = self.repository.trending_recent(days=30, limit=limit)
         if recent:
-            return recent
-        return self.repository.top_downloaded(limit=limit)
+            return sorted(recent, key=lambda ds: ds.download_count or 0, reverse=True)
+        fallback = self.repository.top_downloaded(limit=limit)
+        return sorted(fallback, key=lambda ds: ds.download_count or 0, reverse=True)
 
     # Alias con el nombre solicitado en criterios
     def getTrendingDatasets(self, limit: int = 5):
