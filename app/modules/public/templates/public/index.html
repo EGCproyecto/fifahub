@@ -159,7 +159,7 @@
 
                 <div class="col-12">
 
-                    <div class="card">
+                    <div class="card" id="trending-card">
 
                         <div class="card-body">
                             <h2><b>Trending</b></h2>
@@ -273,6 +273,7 @@
         document.addEventListener("DOMContentLoaded", () => {
             const list = document.getElementById("trending-list");
             const loading = document.getElementById("trending-loading");
+            const card = document.getElementById("trending-card");
 
             const renderItems = (items) => {
                 list.innerHTML = "";
@@ -299,7 +300,9 @@
             };
 
             const handleError = () => {
-                list.innerHTML = '<div class="list-group-item px-0 text-danger small">Unable to load trending datasets right now.</div>';
+                if (card) {
+                    card.style.display = "none";
+                }
             };
 
             fetch("/datasets/trending")
