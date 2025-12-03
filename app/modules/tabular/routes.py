@@ -7,6 +7,7 @@ from werkzeug.utils import secure_filename
 
 from app import db
 from app.modules.dataset.models import DSMetaData, PublicationType
+from app.modules.dataset.services.recommendation_service import RecommendationService
 
 from . import tabular_bp
 from .forms import TabularDatasetForm
@@ -17,6 +18,9 @@ try:
     from ..dataset.services.versioning_service import VersioningService  # type: ignore
 except Exception:
     VersioningService = None  # type: ignore
+
+
+recommendation_service = RecommendationService()
 
 
 def _uploads_dir() -> str:
@@ -133,4 +137,5 @@ def detail(dataset_id: int):
     dataset = TabularDataset.query.filter_by(id=dataset_id, user_id=current_user.id).first()
     if not dataset:
         abort(404)
-    return render_template("view_tabular.html", dataset=dataset)
+    tabular_recommendations = recommendation_service.get_related_datasets(dataset.id)
+    return render_template("view_tabular.html", dataset=dataset, tabular_recommendations=tabular_recommendations)
