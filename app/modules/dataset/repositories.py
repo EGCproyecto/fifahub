@@ -106,7 +106,7 @@ class DataSetRepository(BaseRepository):
             .all()
         )
 
-    def trending_recent(self, days: int = 30, limit: int = 5):
+    def trending_recent(self, days: int = 7, limit: int = 5):
         cutoff = datetime.now(timezone.utc) - timedelta(days=days)
         return (
             self.model.query.filter(self.model.created_at >= cutoff)

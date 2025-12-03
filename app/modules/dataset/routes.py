@@ -65,8 +65,19 @@ def trending_datasets():
                 if getattr(getattr(ds, "ds_meta_data", None), "authors", None)
                 else None
             ),
+            "community": (
+                getattr(getattr(ds, "communities", [None])[0], "slug", None)
+                if getattr(ds, "communities", None)
+                else None
+            )
+            or (
+                getattr(getattr(ds, "communities", [None])[0], "name", None)
+                if getattr(ds, "communities", None)
+                else None
+            ),
             "doi": getattr(getattr(ds, "ds_meta_data", None), "dataset_doi", None),
             "download_count": ds.download_count or 0,
+            "metric_count": ds.download_count or 0,
             "created_at": ds.created_at.isoformat() if getattr(ds, "created_at", None) else None,
         }
         for ds in datasets
