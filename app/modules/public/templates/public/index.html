@@ -171,12 +171,12 @@
                             <div class="list-group list-group-flush">
                                 {% for item in trending %}
                                     <div class="list-group-item px-0">
-                                        <div class="d-flex justify-content-between">
-                                            <div>
-                                                <div class="fw-bold">{{ item.title }}</div>
-                                                <div class="text-muted small">{{ item.author }}</div>
+                                        <div class="d-flex flex-column flex-sm-row align-items-sm-center justify-content-between gap-1">
+                                            <div class="text-truncate">
+                                                <div class="fw-bold text-truncate">{{ item.title }}</div>
+                                                <div class="text-muted small text-truncate">{{ item.author }}</div>
                                             </div>
-                                            <div class="text-primary fw-semibold">
+                                            <div class="text-primary fw-semibold ms-sm-3">
                                                 {{ item.downloads }} downloads
                                             </div>
                                         </div>
