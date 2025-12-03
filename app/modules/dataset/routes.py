@@ -65,6 +65,7 @@ def trending_datasets():
                 if getattr(getattr(ds, "ds_meta_data", None), "authors", None)
                 else None
             ),
+            "doi": getattr(getattr(ds, "ds_meta_data", None), "dataset_doi", None),
             "download_count": ds.download_count or 0,
             "created_at": ds.created_at.isoformat() if getattr(ds, "created_at", None) else None,
         }
