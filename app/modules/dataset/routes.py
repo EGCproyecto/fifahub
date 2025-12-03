@@ -41,6 +41,22 @@ recommendation_service = RecommendationService()
 follow_service = FollowService()
 
 
+@dataset_bp.route("/datasets/trending", methods=["GET"])
+def trending_datasets():
+    datasets = dataset_service.getTrendingDatasets()
+    return jsonify(
+        [
+            {
+                "id": ds.id,
+                "title": getattr(getattr(ds, "ds_meta_data", None), "title", None),
+                "download_count": ds.download_count or 0,
+                "created_at": ds.created_at.isoformat() if getattr(ds, "created_at", None) else None,
+            }
+            for ds in datasets
+        ]
+    )
+
+
 @dataset_bp.route("/dataset/upload", methods=["GET", "POST"])
 @login_required
 def create_dataset():
