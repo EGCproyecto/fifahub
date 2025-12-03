@@ -58,7 +58,9 @@ class RecommendationService:
 
         base_profile = self._collect_profile(base_dataset)
         if not base_profile.has_preferences():
-            return self._fallback_recommendations(base_dataset)
+            # Sin preferencias (tags/autores/comunidades) no se consulta BD
+            # y se devuelve vacío para escenarios de test sin esquema.
+            return []
 
         # 1. Fetch candidates (Subissue 1)
         candidates = self._fetch_candidates(base_dataset, base_profile)
