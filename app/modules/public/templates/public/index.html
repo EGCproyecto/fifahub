@@ -275,6 +275,16 @@
             const loading = document.getElementById("trending-loading");
             const card = document.getElementById("trending-card");
 
+            const buildUrl = (item) => {
+                if (item.doi) {
+                    return `/doi/${item.doi}/`;
+                }
+                if (item.id) {
+                    return `/dataset/download/${item.id}`;
+                }
+                return "#";
+            };
+
             const renderItems = (items) => {
                 list.innerHTML = "";
                 if (!items || items.length === 0) {
@@ -285,7 +295,7 @@
                     const wrapper = document.createElement("div");
                     wrapper.className = "list-group-item px-0";
                     wrapper.innerHTML = `
-                        <div class="d-flex flex-column flex-sm-row align-items-sm-center justify-content-between gap-1">
+                        <a href="${buildUrl(item)}" class="d-flex flex-column flex-sm-row align-items-sm-center justify-content-between gap-1 text-decoration-none">
                             <div class="text-truncate">
                                 <div class="fw-bold text-truncate">${item.title ?? "Untitled dataset"}</div>
                                 <div class="text-muted small text-truncate">${item.author ?? "Unknown author"}</div>
@@ -293,7 +303,7 @@
                             <div class="text-primary fw-semibold ms-sm-3">
                                 ${(item.download_count ?? item.downloads ?? 0)} downloads
                             </div>
-                        </div>
+                        </a>
                     `;
                     list.appendChild(wrapper);
                 });
