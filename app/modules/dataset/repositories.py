@@ -1,5 +1,5 @@
 import logging
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from typing import Optional
 
 from flask_login import current_user
@@ -105,6 +105,18 @@ class DataSetRepository(BaseRepository):
             .limit(5)
             .all()
         )
+
+    def trending_recent(self, days: int = 30, limit: int = 5):
+        cutoff = datetime.now(timezone.utc) - timedelta(days=days)
+        return (
+            self.model.query.filter(self.model.created_at >= cutoff)
+            .order_by(self.model.download_count.desc())
+            .limit(limit)
+            .all()
+        )
+
+    def top_downloaded(self, limit: int = 5):
+        return self.model.query.order_by(self.model.download_count.desc()).limit(limit).all()
 
 
 class DOIMappingRepository(BaseRepository):
