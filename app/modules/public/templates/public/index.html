@@ -162,26 +162,11 @@
                     <div class="card">
 
                         <div class="card-body">
-                            {% set trending = [
-                                {"title": "FUT Player Stats 24", "author": "EA Labs", "downloads": 1280},
-                                {"title": "Career Mode Insights", "author": "Analyst Hub", "downloads": 940},
-                                {"title": "Tactical Builds Pack", "author": "Meta FC", "downloads": 860}
-                            ] %}
                             <h2><b>Trending</b></h2>
-                            <div class="list-group list-group-flush">
-                                {% for item in trending %}
-                                    <div class="list-group-item px-0">
-                                        <div class="d-flex flex-column flex-sm-row align-items-sm-center justify-content-between gap-1">
-                                            <div class="text-truncate">
-                                                <div class="fw-bold text-truncate">{{ item.title }}</div>
-                                                <div class="text-muted small text-truncate">{{ item.author }}</div>
-                                            </div>
-                                            <div class="text-primary fw-semibold ms-sm-3">
-                                                {{ item.downloads }} downloads
-                                            </div>
-                                        </div>
-                                    </div>
-                                {% endfor %}
+                            <div class="list-group list-group-flush" id="trending-list">
+                                <div class="list-group-item px-0 text-muted small" id="trending-loading">
+                                    Loading trending datasets...
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -284,4 +269,52 @@
 
 {% block scripts %}
     <script src="{{ url_for('public.scripts') }}"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            const list = document.getElementById("trending-list");
+            const loading = document.getElementById("trending-loading");
+
+            const renderItems = (items) => {
+                list.innerHTML = "";
+                if (!items || items.length === 0) {
+                    list.innerHTML = '<div class="list-group-item px-0 text-muted small">No trending datasets yet.</div>';
+                    return;
+                }
+                items.forEach((item) => {
+                    const wrapper = document.createElement("div");
+                    wrapper.className = "list-group-item px-0";
+                    wrapper.innerHTML = `
+                        <div class="d-flex flex-column flex-sm-row align-items-sm-center justify-content-between gap-1">
+                            <div class="text-truncate">
+                                <div class="fw-bold text-truncate">${item.title ?? "Untitled dataset"}</div>
+                                <div class="text-muted small text-truncate">${item.author ?? "Unknown author"}</div>
+                            </div>
+                            <div class="text-primary fw-semibold ms-sm-3">
+                                ${(item.download_count ?? item.downloads ?? 0)} downloads
+                            </div>
+                        </div>
+                    `;
+                    list.appendChild(wrapper);
+                });
+            };
+
+            const handleError = () => {
+                list.innerHTML = '<div class="list-group-item px-0 text-danger small">Unable to load trending datasets right now.</div>';
+            };
+
+            fetch("/datasets/trending")
+                .then((res) => {
+                    if (!res.ok) throw new Error("Network response was not ok");
+                    return res.json();
+                })
+                .then(renderItems)
+                .catch((err) => {
+                    console.error(err);
+                    handleError();
+                })
+                .finally(() => {
+                    if (loading) loading.remove();
+                });
+        });
+    </script>
 {% endblock %}
