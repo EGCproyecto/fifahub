@@ -4,13 +4,13 @@ from typing import Iterable
 
 from flask import current_app, url_for
 
-from core.services import email_service
 from app.modules.auth.services import FollowService
 from app.modules.dataset.models import DataSet
 from app.modules.dataset.services.notification_utils import (
     get_dataset_community_id,
     get_dataset_primary_author,
 )
+from core.services import email_service
 
 logger = logging.getLogger(__name__)
 
@@ -20,11 +20,15 @@ class NotificationService:
         self.follow_service = follow_service or FollowService()
 
     import threading
+
 import logging
+
 from flask import current_app
+
 from app.modules.dataset.models import DataSet
 
 logger = logging.getLogger(__name__)
+
 
 class NotificationService:
     ...
@@ -47,7 +51,6 @@ class NotificationService:
 
         t = threading.Thread(target=_worker, daemon=True)
         t.start()
-
 
     def notify_new_dataset_sync(self, dataset: DataSet) -> None:
         try:
@@ -77,7 +80,7 @@ class NotificationService:
             f"<p><strong>{author.name}</strong> published a new dataset:</p>"
             f"<p><strong>{self._dataset_title(dataset)}</strong></p>"
             f"<p>{description}</p>"
-            f"<p><a href=\"{dataset_url}\">View dataset</a></p>"
+            f'<p><a href="{dataset_url}">View dataset</a></p>'
         )
 
         self._send_to_users(followers, subject, html_body)
@@ -99,7 +102,7 @@ class NotificationService:
             f"<p>New dataset in <strong>{community_id}</strong>:</p>"
             f"<p><strong>{self._dataset_title(dataset)}</strong></p>"
             f"<p>{description}</p>"
-            f"<p><a href=\"{dataset_url}\">View dataset</a></p>"
+            f'<p><a href="{dataset_url}">View dataset</a></p>'
         )
 
         self._send_to_users(followers, subject, html_body)
