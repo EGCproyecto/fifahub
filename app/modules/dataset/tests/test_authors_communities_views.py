@@ -61,8 +61,9 @@ def test_author_and_community_detail_views(test_client, clean_database):
         db.session.add(author)
         db.session.commit()
         _create_dataset_with_author(user, author, doi="10.1234/detail", community="detail-comm")
+        author_id = author.id
 
-    author_resp = test_client.get(f"/authors/{author.id}")
+    author_resp = test_client.get(f"/authors/{author_id}")
     assert author_resp.status_code == 200
     assert b"Detail Author" in author_resp.data
 
