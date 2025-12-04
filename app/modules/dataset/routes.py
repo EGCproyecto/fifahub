@@ -297,9 +297,6 @@ def dataset_stats(dataset_id):
 def view_dataset(dataset_id: int):
     dataset = BaseDataset.query.get_or_404(dataset_id)
 
-    if dataset.user_id != current_user.id:
-        abort(403)
-
     detail_template, detail_ctx = render_detail(dataset.type, dataset)
     detail_ctx["related_datasets"] = recommendation_service.get_related_datasets(dataset.id)
     versions = DatasetVersion.query.filter_by(dataset_id=dataset.id).order_by(DatasetVersion.created_at.desc()).all()
@@ -357,9 +354,9 @@ def subdomain_index(doi):
 @login_required
 def get_unsynchronized_dataset(dataset_id):
 
-    dataset = dataset_service.get_unsynchronized_dataset(current_user.id, dataset_id)
+    dataset = BaseDataset.query.get_or_404(dataset_id)
 
-    if not dataset:
+    if dataset is None:
         abort(404)
 
     detail_template, detail_ctx = render_detail(dataset.type, dataset)

@@ -165,7 +165,7 @@ def my_tabular():
 @tabular_bp.route("/<int:dataset_id>", methods=["GET"])
 @login_required
 def detail(dataset_id: int):
-    dataset = TabularDataset.query.filter_by(id=dataset_id, user_id=current_user.id).first()
+    dataset = TabularDataset.query.filter_by(id=dataset_id).first()
     if not dataset:
         abort(404)
     return render_template("view_tabular.html", dataset=dataset)

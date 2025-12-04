@@ -78,7 +78,8 @@
 </div>
 {% endif %}
 
-{% set tags = dataset.ds_meta_data.tags or '' %}
+{% set md = dataset.ds_meta_data if dataset is defined else None %}
+{% set tags = md.tags if md and md.tags else '' %}
 {% if tags %}
 <div class="row mb-2">
     <div class="col-md-4 col-12">
