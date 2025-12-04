@@ -28,6 +28,14 @@ def get_dataset_community_id(dataset: DataSet) -> Optional[str]:
             val = getattr(metadata, attr, None)
             if isinstance(val, str) and val.strip():
                 return val.strip()
+        tags = getattr(metadata, "tags", None)
+        if isinstance(tags, str) and tags.strip():
+            for raw_tag in tags.split(","):
+                tag = raw_tag.strip()
+                if not tag:
+                    continue
+                if tag.lower().startswith("community:"):
+                    return tag.split(":", 1)[1].strip() or None
     except Exception:
         return None
 

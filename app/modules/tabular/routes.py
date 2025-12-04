@@ -6,7 +6,7 @@ from flask_login import current_user, login_required
 from werkzeug.utils import secure_filename
 
 from app import db
-from app.modules.dataset.models import DSMetaData, PublicationType
+from app.modules.dataset.models import Author, DSMetaData, PublicationType
 from app.modules.dataset.services.notification_service import notification_service
 
 from . import tabular_bp
@@ -50,6 +50,8 @@ def _save_uploaded_file(file_storage) -> str:
 @login_required
 def upload():
     form = TabularDatasetForm()
+    authors = Author.query.order_by(Author.name.asc()).all()
+    form.author_id.choices = [(0, "Sin autor")] + [(author.id, author.name) for author in authors]
 
     if request.method == "GET":
         return render_template("upload_tabular.html", form=form)
@@ -69,24 +71,25 @@ def upload():
         return render_template("upload_tabular.html", form=form), 400
 
     name = (form.name.data or "").strip()
-
-    ds_md = DSMetaData(
-        title=name or "Tabular dataset",
-        description="CSV importado",
-        publication_type=PublicationType.OTHER,
-    )
-    db.session.add(ds_md)
-    db.session.flush()
+    title_value = name or "Tabular dataset"
 
     dataset = (
         TabularDataset.query.filter_by(user_id=current_user.id)
         .join(DSMetaData, TabularDataset.ds_meta_data_id == DSMetaData.id)
-        .filter(DSMetaData.title == ds_md.title)
+        .filter(DSMetaData.title == title_value)
         .first()
     )
     is_resubida = dataset is not None
 
     if dataset is None:
+        ds_md = DSMetaData(
+            title=title_value,
+            description="CSV importado",
+            publication_type=PublicationType.OTHER,
+        )
+        db.session.add(ds_md)
+        db.session.flush()
+
         dataset = TabularDataset(
             user_id=current_user.id,
             ds_meta_data_id=ds_md.id,
@@ -94,6 +97,33 @@ def upload():
         )
         db.session.add(dataset)
         db.session.flush()
+    else:
+        ds_md = dataset.ds_meta_data
+
+    if ds_md is not None:
+        selected_author_id = form.author_id.data or 0
+        if selected_author_id:
+            author = Author.query.get(selected_author_id)
+            if author:
+                if author.ds_meta_data_id and author.ds_meta_data_id != ds_md.id:
+                    current_app.logger.info(
+                        "Reasignando autor existente %s desde ds_meta_data_id=%s a ds_meta_data_id=%s",
+                        author.id,
+                        author.ds_meta_data_id,
+                        ds_md.id,
+                    )
+                current_authors = [a for a in ds_md.authors] if getattr(ds_md, "authors", None) else []
+                ds_md.authors = [author] + [a for a in current_authors if a.id != author.id]
+            else:
+                current_app.logger.info("Author with id %s not found when uploading tabular dataset", selected_author_id)
+
+        community_id = (form.community_id.data or "").strip()
+        if community_id:
+            existing_tags = [tag.strip() for tag in (ds_md.tags or "").split(",") if tag.strip()]
+            community_tag = f"community:{community_id}"
+            if community_tag not in existing_tags:
+                existing_tags.append(community_tag)
+            ds_md.tags = ",".join(existing_tags) if existing_tags else None
 
     ingestor = TabularIngestor(resolve_path=lambda hubfile_id: hubfile_id)
     try:
