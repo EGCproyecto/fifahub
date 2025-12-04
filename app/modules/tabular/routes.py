@@ -115,7 +115,9 @@ def upload():
                 current_authors = [a for a in ds_md.authors] if getattr(ds_md, "authors", None) else []
                 ds_md.authors = [author] + [a for a in current_authors if a.id != author.id]
             else:
-                current_app.logger.info("Author with id %s not found when uploading tabular dataset", selected_author_id)
+                current_app.logger.info(
+                    "Author with id %s not found when uploading tabular dataset", selected_author_id
+                )
 
         community_id = (form.community_id.data or "").strip()
         if community_id:

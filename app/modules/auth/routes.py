@@ -124,9 +124,7 @@ def follow_author(author_id: int):
         logger.exception("Error while following author")
         return jsonify({"message": "Unable to follow author"}), 500
 
-    return jsonify(
-        {"message": "Author followed", "author_id": author.id, "follow_id": follow.id}
-    ), 200
+    return jsonify({"message": "Author followed", "author_id": author.id, "follow_id": follow.id}), 200
 
 
 @auth_bp.route("/unfollow/author/<int:author_id>", methods=["POST"])
@@ -165,13 +163,16 @@ def follow_community(community_id: str):
         logger.exception("Error while following community")
         return jsonify({"message": "Unable to follow community"}), 500
 
-    return jsonify(
-        {
-            "message": "Community followed",
-            "community_id": follow.community_id,
-            "follow_id": follow.id,
-        }
-    ), 200
+    return (
+        jsonify(
+            {
+                "message": "Community followed",
+                "community_id": follow.community_id,
+                "follow_id": follow.id,
+            }
+        ),
+        200,
+    )
 
 
 @auth_bp.route("/unfollow/community/<string:community_id>", methods=["POST"])
@@ -190,8 +191,6 @@ def unfollow_community(community_id: str):
         return jsonify({"message": "Unable to unfollow community"}), 500
 
     if not removed:
-        return jsonify(
-            {"message": "Community was not followed", "community_id": community_id}
-        ), 200
+        return jsonify({"message": "Community was not followed", "community_id": community_id}), 200
 
     return jsonify({"message": "Community unfollowed", "community_id": community_id}), 200
