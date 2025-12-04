@@ -74,15 +74,16 @@
 
                         </div>
 
-                        <div class="row mb-2">
-
-                            <div class="col-12">
-                                {% for tag in dataset.ds_meta_data.tags.split(',') %}
-                                    <span class="badge bg-secondary">{{ tag.strip() }}</span>
-                                {% endfor %}
+                        {% set tags = dataset.ds_meta_data.tags if dataset.ds_meta_data else None %}
+                        {% if tags %}
+                            <div class="row mb-2">
+                                <div class="col-12">
+                                    {% for tag in tags.split(',') %}
+                                        <span class="badge bg-secondary">{{ tag.strip() }}</span>
+                                    {% endfor %}
+                                </div>
                             </div>
-
-                        </div>
+                        {% endif %}
 
                         <div class="row  mt-4">
                             <div class="col-12">
