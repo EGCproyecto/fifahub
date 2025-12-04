@@ -21,6 +21,7 @@ class NotificationService:
 
     import threading
 
+
 import logging
 
 from flask import current_app
