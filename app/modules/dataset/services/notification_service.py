@@ -4,14 +4,14 @@ from typing import Iterable
 
 from flask import current_app, url_for
 
-from core.services import email_service
 from app.modules.auth.services import FollowService
-from app.modules.tabular.models import TabularDataset
 from app.modules.dataset.models import DataSet
 from app.modules.dataset.services.notification_utils import (
     get_dataset_community_id,
     get_dataset_primary_author,
 )
+from app.modules.tabular.models import TabularDataset
+from core.services import email_service
 
 logger = logging.getLogger(__name__)
 
@@ -19,7 +19,6 @@ logger = logging.getLogger(__name__)
 class NotificationService:
     def __init__(self, follow_service: FollowService | None = None):
         self.follow_service = follow_service or FollowService()
-
 
     def trigger_new_dataset_notifications_async(self, dataset) -> None:
         """Lanza un hilo para procesar las notificaciones de un dataset recién creado."""
@@ -54,7 +53,6 @@ class NotificationService:
         t = threading.Thread(target=_worker, daemon=True)
         t.start()
 
-
     def notify_new_dataset_sync(self, dataset: DataSet) -> None:
         """Envía notificaciones (autor y comunidad) para un dataset dado."""
         dataset_id = getattr(dataset, "id", None)
@@ -87,11 +85,14 @@ class NotificationService:
         author_name = getattr(author, "name", "author")
         subject = f"[fifahub] New dataset from {author_name}"
         dataset_url = self._dataset_url(dataset)
-        description = getattr(
-            getattr(dataset, "ds_meta_data", None),
-            "description",
-            "",
-        ) or ""
+        description = (
+            getattr(
+                getattr(dataset, "ds_meta_data", None),
+                "description",
+                "",
+            )
+            or ""
+        )
 
         html_body = (
             "<p>You are receiving this email because you follow this author.</p>"
@@ -114,11 +115,14 @@ class NotificationService:
 
         subject = f"[fifahub] New dataset in community {community_id}"
         dataset_url = self._dataset_url(dataset)
-        description = getattr(
-            getattr(dataset, "ds_meta_data", None),
-            "description",
-            "",
-        ) or ""
+        description = (
+            getattr(
+                getattr(dataset, "ds_meta_data", None),
+                "description",
+                "",
+            )
+            or ""
+        )
 
         html_body = (
             "<p>You are receiving this email because you follow this community.</p>"
@@ -130,13 +134,8 @@ class NotificationService:
 
         self._send_to_users(followers, subject, html_body)
 
-
     def _send_to_users(self, users: Iterable, subject: str, html_body: str) -> None:
-        emails = [
-            getattr(u, "email", None)
-            for u in users
-            if getattr(u, "email", None)
-        ]
+        emails = [getattr(u, "email", None) for u in users if getattr(u, "email", None)]
         if not emails:
             return
 
@@ -149,10 +148,7 @@ class NotificationService:
     @staticmethod
     def _dataset_title(dataset: DataSet) -> str:
         try:
-            return (
-                getattr(getattr(dataset, "ds_meta_data", None), "title", None)
-                or f"Dataset {dataset.id}"
-            )
+            return getattr(getattr(dataset, "ds_meta_data", None), "title", None) or f"Dataset {dataset.id}"
         except Exception:
             return f"Dataset {getattr(dataset, 'id', '')}"
 
@@ -172,6 +168,7 @@ class NotificationService:
 
         try:
             from flask import current_app
+
             from app.modules.tabular.models import TabularDataset
 
             domain = current_app.config.get("DOMAIN") or "localhost:5000"
