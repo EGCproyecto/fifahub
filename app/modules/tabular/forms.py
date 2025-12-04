@@ -1,7 +1,7 @@
 import csv
 
 from flask_wtf import FlaskForm
-from wtforms import BooleanField, FileField, IntegerField, StringField
+from wtforms import BooleanField, FileField, IntegerField, SelectField, StringField
 from wtforms.validators import DataRequired, NumberRange, Optional, Regexp, ValidationError
 
 FIFA_REQUIRED_COLUMNS = [
@@ -99,6 +99,10 @@ class TabularDatasetForm(FlaskForm):
         default=20,
         validators=[Optional(), NumberRange(min=0, max=200, message="0–200 filas.")],
     )
+
+    author_id = SelectField("Autor", coerce=int, validators=[Optional()], choices=[])
+
+    community_id = StringField("Comunidad", validators=[Optional()])
 
     def validate_delimiter(self, field):
         if field.data == "\\t":
