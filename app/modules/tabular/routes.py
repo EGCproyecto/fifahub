@@ -7,6 +7,7 @@ from werkzeug.utils import secure_filename
 
 from app import db
 from app.modules.dataset.models import DSMetaData, PublicationType
+from app.modules.dataset.services.notification_service import notification_service
 
 from . import tabular_bp
 from .forms import TabularDatasetForm
@@ -116,6 +117,8 @@ def upload():
             flash("Aviso: no se pudo registrar la nueva versión.", "warning")
 
     db.session.commit()
+
+    notification_service.trigger_new_dataset_notifications_async(dataset)
 
     return redirect(url_for("tabular.detail", dataset_id=dataset.id))
 

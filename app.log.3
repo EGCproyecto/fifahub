@@ -1,98 +1,167 @@
-2025-11-28 13:40:36,653 - app - ERROR - Falló la ingesta tabular
+2025-12-04 10:55:25,570 - app - ERROR - Exception on / [GET]
 Traceback (most recent call last):
-  File "/home/sergio/fifahub/env/lib/python3.12/site-packages/sqlalchemy/engine/base.py", line 1956, in _exec_single_context
-    self.dialect.do_execute(
-  File "/home/sergio/fifahub/env/lib/python3.12/site-packages/sqlalchemy/engine/default.py", line 928, in do_execute
-    cursor.execute(statement, parameters)
-  File "/home/sergio/fifahub/env/lib/python3.12/site-packages/pymysql/cursors.py", line 153, in execute
-    result = self._query(query)
-             ^^^^^^^^^^^^^^^^^^
-  File "/home/sergio/fifahub/env/lib/python3.12/site-packages/pymysql/cursors.py", line 315, in _query
-    conn.query(q)
-  File "/home/sergio/fifahub/env/lib/python3.12/site-packages/pymysql/connections.py", line 546, in query
-    self._affected_rows = self._read_query_result(unbuffered=unbuffered)
-                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/sergio/fifahub/env/lib/python3.12/site-packages/pymysql/connections.py", line 801, in _read_query_result
-    result.read()
-  File "/home/sergio/fifahub/env/lib/python3.12/site-packages/pymysql/connections.py", line 1165, in read
-    first_packet = self.connection._read_packet()
-                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/sergio/fifahub/env/lib/python3.12/site-packages/pymysql/connections.py", line 755, in _read_packet
-    packet.raise_for_error()
-  File "/home/sergio/fifahub/env/lib/python3.12/site-packages/pymysql/protocol.py", line 211, in raise_for_error
-    err.raise_mysql_exception(self._data)
-  File "/home/sergio/fifahub/env/lib/python3.12/site-packages/pymysql/err.py", line 150, in raise_mysql_exception
-    raise errorclass(errno, errval)
-pymysql.err.IntegrityError: (1062, "Duplicate entry '7' for key 'uq_tabular_meta_data_dataset_id'")
+  File "/home/practica/fifahub/venv/lib/python3.12/site-packages/pymysql/connections.py", line 649, in connect
+    sock = socket.create_connection(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/socket.py", line 852, in create_connection
+    raise exceptions[0]
+  File "/usr/lib/python3.12/socket.py", line 837, in create_connection
+    sock.connect(sa)
+ConnectionRefusedError: [Errno 111] Connection refused
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/home/practica/fifahub/venv/lib/python3.12/site-packages/sqlalchemy/engine/base.py", line 143, in __init__
+    self._dbapi_connection = engine.raw_connection()
+                             ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/practica/fifahub/venv/lib/python3.12/site-packages/sqlalchemy/engine/base.py", line 3295, in raw_connection
+    return self.pool.connect()
+           ^^^^^^^^^^^^^^^^^^^
+  File "/home/practica/fifahub/venv/lib/python3.12/site-packages/sqlalchemy/pool/base.py", line 447, in connect
+    return _ConnectionFairy._checkout(self)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/practica/fifahub/venv/lib/python3.12/site-packages/sqlalchemy/pool/base.py", line 1264, in _checkout
+    fairy = _ConnectionRecord.checkout(pool)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/practica/fifahub/venv/lib/python3.12/site-packages/sqlalchemy/pool/base.py", line 711, in checkout
+    rec = pool._do_get()
+          ^^^^^^^^^^^^^^
+  File "/home/practica/fifahub/venv/lib/python3.12/site-packages/sqlalchemy/pool/impl.py", line 177, in _do_get
+    with util.safe_reraise():
+  File "/home/practica/fifahub/venv/lib/python3.12/site-packages/sqlalchemy/util/langhelpers.py", line 224, in __exit__
+    raise exc_value.with_traceback(exc_tb)
+  File "/home/practica/fifahub/venv/lib/python3.12/site-packages/sqlalchemy/pool/impl.py", line 175, in _do_get
+    return self._create_connection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/practica/fifahub/venv/lib/python3.12/site-packages/sqlalchemy/pool/base.py", line 388, in _create_connection
+    return _ConnectionRecord(self)
+           ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/practica/fifahub/venv/lib/python3.12/site-packages/sqlalchemy/pool/base.py", line 673, in __init__
+    self.__connect()
+  File "/home/practica/fifahub/venv/lib/python3.12/site-packages/sqlalchemy/pool/base.py", line 899, in __connect
+    with util.safe_reraise():
+  File "/home/practica/fifahub/venv/lib/python3.12/site-packages/sqlalchemy/util/langhelpers.py", line 224, in __exit__
+    raise exc_value.with_traceback(exc_tb)
+  File "/home/practica/fifahub/venv/lib/python3.12/site-packages/sqlalchemy/pool/base.py", line 895, in __connect
+    self.dbapi_connection = connection = pool._invoke_creator(self)
+                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/practica/fifahub/venv/lib/python3.12/site-packages/sqlalchemy/engine/create.py", line 646, in connect
+    return dialect.connect(*cargs, **cparams)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/practica/fifahub/venv/lib/python3.12/site-packages/sqlalchemy/engine/default.py", line 626, in connect
+    return self.loaded_dbapi.connect(*cargs, **cparams)  # type: ignore[no-any-return]  # NOQA: E501
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/practica/fifahub/venv/lib/python3.12/site-packages/pymysql/connections.py", line 361, in __init__
+    self.connect()
+  File "/home/practica/fifahub/venv/lib/python3.12/site-packages/pymysql/connections.py", line 716, in connect
+    raise exc
+pymysql.err.OperationalError: (2003, "Can't connect to MySQL server on '127.0.0.1' ([Errno 111] Connection refused)")
 
 The above exception was the direct cause of the following exception:
 
 Traceback (most recent call last):
-  File "/home/sergio/fifahub/app/modules/tabular/routes.py", line 95, in upload
-    ingestor.ingest(
-  File "/home/sergio/fifahub/app/modules/tabular/ingest.py", line 61, in ingest
-    db.session.flush()  # meta.id disponible
-    ^^^^^^^^^^^^^^^^^^
-  File "/home/sergio/fifahub/env/lib/python3.12/site-packages/sqlalchemy/orm/scoping.py", line 918, in flush
-    return self._proxied.flush(objects=objects)
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/sergio/fifahub/env/lib/python3.12/site-packages/sqlalchemy/orm/session.py", line 4306, in flush
-    self._flush(objects)
-  File "/home/sergio/fifahub/env/lib/python3.12/site-packages/sqlalchemy/orm/session.py", line 4441, in _flush
-    with util.safe_reraise():
-  File "/home/sergio/fifahub/env/lib/python3.12/site-packages/sqlalchemy/util/langhelpers.py", line 225, in __exit__
-    raise exc_value.with_traceback(exc_tb)
-  File "/home/sergio/fifahub/env/lib/python3.12/site-packages/sqlalchemy/orm/session.py", line 4402, in _flush
-    flush_context.execute()
-  File "/home/sergio/fifahub/env/lib/python3.12/site-packages/sqlalchemy/orm/unitofwork.py", line 459, in execute
-    rec.execute(self)
-  File "/home/sergio/fifahub/env/lib/python3.12/site-packages/sqlalchemy/orm/unitofwork.py", line 635, in execute
-    util.preloaded.orm_persistence.save_obj(
-  File "/home/sergio/fifahub/env/lib/python3.12/site-packages/sqlalchemy/orm/persistence.py", line 88, in save_obj
-    _emit_insert_statements(
-  File "/home/sergio/fifahub/env/lib/python3.12/site-packages/sqlalchemy/orm/persistence.py", line 1228, in _emit_insert_statements
-    result = connection.execute(
-             ^^^^^^^^^^^^^^^^^^^
-  File "/home/sergio/fifahub/env/lib/python3.12/site-packages/sqlalchemy/engine/base.py", line 1408, in execute
-    return meth(
-           ^^^^^
-  File "/home/sergio/fifahub/env/lib/python3.12/site-packages/sqlalchemy/sql/elements.py", line 505, in _execute_on_connection
-    return connection._execute_clauseelement(
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/sergio/fifahub/env/lib/python3.12/site-packages/sqlalchemy/engine/base.py", line 1630, in _execute_clauseelement
-    ret = self._execute_context(
-          ^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/sergio/fifahub/env/lib/python3.12/site-packages/sqlalchemy/engine/base.py", line 1835, in _execute_context
-    return self._exec_single_context(
+  File "/home/practica/fifahub/venv/lib/python3.12/site-packages/flask/app.py", line 1511, in wsgi_app
+    response = self.full_dispatch_request()
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/practica/fifahub/venv/lib/python3.12/site-packages/flask/app.py", line 919, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/practica/fifahub/venv/lib/python3.12/site-packages/flask_restful/__init__.py", line 298, in error_router
+    return original_handler(e)
+           ^^^^^^^^^^^^^^^^^^^
+  File "/home/practica/fifahub/venv/lib/python3.12/site-packages/flask/app.py", line 917, in full_dispatch_request
+    rv = self.dispatch_request()
+         ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/practica/fifahub/venv/lib/python3.12/site-packages/flask/app.py", line 902, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/practica/fifahub/app/modules/public/routes.py", line 19, in index
+    datasets_counter = dataset_service.count_synchronized_datasets()
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/practica/fifahub/app/modules/dataset/services/services.py", line 81, in count_synchronized_datasets
+    return self.repository.count_synchronized_datasets()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/practica/fifahub/app/modules/dataset/repositories.py", line 95, in count_synchronized_datasets
+    return self.model.query.join(DSMetaData).filter(DSMetaData.dataset_doi.isnot(None)).count()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/practica/fifahub/venv/lib/python3.12/site-packages/sqlalchemy/orm/query.py", line 3146, in count
+    self._legacy_from_self(col).enable_eagerloads(False).scalar()
+  File "/home/practica/fifahub/venv/lib/python3.12/site-packages/sqlalchemy/orm/query.py", line 2835, in scalar
+    ret = self.one()
+          ^^^^^^^^^^
+  File "/home/practica/fifahub/venv/lib/python3.12/site-packages/sqlalchemy/orm/query.py", line 2808, in one
+    return self._iter().one()  # type: ignore
+           ^^^^^^^^^^^^
+  File "/home/practica/fifahub/venv/lib/python3.12/site-packages/sqlalchemy/orm/query.py", line 2857, in _iter
+    result: Union[ScalarResult[_T], Result[_T]] = self.session.execute(
+                                                  ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/practica/fifahub/venv/lib/python3.12/site-packages/sqlalchemy/orm/session.py", line 2365, in execute
+    return self._execute_internal(
+           ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/practica/fifahub/venv/lib/python3.12/site-packages/sqlalchemy/orm/session.py", line 2241, in _execute_internal
+    conn = self._connection_for_bind(bind)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/practica/fifahub/venv/lib/python3.12/site-packages/sqlalchemy/orm/session.py", line 2110, in _connection_for_bind
+    return trans._connection_for_bind(engine, execution_options)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<string>", line 2, in _connection_for_bind
+  File "/home/practica/fifahub/venv/lib/python3.12/site-packages/sqlalchemy/orm/state_changes.py", line 137, in _go
+    ret_value = fn(self, *arg, **kw)
+                ^^^^^^^^^^^^^^^^^^^^
+  File "/home/practica/fifahub/venv/lib/python3.12/site-packages/sqlalchemy/orm/session.py", line 1189, in _connection_for_bind
+    conn = bind.connect()
+           ^^^^^^^^^^^^^^
+  File "/home/practica/fifahub/venv/lib/python3.12/site-packages/sqlalchemy/engine/base.py", line 3271, in connect
+    return self._connection_cls(self)
            ^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/sergio/fifahub/env/lib/python3.12/site-packages/sqlalchemy/engine/base.py", line 1975, in _exec_single_context
-    self._handle_dbapi_exception(
-  File "/home/sergio/fifahub/env/lib/python3.12/site-packages/sqlalchemy/engine/base.py", line 2344, in _handle_dbapi_exception
+  File "/home/practica/fifahub/venv/lib/python3.12/site-packages/sqlalchemy/engine/base.py", line 145, in __init__
+    Connection._handle_dbapi_exception_noconnection(
+  File "/home/practica/fifahub/venv/lib/python3.12/site-packages/sqlalchemy/engine/base.py", line 2434, in _handle_dbapi_exception_noconnection
     raise sqlalchemy_exception.with_traceback(exc_info[2]) from e
-  File "/home/sergio/fifahub/env/lib/python3.12/site-packages/sqlalchemy/engine/base.py", line 1956, in _exec_single_context
-    self.dialect.do_execute(
-  File "/home/sergio/fifahub/env/lib/python3.12/site-packages/sqlalchemy/engine/default.py", line 928, in do_execute
-    cursor.execute(statement, parameters)
-  File "/home/sergio/fifahub/env/lib/python3.12/site-packages/pymysql/cursors.py", line 153, in execute
-    result = self._query(query)
-             ^^^^^^^^^^^^^^^^^^
-  File "/home/sergio/fifahub/env/lib/python3.12/site-packages/pymysql/cursors.py", line 315, in _query
-    conn.query(q)
-  File "/home/sergio/fifahub/env/lib/python3.12/site-packages/pymysql/connections.py", line 546, in query
-    self._affected_rows = self._read_query_result(unbuffered=unbuffered)
-                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/sergio/fifahub/env/lib/python3.12/site-packages/pymysql/connections.py", line 801, in _read_query_result
-    result.read()
-  File "/home/sergio/fifahub/env/lib/python3.12/site-packages/pymysql/connections.py", line 1165, in read
-    first_packet = self.connection._read_packet()
-                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/sergio/fifahub/env/lib/python3.12/site-packages/pymysql/connections.py", line 755, in _read_packet
-    packet.raise_for_error()
-  File "/home/sergio/fifahub/env/lib/python3.12/site-packages/pymysql/protocol.py", line 211, in raise_for_error
-    err.raise_mysql_exception(self._data)
-  File "/home/sergio/fifahub/env/lib/python3.12/site-packages/pymysql/err.py", line 150, in raise_mysql_exception
-    raise errorclass(errno, errval)
-sqlalchemy.exc.IntegrityError: (pymysql.err.IntegrityError) (1062, "Duplicate entry '7' for key 'uq_tabular_meta_data_dataset_id'")
-[SQL: INSERT INTO tabular_meta_data (hubfile_id, delimiter, encoding, has_header, n_rows, n_cols, primary_keys, index_cols, sample_rows, dataset_id) VALUES (%(hubfile_id)s, %(delimiter)s, %(encoding)s, %(has_header)s, %(n_rows)s, %(n_cols)s, %(primary_keys)s, %(index_cols)s, %(sample_rows)s, %(dataset_id)s)]
-[parameters: {'hubfile_id': None, 'delimiter': ',', 'encoding': 'utf-8', 'has_header': 0, 'n_rows': 2, 'n_cols': 15, 'primary_keys': 'null', 'index_cols': 'null', 'sample_rows': '[["ID", "Name", "Age", "Nationality", "Overall", "Potential", "Club", "Value", "Wage", "Preferred Foot", "Weak Foot", "Skill Moves", "Position", "Height", "Weight"], ["1", "Test Player", "25", "Country", "80", "85", "Club", "1000000", "50000", "Right", "4", "4", "ST", "180", "75"]]', 'dataset_id': 7}]
-(Background on this error at: https://sqlalche.me/e/20/gkpj)
+  File "/home/practica/fifahub/venv/lib/python3.12/site-packages/sqlalchemy/engine/base.py", line 143, in __init__
+    self._dbapi_connection = engine.raw_connection()
+                             ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/practica/fifahub/venv/lib/python3.12/site-packages/sqlalchemy/engine/base.py", line 3295, in raw_connection
+    return self.pool.connect()
+           ^^^^^^^^^^^^^^^^^^^
+  File "/home/practica/fifahub/venv/lib/python3.12/site-packages/sqlalchemy/pool/base.py", line 447, in connect
+    return _ConnectionFairy._checkout(self)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/practica/fifahub/venv/lib/python3.12/site-packages/sqlalchemy/pool/base.py", line 1264, in _checkout
+    fairy = _ConnectionRecord.checkout(pool)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/practica/fifahub/venv/lib/python3.12/site-packages/sqlalchemy/pool/base.py", line 711, in checkout
+    rec = pool._do_get()
+          ^^^^^^^^^^^^^^
+  File "/home/practica/fifahub/venv/lib/python3.12/site-packages/sqlalchemy/pool/impl.py", line 177, in _do_get
+    with util.safe_reraise():
+  File "/home/practica/fifahub/venv/lib/python3.12/site-packages/sqlalchemy/util/langhelpers.py", line 224, in __exit__
+    raise exc_value.with_traceback(exc_tb)
+  File "/home/practica/fifahub/venv/lib/python3.12/site-packages/sqlalchemy/pool/impl.py", line 175, in _do_get
+    return self._create_connection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/practica/fifahub/venv/lib/python3.12/site-packages/sqlalchemy/pool/base.py", line 388, in _create_connection
+    return _ConnectionRecord(self)
+           ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/practica/fifahub/venv/lib/python3.12/site-packages/sqlalchemy/pool/base.py", line 673, in __init__
+    self.__connect()
+  File "/home/practica/fifahub/venv/lib/python3.12/site-packages/sqlalchemy/pool/base.py", line 899, in __connect
+    with util.safe_reraise():
+  File "/home/practica/fifahub/venv/lib/python3.12/site-packages/sqlalchemy/util/langhelpers.py", line 224, in __exit__
+    raise exc_value.with_traceback(exc_tb)
+  File "/home/practica/fifahub/venv/lib/python3.12/site-packages/sqlalchemy/pool/base.py", line 895, in __connect
+    self.dbapi_connection = connection = pool._invoke_creator(self)
+                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/practica/fifahub/venv/lib/python3.12/site-packages/sqlalchemy/engine/create.py", line 646, in connect
+    return dialect.connect(*cargs, **cparams)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/practica/fifahub/venv/lib/python3.12/site-packages/sqlalchemy/engine/default.py", line 626, in connect
+    return self.loaded_dbapi.connect(*cargs, **cparams)  # type: ignore[no-any-return]  # NOQA: E501
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/practica/fifahub/venv/lib/python3.12/site-packages/pymysql/connections.py", line 361, in __init__
+    self.connect()
+  File "/home/practica/fifahub/venv/lib/python3.12/site-packages/pymysql/connections.py", line 716, in connect
+    raise exc
+sqlalchemy.exc.OperationalError: (pymysql.err.OperationalError) (2003, "Can't connect to MySQL server on '127.0.0.1' ([Errno 111] Connection refused)")
+(Background on this error at: https://sqlalche.me/e/20/e3q8)
