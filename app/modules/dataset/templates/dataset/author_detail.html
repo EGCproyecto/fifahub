@@ -45,6 +45,50 @@
         </div>
     </div>
 </div>
+
+<div class="card shadow-sm">
+    <div class="card-header bg-light">
+        <h2 class="h5 mb-0">Datasets de este autor</h2>
+    </div>
+    <div class="card-body p-0">
+        {% if datasets %}
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Título</th>
+                            <th class="text-center">Tipo</th>
+                            <th class="text-center">Fecha</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for dataset in datasets %}
+                            {% set md = dataset.ds_meta_data %}
+                            {% set doi = md.dataset_doi if md else None %}
+                            {% if doi %}
+                                {% set detail_url = url_for('dataset.subdomain_index', doi=doi) %}
+                            {% else %}
+                                {% set detail_url = url_for('dataset.view_dataset', dataset_id=dataset.id) %}
+                            {% endif %}
+                            <tr>
+                                <td>
+                                    <a href="{{ detail_url }}">{{ md.title if md else ('Dataset ' ~ dataset.id) }}</a>
+                                    <div class="text-muted small">{{ md.description[:120] ~ ('...' if md and md.description|length > 120 else '') }}</div>
+                                </td>
+                                <td class="text-center text-nowrap">{{ dataset.type|capitalize }}</td>
+                                <td class="text-center text-nowrap">
+                                    {{ dataset.created_at.strftime('%Y-%m-%d') if dataset.created_at else '—' }}
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <div class="p-3 text-muted">Este autor todavía no tiene datasets publicados.</div>
+        {% endif %}
+    </div>
+</div>
 {% endblock %}
 
 {% block scripts %}
