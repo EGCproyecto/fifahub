@@ -35,8 +35,47 @@
 
                 </div>
 
-
             </div>
+
+            {% if tabular_results %}
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Tabular datasets</h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Title</th>
+                                    <th>Owner</th>
+                                    <th class="text-end">View</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for ds in tabular_results %}
+                                    <tr>
+                                        <td>{{ ds.ds_meta_data.title if ds.ds_meta_data else 'Tabular dataset' }}</td>
+                                        <td>
+                                            {% if ds.user and ds.user.email %}
+                                                {{ ds.user.email }}
+                                            {% else %}
+                                                <span class="text-muted">Unknown</span>
+                                            {% endif %}
+                                        </td>
+                                        <td class="text-end">
+                                            <a href="{{ url_for('tabular.detail', dataset_id=ds.id) }}" class="btn btn-outline-primary btn-sm">
+                                                View
+                                            </a>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
         </div>
 
         <div class="col-lg-5 fixed-column" id="filters">
