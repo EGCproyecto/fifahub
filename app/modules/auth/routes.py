@@ -1,10 +1,12 @@
 import logging
+import secrets
+import time
 
-from flask import jsonify, redirect, render_template, request, url_for
+from flask import jsonify, redirect, render_template, request, session, url_for
 from flask_login import current_user, login_required, login_user, logout_user
 
 from app.modules.auth import auth_bp
-from app.modules.auth.forms import LoginForm, SignupForm
+from app.modules.auth.forms import LoginForm, SignupForm, TwoFactorLoginForm
 from app.modules.auth.services import AuthenticationService, FollowService
 from app.modules.dataset.models import Author
 from app.modules.profile.services import UserProfileService
@@ -13,6 +15,24 @@ authentication_service = AuthenticationService()
 user_profile_service = UserProfileService()
 follow_service = FollowService()
 logger = logging.getLogger(__name__)
+
+PENDING_TWO_FACTOR_SESSION_KEY = "pending_two_factor_login"
+PENDING_TWO_FACTOR_MAX_AGE = 300
+PENDING_TWO_FACTOR_MAX_ATTEMPTS = 5
+
+
+def _get_pending_two_factor():
+    pending = session.get(PENDING_TWO_FACTOR_SESSION_KEY)
+    if not pending:
+        return None, None
+    user = authentication_service.repository.get_by_id(pending.get("user_id"))
+    if not user:
+        session.pop(PENDING_TWO_FACTOR_SESSION_KEY, None)
+        return None, None
+    if time.time() - pending.get("created_at", 0) > PENDING_TWO_FACTOR_MAX_AGE:
+        session.pop(PENDING_TWO_FACTOR_SESSION_KEY, None)
+        return None, None
+    return pending, user
 
 
 @auth_bp.route("/signup/", methods=["GET", "POST"])
@@ -44,13 +64,124 @@ def login():
         return redirect(url_for("public.index"))
 
     form = LoginForm()
+    two_factor_form = TwoFactorLoginForm()
     if request.method == "POST" and form.validate_on_submit():
-        if authentication_service.login(form.email.data, form.password.data):
+        session.pop(PENDING_TWO_FACTOR_SESSION_KEY, None)
+        result = authentication_service.login(
+            form.email.data,
+            form.password.data,
+            remember=form.remember_me.data,
+        )
+        if result["status"] == "authenticated":
             return redirect(url_for("public.index"))
 
-        return render_template("auth/login_form.html", form=form, error="Invalid credentials")
+        if result["status"] == "two_factor_required":
+            token = secrets.token_urlsafe(32)
+            session[PENDING_TWO_FACTOR_SESSION_KEY] = {
+                "user_id": result["user"].id,
+                "token": token,
+                "remember": bool(form.remember_me.data),
+                "created_at": time.time(),
+                "attempts": 0,
+            }
+            two_factor_form.token.data = token
+            return render_template(
+                "auth/login_form.html",
+                form=LoginForm(),
+                two_factor_form=two_factor_form,
+                two_factor_required=True,
+                two_factor_email=result["user"].email,
+                two_factor_message="Enter the 6-digit code from your authenticator app.",
+            )
 
-    return render_template("auth/login_form.html", form=form)
+        return render_template(
+            "auth/login_form.html", form=form, error="Invalid credentials", two_factor_form=two_factor_form
+        )
+
+    pending, pending_user = _get_pending_two_factor()
+    if pending and pending_user:
+        two_factor_form.token.data = pending.get("token")
+        return render_template(
+            "auth/login_form.html",
+            form=form,
+            two_factor_form=two_factor_form,
+            two_factor_required=True,
+            two_factor_email=pending_user.email,
+            two_factor_message="Enter the 6-digit code from your authenticator app.",
+        )
+
+    return render_template("auth/login_form.html", form=form, two_factor_form=two_factor_form)
+
+
+@auth_bp.route("/login/2fa", methods=["POST"])
+def login_two_factor():
+    if current_user.is_authenticated:
+        return redirect(url_for("public.index"))
+
+    pending, pending_user = _get_pending_two_factor()
+    if not pending or not pending_user:
+        logger.warning("2FA verification attempted without pending session")
+        return redirect(url_for("auth.login"))
+
+    form = TwoFactorLoginForm()
+    if not form.validate_on_submit():
+        form.token.data = pending.get("token")
+        return render_template(
+            "auth/login_form.html",
+            form=LoginForm(),
+            two_factor_form=form,
+            two_factor_required=True,
+            two_factor_email=pending_user.email,
+            two_factor_message="Enter the 6-digit code from your authenticator app.",
+            error="Invalid code",
+        )
+
+    if form.token.data != pending.get("token"):
+        logger.warning("2FA token mismatch for user %s", pending_user.id)
+        session.pop(PENDING_TWO_FACTOR_SESSION_KEY, None)
+        return redirect(url_for("auth.login"))
+
+    if time.time() - pending.get("created_at", 0) > PENDING_TWO_FACTOR_MAX_AGE:
+        session.pop(PENDING_TWO_FACTOR_SESSION_KEY, None)
+        return render_template(
+            "auth/login_form.html",
+            form=LoginForm(),
+            two_factor_form=TwoFactorLoginForm(),
+            error="Two-factor session expired. Please login again.",
+        )
+
+    try:
+        authentication_service.complete_two_factor_login(
+            pending_user,
+            form.code.data,
+            remember=pending.get("remember", False),
+        )
+    except ValueError as exc:
+        attempts = pending.get("attempts", 0) + 1
+        if attempts >= PENDING_TWO_FACTOR_MAX_ATTEMPTS:
+            session.pop(PENDING_TWO_FACTOR_SESSION_KEY, None)
+        else:
+            pending["attempts"] = attempts
+            session[PENDING_TWO_FACTOR_SESSION_KEY] = pending
+        challenge_form = TwoFactorLoginForm()
+        if attempts < PENDING_TWO_FACTOR_MAX_ATTEMPTS:
+            challenge_form.token.data = pending.get("token")
+        return render_template(
+            "auth/login_form.html",
+            form=LoginForm(),
+            two_factor_form=challenge_form,
+            two_factor_required=attempts < PENDING_TWO_FACTOR_MAX_ATTEMPTS,
+            two_factor_email=pending_user.email,
+            two_factor_message="Enter the 6-digit code from your authenticator app.",
+            error=(
+                str(exc)
+                if attempts < PENDING_TWO_FACTOR_MAX_ATTEMPTS
+                else "Too many invalid codes. Please login again."
+            ),
+        )
+
+    session.pop(PENDING_TWO_FACTOR_SESSION_KEY, None)
+    return redirect(url_for("public.index"))
 
 
 @auth_bp.route("/logout")
