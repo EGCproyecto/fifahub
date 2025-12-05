@@ -35,6 +35,19 @@ def _get_pending_two_factor():
     return pending, user
 
 
+def _increment_two_factor_attempts(pending: dict | None):
+    if not pending:
+        return 0, True
+    attempts = pending.get("attempts", 0) + 1
+    locked = attempts >= PENDING_TWO_FACTOR_MAX_ATTEMPTS
+    if locked:
+        session.pop(PENDING_TWO_FACTOR_SESSION_KEY, None)
+    else:
+        pending["attempts"] = attempts
+        session[PENDING_TWO_FACTOR_SESSION_KEY] = pending
+    return attempts, locked
+
+
 @auth_bp.route("/signup/", methods=["GET", "POST"])
 def show_signup_form():
     if current_user.is_authenticated:
@@ -157,31 +170,99 @@ def login_two_factor():
             remember=pending.get("remember", False),
         )
     except ValueError as exc:
-        attempts = pending.get("attempts", 0) + 1
-        if attempts >= PENDING_TWO_FACTOR_MAX_ATTEMPTS:
-            session.pop(PENDING_TWO_FACTOR_SESSION_KEY, None)
-        else:
-            pending["attempts"] = attempts
-            session[PENDING_TWO_FACTOR_SESSION_KEY] = pending
+        attempts, locked = _increment_two_factor_attempts(pending)
         challenge_form = TwoFactorLoginForm()
-        if attempts < PENDING_TWO_FACTOR_MAX_ATTEMPTS:
+        if not locked:
             challenge_form.token.data = pending.get("token")
         return render_template(
             "auth/login_form.html",
             form=LoginForm(),
             two_factor_form=challenge_form,
-            two_factor_required=attempts < PENDING_TWO_FACTOR_MAX_ATTEMPTS,
+            two_factor_required=not locked,
             two_factor_email=pending_user.email,
             two_factor_message="Enter the 6-digit code from your authenticator app.",
-            error=(
-                str(exc)
-                if attempts < PENDING_TWO_FACTOR_MAX_ATTEMPTS
-                else "Too many invalid codes. Please login again."
-            ),
+            error=str(exc) if not locked else "Too many invalid codes. Please login again.",
         )
 
     session.pop(PENDING_TWO_FACTOR_SESSION_KEY, None)
     return redirect(url_for("public.index"))
+
+
+@auth_bp.route("/auth/2fa/verify", methods=["POST"])
+def verify_two_factor_api():
+    if current_user.is_authenticated:
+        return jsonify({"message": "Already authenticated"}), 400
+
+    pending, pending_user = _get_pending_two_factor()
+    if not pending or not pending_user:
+        return jsonify({"message": "No pending 2FA challenge"}), 400
+
+    payload = request.get_json(silent=True) or {}
+    token = (payload.get("token") or "").strip()
+    if not token or token != pending.get("token"):
+        logger.warning("Invalid 2FA token via API for user %s", pending_user.id)
+        session.pop(PENDING_TWO_FACTOR_SESSION_KEY, None)
+        return jsonify({"message": "Invalid or expired 2FA session"}), 400
+
+    recovery_code = (payload.get("recovery_code") or "").strip()
+    totp_code = (payload.get("totp_code") or payload.get("code") or "").strip()
+
+    def _error_response(message, status=400):
+        return jsonify({"message": message}), status
+
+    if recovery_code:
+        try:
+            authentication_service.use_recovery_code(pending_user, recovery_code)
+            login_user(pending_user, remember=pending.get("remember", False))
+        except ValueError as exc:
+            attempts, locked = _increment_two_factor_attempts(pending)
+            message = "Too many invalid codes. Please login again." if locked else str(exc)
+            return jsonify({"message": message, "locked": locked, "attempts": attempts}), 429 if locked else 400
+        except Exception:
+            attempts, locked = _increment_two_factor_attempts(pending)
+            logger.exception("Unexpected error verifying recovery code for user %s", pending_user.id)
+            return (
+                jsonify(
+                    {
+                        "message": "Unable to verify recovery code",
+                        "locked": locked,
+                        "attempts": attempts,
+                    }
+                ),
+                500 if not locked else 429,
+            )
+        session.pop(PENDING_TWO_FACTOR_SESSION_KEY, None)
+        return jsonify({"message": "2FA verified", "method": "recovery"}), 200
+
+    if not totp_code:
+        return _error_response("Code is required")
+
+    try:
+        authentication_service.complete_two_factor_login(
+            pending_user,
+            totp_code,
+            remember=pending.get("remember", False),
+        )
+    except ValueError as exc:
+        attempts, locked = _increment_two_factor_attempts(pending)
+        message = "Too many invalid codes. Please login again." if locked else str(exc)
+        return jsonify({"message": message, "locked": locked, "attempts": attempts}), 429 if locked else 400
+    except Exception:
+        attempts, locked = _increment_two_factor_attempts(pending)
+        logger.exception("Unexpected error verifying TOTP code for user %s", pending_user.id)
+        return (
+            jsonify(
+                {
+                    "message": "Unable to verify 2FA code",
+                    "locked": locked,
+                    "attempts": attempts,
+                }
+            ),
+            500 if not locked else 429,
+        )
+
+    session.pop(PENDING_TWO_FACTOR_SESSION_KEY, None)
+    return jsonify({"message": "2FA verified", "method": "totp"}), 200
 
 
 @auth_bp.route("/logout")
