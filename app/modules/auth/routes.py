@@ -34,6 +34,7 @@ def _get_pending_two_factor():
         return None, None
     return pending, user
 
+
 @auth_bp.route("/signup/", methods=["GET", "POST"])
 def show_signup_form():
     if current_user.is_authenticated:
@@ -93,7 +94,9 @@ def login():
                 two_factor_message="Enter the 6-digit code from your authenticator app.",
             )
 
-        return render_template("auth/login_form.html", form=form, error="Invalid credentials", two_factor_form=two_factor_form)
+        return render_template(
+            "auth/login_form.html", form=form, error="Invalid credentials", two_factor_form=two_factor_form
+        )
 
     pending, pending_user = _get_pending_two_factor()
     if pending and pending_user:
@@ -170,7 +173,11 @@ def login_two_factor():
             two_factor_required=attempts < PENDING_TWO_FACTOR_MAX_ATTEMPTS,
             two_factor_email=pending_user.email,
             two_factor_message="Enter the 6-digit code from your authenticator app.",
-            error=str(exc) if attempts < PENDING_TWO_FACTOR_MAX_ATTEMPTS else "Too many invalid codes. Please login again.",
+            error=(
+                str(exc)
+                if attempts < PENDING_TWO_FACTOR_MAX_ATTEMPTS
+                else "Too many invalid codes. Please login again."
+            ),
         )
 
     session.pop(PENDING_TWO_FACTOR_SESSION_KEY, None)
