@@ -1,4 +1,4 @@
-2025-12-04 21:02:17,830 - app - ERROR - Exception on / [GET]
+2025-12-05 16:48:10,203 - app - ERROR - Exception on / [GET]
 Traceback (most recent call last):
   File "/home/practica/Escritorio/EGC/proyecto/fifahub/venv/lib/python3.12/site-packages/sqlalchemy/engine/base.py", line 1961, in _exec_single_context
     self.dialect.do_execute(
@@ -118,4 +118,4 @@ FROM data_set INNER JOIN ds_meta_data ON ds_meta_data.id = data_set.ds_meta_data
 WHERE ds_meta_data.dataset_doi IS NOT NULL AND data_set.type IN (%(type_1_1)s)) AS anon_1]
 [parameters: {'type_1_1': 'uvl'}]
 (Background on this error at: https://sqlalche.me/e/20/f405)
-2025-12-04 21:02:17,874 - app - ERROR - Internal Server Error: 500 Internal Server Error: The server encountered an internal error and was unable to complete your request. Either the server is overloaded or there is an error in the application.
+2025-12-05 16:48:10,242 - app - ERROR - Internal Server Error: 500 Internal Server Error: The server encountered an internal error and was unable to complete your request. Either the server is overloaded or there is an error in the application.
