@@ -4,57 +4,16 @@
 
 {% block content %}
 
-<h1 class="h2 mb-3"><b>Login</b></h1>
+<div class="d-flex align-items-center justify-content-between mb-3">
+    <h1 class="h2 mb-0"><b>Login</b></h1>
+    <a class="btn btn-outline-secondary" href="{{ url_for('auth.show_signup_form') }}">Create account</a>
+</div>
 
 <div class="row">
-    <div class="col-12">
-
-        {% if two_factor_required %}
-        <form action="{{ url_for('auth.login_two_factor') }}" method="post" novalidate>
-            {{ two_factor_form.hidden_tag() }}
-
-            <div class="row">
-
-                <div class="col-md-6 col-lg-6 col-xs-12">
-                    <div class="mb-3">
-                        <label class="form-label">Two-Factor Authentication</label>
-                        {% if two_factor_email %}
-                        <p class="form-text">Account: {{ two_factor_email }}</p>
-                        {% endif %}
-                        {% if two_factor_message %}
-                        <p class="form-text">{{ two_factor_message }}</p>
-                        {% endif %}
-                        {{ two_factor_form.code(class="form-control",placeholder="Enter 6-digit code") }}
-                        {% for error in two_factor_form.code.errors %}
-                        <span style="color: red;">{{ error }}</span>
-                        {% endfor %}
-                    </div>
-                </div>
-
-            </div>
-
-            <div class="row">
-
-                <div class="col-lg-6 col-12">
-                    {{ two_factor_form.submit(class="btn btn-primary") }}
-                </div>
-
-            </div>
-
-            <div class="row">
-
-                {% if error %}
-
-                <div class="mt-3 col-lg-6 col-12">
-                    <span style="color: red;">{{ error }}</span>
-                </div>
-
-                {% endif %}
-
-            </div>
-        </form>
-        {% else %}
-        <form action="" method="post" novalidate>
+    <div class="col-12 col-lg-8">
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <form action="" method="post" novalidate>
             {{ form.hidden_tag() }}
 
             <div class="row">
@@ -116,23 +75,14 @@
                 {% endif %}
 
             </div>
-
-            <div class="row">
-
-                <div class="mt-3">
-                    <div class="col-lg-6 col-12">
-                        Don't have an account? <a href="{{ url_for('auth.show_signup_form') }}">Sign up!</a>
-                    </div>
-                </div>
-
-            </div>
-
         </form>
-        {% endif %}
-
+            </div>
+        </div>
+        <div class="mt-3">
+            Don't have an account? <a href="{{ url_for('auth.show_signup_form') }}">Sign up!</a>
+        </div>
     </div>
 </div>
-
 
 {% endblock %}
 

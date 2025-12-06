@@ -22,3 +22,12 @@ class TwoFactorLoginForm(FlaskForm):
     token = HiddenField(validators=[DataRequired()])
     code = StringField("Authentication code", validators=[DataRequired(), Length(min=6, max=6)])
     submit = SubmitField("Verify code")
+
+
+class TwoFactorRecoveryForm(FlaskForm):
+    token = HiddenField(validators=[DataRequired()])
+    recovery_code = StringField(
+        "Recovery code",
+        validators=[DataRequired(), Length(min=6, max=32)],
+    )
+    submit = SubmitField("Use recovery code")
