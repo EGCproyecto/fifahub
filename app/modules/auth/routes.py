@@ -6,7 +6,7 @@ from flask import jsonify, redirect, render_template, request, session, url_for
 from flask_login import current_user, login_required, login_user, logout_user
 
 from app.modules.auth import auth_bp
-from app.modules.auth.forms import LoginForm, SignupForm, TwoFactorLoginForm
+from app.modules.auth.forms import LoginForm, SignupForm, TwoFactorLoginForm, TwoFactorRecoveryForm
 from app.modules.auth.services import AuthenticationService, FollowService
 from app.modules.dataset.models import Author
 from app.modules.profile.services import UserProfileService
@@ -19,6 +19,7 @@ logger = logging.getLogger(__name__)
 PENDING_TWO_FACTOR_SESSION_KEY = "pending_two_factor_login"
 PENDING_TWO_FACTOR_MAX_AGE = 300
 PENDING_TWO_FACTOR_MAX_ATTEMPTS = 5
+TWO_FACTOR_PROMPT = "Enter the 6-digit code from your authenticator app."
 
 
 def _get_pending_two_factor():
@@ -46,6 +47,27 @@ def _increment_two_factor_attempts(pending: dict | None):
         pending["attempts"] = attempts
         session[PENDING_TWO_FACTOR_SESSION_KEY] = pending
     return attempts, locked
+
+
+def _render_two_factor_challenge(
+    totp_form: TwoFactorLoginForm,
+    recovery_form: TwoFactorRecoveryForm,
+    email: str,
+    message: str = TWO_FACTOR_PROMPT,
+    error: str | None = None,
+    recovery_error: str | None = None,
+    locked: bool = False,
+):
+    return render_template(
+        "auth/two_factor_challenge.html",
+        two_factor_form=totp_form,
+        recovery_form=recovery_form,
+        two_factor_email=email,
+        two_factor_message=message,
+        error=error,
+        recovery_error=recovery_error,
+        locked=locked,
+    )
 
 
 @auth_bp.route("/signup/", methods=["GET", "POST"])
@@ -78,6 +100,7 @@ def login():
 
     form = LoginForm()
     two_factor_form = TwoFactorLoginForm()
+    recovery_form = TwoFactorRecoveryForm()
     if request.method == "POST" and form.validate_on_submit():
         session.pop(PENDING_TWO_FACTOR_SESSION_KEY, None)
         result = authentication_service.login(
@@ -98,13 +121,12 @@ def login():
                 "attempts": 0,
             }
             two_factor_form.token.data = token
-            return render_template(
-                "auth/login_form.html",
-                form=LoginForm(),
-                two_factor_form=two_factor_form,
-                two_factor_required=True,
-                two_factor_email=result["user"].email,
-                two_factor_message="Enter the 6-digit code from your authenticator app.",
+            recovery_form.token.data = token
+            return _render_two_factor_challenge(
+                two_factor_form,
+                recovery_form,
+                result["user"].email,
+                TWO_FACTOR_PROMPT,
             )
 
         return render_template(
@@ -114,13 +136,12 @@ def login():
     pending, pending_user = _get_pending_two_factor()
     if pending and pending_user:
         two_factor_form.token.data = pending.get("token")
-        return render_template(
-            "auth/login_form.html",
-            form=form,
-            two_factor_form=two_factor_form,
-            two_factor_required=True,
-            two_factor_email=pending_user.email,
-            two_factor_message="Enter the 6-digit code from your authenticator app.",
+        recovery_form.token.data = pending.get("token")
+        return _render_two_factor_challenge(
+            two_factor_form,
+            recovery_form,
+            pending_user.email,
+            TWO_FACTOR_PROMPT,
         )
 
     return render_template("auth/login_form.html", form=form, two_factor_form=two_factor_form)
@@ -136,20 +157,24 @@ def login_two_factor():
         logger.warning("2FA verification attempted without pending session")
         return redirect(url_for("auth.login"))
 
-    form = TwoFactorLoginForm()
-    if not form.validate_on_submit():
-        form.token.data = pending.get("token")
-        return render_template(
-            "auth/login_form.html",
-            form=LoginForm(),
-            two_factor_form=form,
-            two_factor_required=True,
-            two_factor_email=pending_user.email,
-            two_factor_message="Enter the 6-digit code from your authenticator app.",
-            error="Invalid code",
+    totp_form = TwoFactorLoginForm()
+    recovery_form = TwoFactorRecoveryForm()
+    use_recovery = "recovery_code" in request.form
+    active_form = recovery_form if use_recovery else totp_form
+
+    if not active_form.validate_on_submit():
+        totp_form.token.data = pending.get("token")
+        recovery_form.token.data = pending.get("token")
+        return _render_two_factor_challenge(
+            totp_form,
+            recovery_form,
+            pending_user.email,
+            TWO_FACTOR_PROMPT,
+            error="Código inválido" if not use_recovery else None,
+            recovery_error="Código inválido" if use_recovery else None,
         )
 
-    if form.token.data != pending.get("token"):
+    if active_form.token.data != pending.get("token"):
         logger.warning("2FA token mismatch for user %s", pending_user.id)
         session.pop(PENDING_TWO_FACTOR_SESSION_KEY, None)
         return redirect(url_for("auth.login"))
@@ -164,24 +189,35 @@ def login_two_factor():
         )
 
     try:
-        authentication_service.complete_two_factor_login(
-            pending_user,
-            form.code.data,
-            remember=pending.get("remember", False),
-        )
+        if use_recovery:
+            authentication_service.use_recovery_code(pending_user, recovery_form.recovery_code.data)
+            login_user(pending_user, remember=pending.get("remember", False))
+        else:
+            authentication_service.complete_two_factor_login(
+                pending_user,
+                totp_form.code.data,
+                remember=pending.get("remember", False),
+            )
     except ValueError as exc:
         attempts, locked = _increment_two_factor_attempts(pending)
-        challenge_form = TwoFactorLoginForm()
-        if not locked:
-            challenge_form.token.data = pending.get("token")
-        return render_template(
-            "auth/login_form.html",
-            form=LoginForm(),
-            two_factor_form=challenge_form,
-            two_factor_required=not locked,
-            two_factor_email=pending_user.email,
-            two_factor_message="Enter the 6-digit code from your authenticator app.",
-            error=str(exc) if not locked else "Too many invalid codes. Please login again.",
+        if locked:
+            challenge_totp = TwoFactorLoginForm()
+            challenge_recovery = TwoFactorRecoveryForm()
+            session.pop(PENDING_TWO_FACTOR_SESSION_KEY, None)
+        else:
+            challenge_totp = totp_form
+            challenge_recovery = recovery_form
+            challenge_totp.token.data = pending.get("token")
+            challenge_recovery.token.data = pending.get("token")
+        message = "Too many invalid codes. Please login again." if locked else str(exc)
+        return _render_two_factor_challenge(
+            challenge_totp,
+            challenge_recovery,
+            pending_user.email,
+            TWO_FACTOR_PROMPT,
+            error=message if not use_recovery else None,
+            recovery_error=message if use_recovery else None,
+            locked=locked,
         )
 
     session.pop(PENDING_TWO_FACTOR_SESSION_KEY, None)

@@ -1,0 +1,102 @@
+{% extends "base_template.html" %}
+
+{% block title %}Two-Factor Authentication{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center" data-two-factor-page>
+    <div class="col-lg-6 col-md-8">
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <h1 class="h3 mb-3">Two-Factor Authentication</h1>
+                <p class="text-muted mb-4">
+                    Complete sign in to
+                    {% if two_factor_email %}
+                        <span class="fw-semibold">{{ two_factor_email }}</span>
+                    {% endif %}
+                    {{ two_factor_message or "Enter the 6-digit code from your authenticator app to continue." }}
+                </p>
+
+                {% if locked %}
+                <div class="alert alert-danger" role="alert">
+                    {{ error or "Too many invalid codes. Please login again." }}
+                </div>
+                <a href="{{ url_for('auth.login') }}" class="btn btn-primary w-100">Return to login</a>
+                {% else %}
+                <div id="twoFactorTotpSection">
+                    <form
+                        id="twoFactorTotpForm"
+                        action="{{ url_for('auth.login_two_factor') }}"
+                        method="post"
+                        data-verify-url="{{ url_for('auth.verify_two_factor_api') }}"
+                        data-success-url="{{ url_for('public.index') }}"
+                        data-login-url="{{ url_for('auth.login') }}"
+                        novalidate
+                    >
+                        {{ two_factor_form.hidden_tag() }}
+                        <div class="mb-3">
+                            <label class="form-label" for="twoFactorCodeInput">Authentication code</label>
+                            {{ two_factor_form.code(class="form-control form-control-lg text-center", maxlength="6", inputmode="numeric", pattern="[0-9]*", autocomplete="one-time-code", placeholder="123456", id="twoFactorCodeInput") }}
+                            <div class="form-text">Enter the 6-digit code from your authenticator app.</div>
+                            {% for field_error in two_factor_form.code.errors %}
+                            <div class="text-danger small">{{ field_error }}</div>
+                            {% endfor %}
+                            <div class="text-danger small" data-error-target="totp">
+                                {% if error and not recovery_error %}{{ error }}{% endif %}
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100" data-loading-text="Verifying...">
+                            Verify and continue
+                        </button>
+                    </form>
+                    <div class="text-center mt-3">
+                        <button type="button" class="btn btn-link p-0 text-decoration-none" data-toggle-recovery>
+                            Use recovery code
+                        </button>
+                    </div>
+                </div>
+
+                <div id="twoFactorRecoverySection" class="d-none">
+                    <form
+                        id="recoveryCodeForm"
+                        action="{{ url_for('auth.login_two_factor') }}"
+                        method="post"
+                        data-mode="recovery"
+                        data-verify-url="{{ url_for('auth.verify_two_factor_api') }}"
+                        data-success-url="{{ url_for('public.index') }}"
+                        data-login-url="{{ url_for('auth.login') }}"
+                        novalidate
+                    >
+                        {{ recovery_form.hidden_tag() }}
+                        <div class="mb-3">
+                            <label class="form-label" for="recoveryCodeInput">Recovery code</label>
+                            {{ recovery_form.recovery_code(class="form-control", placeholder="xxxxx-xxxxx", id="recoveryCodeInput") }}
+                            <div class="form-text">
+                                Enter one of the recovery codes you saved when setting up 2FA. Codes are single-use.
+                            </div>
+                            {% for field_error in recovery_form.recovery_code.errors %}
+                            <div class="text-danger small">{{ field_error }}</div>
+                            {% endfor %}
+                            <div class="text-danger small" data-error-target="recovery">
+                                {% if recovery_error %}{{ recovery_error }}{% endif %}
+                            </div>
+                        </div>
+                        <div class="d-flex flex-column gap-2">
+                            <button type="submit" class="btn btn-outline-primary w-100" data-loading-text="Verifying...">
+                                Use recovery code
+                            </button>
+                            <button type="button" class="btn btn-link p-0 text-decoration-none" data-toggle-totp>
+                                Back to authenticator code
+                            </button>
+                        </div>
+                    </form>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+    <script src="{{ url_for('auth.scripts') }}"></script>
+{% endblock %}
