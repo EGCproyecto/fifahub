@@ -5,7 +5,7 @@ from app.modules.tabular.models import TabularDataset
 
 
 def test_polymorphic_query_returns_subclasses():
-    app = create_app()
+    app = create_app("testing")
     with app.app_context():
         # Crear esquema para este test (tablas necesarias en la BD de CI)
         db.create_all()
