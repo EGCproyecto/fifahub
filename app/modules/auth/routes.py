@@ -363,6 +363,27 @@ def verify_recovery_code():
     return jsonify({"message": "Recovery code accepted"})
 
 
+@auth_bp.route("/2fa/disable", methods=["POST"])
+@login_required
+def disable_two_factor():
+    payload = request.get_json(silent=True) or {}
+    password = (payload.get("password") or "").strip()
+    totp_code = (payload.get("code") or payload.get("totp_code") or "").strip()
+    try:
+        method = authentication_service.disable_two_factor(
+            current_user,
+            password=password,
+            totp_code=totp_code,
+        )
+    except ValueError as exc:
+        return jsonify({"message": str(exc)}), 400
+    except Exception:
+        logger.exception("Unable to disable 2FA for user %s", current_user.id)
+        return jsonify({"message": "Unable to disable 2FA"}), 500
+    logger.info("User %s disabled 2FA using %s verification", current_user.id, method)
+    return jsonify({"message": "Two-factor authentication disabled", "method": method})
+
+
 @auth_bp.route("/follow/author/<int:author_id>", methods=["POST"])
 @login_required
 def follow_author(author_id: int):

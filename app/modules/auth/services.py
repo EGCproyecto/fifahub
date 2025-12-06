@@ -130,6 +130,10 @@ class AuthenticationService(BaseService):
     def regenerate_recovery_codes(self, user: User) -> list[str]:
         if user is None:
             raise ValueError("User required")
+        persisted = self.repository.get_by_id(user.id)
+        if persisted is None:
+            raise ValueError("User required")
+        user = persisted
         if not user.two_factor_enabled:
             raise ValueError("2FA no activada")
         codes = self._generate_recovery_codes(user)
@@ -175,6 +179,10 @@ class AuthenticationService(BaseService):
     def complete_two_factor_login(self, user: User, code: str, remember: bool = True):
         if user is None:
             raise ValueError("User required")
+        persisted = self.repository.get_by_id(user.id)
+        if persisted is None:
+            raise ValueError("User required")
+        user = persisted
         if not user.two_factor_enabled:
             raise ValueError("2FA no activada")
         trimmed = (code or "").strip()
@@ -194,6 +202,36 @@ class AuthenticationService(BaseService):
             return decrypt_text(user.two_factor_secret)
         except InvalidToken as exc:
             raise RuntimeError("Secreto inválido") from exc
+
+    def disable_two_factor(self, user: User, password: str | None = None, totp_code: str | None = None) -> str:
+        if user is None:
+            raise ValueError("User required")
+        if not user.two_factor_enabled:
+            raise ValueError("2FA no activada")
+        password_candidate = (password or "").strip()
+        totp_candidate = (totp_code or "").strip()
+        if not password_candidate and not totp_candidate:
+            raise ValueError("Contraseña o código requerido")
+
+        method_used = None
+        if password_candidate:
+            if not user.check_password(password_candidate):
+                raise ValueError("Contraseña inválida")
+            method_used = "password"
+        elif totp_candidate:
+            if len(totp_candidate) != 6 or not totp_candidate.isdigit():
+                raise ValueError("Código inválido")
+            secret = self._get_user_secret(user)
+            totp = pyotp.TOTP(secret)
+            if not totp.verify(totp_candidate, valid_window=1):
+                raise ValueError("Código inválido")
+            method_used = "totp"
+
+        user.two_factor_enabled = False
+        user.two_factor_secret = None
+        self._recovery_codes_query(user).delete()
+        self.repository.session.commit()
+        return method_used or "totp"
 
 
 class FollowService(BaseService):
