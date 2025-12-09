@@ -3,7 +3,7 @@
 # Exit immediately if a command exits with a non-zero status
 set -e
 
--
+
 export FLASK_APP=app:create_app
 
 # Wait for the database to be ready
