@@ -1,76 +1,44 @@
-#!/usr/bin/env bash
-set -euo pipefail
+#!/bin/bash
 
-# ===== Config básica =====
+# Exit immediately if a command exits with a non-zero status
+set -e
+
+-
 export FLASK_APP=app:create_app
-export PORT="${PORT:-10000}"     # Render inyecta $PORT; si no, 10000
-export MIGRATIONS_ONLY=1         # Evita cargar módulos pesados (flamapy/ANTLR) durante migraciones
 
-echo "⏳ Esperando a la base de datos..."
-python3 - << 'PY'
-import os, time, pymysql, sys
-host=os.environ['MARIADB_HOSTNAME']
-port=int(os.environ.get('MARIADB_PORT', 3306))
-user=os.environ['MARIADB_USER']
-pw=os.environ['MARIADB_PASSWORD']
-db=os.environ['MARIADB_DATABASE']
+# Wait for the database to be ready
+sh ./scripts/wait-for-db.sh
 
-for i in range(90):
-    try:
-        conn=pymysql.connect(host=host, port=port, user=user, password=pw, database=db, connect_timeout=5)
-        with conn.cursor() as c: c.execute("SELECT 1")
-        conn.close()
-        print("✅ DB OK")
-        sys.exit(0)
-    except Exception as e:
-        print(f"[{i:02d}] BD no disponible: {e}")
-        time.sleep(2)
-print("❌ Timeout esperando BD"); sys.exit(1)
-PY
-
-echo "🔧 Comprobando estado de Alembic..."
-python3 - << 'PY'
-import os, pymysql, json
-host=os.environ['MARIADB_HOSTNAME']
-port=int(os.environ.get('MARIADB_PORT', 3306))
-user=os.environ['MARIADB_USER']
-pw=os.environ['MARIADB_PASSWORD']
-db=os.environ['MARIADB_DATABASE']
-
-state = {"has_alembic": False, "alembic_version": None, "has_tables": False}
-conn = pymysql.connect(host=host, port=port, user=user, password=pw, database=db)
-try:
-    with conn.cursor() as c:
-        c.execute("SHOW TABLES")
-        tables = [row[0] for row in c.fetchall()]
-        state["has_tables"] = len(tables) > 0
-        if "alembic_version" in tables:
-            state["has_alembic"] = True
-            c.execute("SELECT version_num FROM alembic_version LIMIT 1")
-            row = c.fetchone()
-            state["alembic_version"] = row[0] if row else None
-finally:
-    conn.close()
-print(json.dumps(state))
-PY
-
-echo "🔼 Ejecutando migraciones (flask db upgrade)..."
-# Primer intento "normal"
-if ! flask db upgrade; then
-  echo "⚠️  Upgrade falló. Intento de 'stamp head' y reintento (para esquemas ya creados)."
-  flask db stamp head || true
-  flask db upgrade
+# Initialize migrations only if the migrations directory doesn't exist
+if [ ! -d "migrations/versions" ]; then
+    flask db init
+    flask db migrate
 fi
 
-# (Opcional) seed solo si la BD estaba vacía antes del upgrade
-if command -v rosemary >/dev/null 2>&1; then
-  echo "🌱 Seed (solo si procede)..."
-  # no fallar si no hay comando/seed
-  rosemary db:seed -y || true
+# Check if the database is empty 
+if [ $(mariadb -u $MARIADB_USER -p$MARIADB_PASSWORD -h $MARIADB_HOSTNAME -P $MARIADB_PORT -D $MARIADB_DATABASE -sse "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = '$MARIADB_DATABASE';") -eq 0 ]; then
+ 
+    echo "Empty database, migrating..."
+    flask db upgrade
+    
+    rosemary db:seed -y
+
+else
+
+    echo "Database already initialized, checking migrations..."
+
+    # Check specifically if alembic_version table exists to avoid crash
+    TABLE_EXISTS=$(mariadb -u $MARIADB_USER -p$MARIADB_PASSWORD -h $MARIADB_HOSTNAME -P $MARIADB_PORT -D $MARIADB_DATABASE -sse "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = '$MARIADB_DATABASE' AND table_name = 'alembic_version';")
+
+    if [ "$TABLE_EXISTS" -eq 0 ]; then
+        echo "⚠️  Tabla alembic_version perdida. Restaurando historial..."
+        flask db stamp head
+    fi
+
+    # Apply upgrades
+    flask db upgrade
 fi
 
-# A partir de aquí ya puede cargar flamapy/ANTLR con normalidad
-unset MIGRATIONS_ONLY
 
-echo "🚀 Lanzando Gunicorn en $PORT"
-exec gunicorn -w "${WEB_CONCURRENCY:-2}" -b "0.0.0.0:${PORT}" "app:create_app()"
+echo "🚀 Arrancando en el puerto $PORT..."
+exec gunicorn --bind 0.0.0.0:$PORT app:app --log-level info --timeout 3600
