@@ -8,6 +8,7 @@ from werkzeug.utils import secure_filename
 from app import db
 from app.modules.dataset.models import Author, DSMetaData, PublicationType
 from app.modules.dataset.services.notification_service import notification_service
+from app.modules.recommendation.service import RecommendationService
 
 from . import tabular_bp
 from .forms import TabularDatasetForm
@@ -168,4 +169,5 @@ def detail(dataset_id: int):
     dataset = TabularDataset.query.filter_by(id=dataset_id).first()
     if not dataset:
         abort(404)
-    return render_template("view_tabular.html", dataset=dataset)
+    tabular_recommendations = RecommendationService.get_related_datasets(dataset.id)
+    return render_template("view_tabular.html", dataset=dataset, tabular_recommendations=tabular_recommendations)

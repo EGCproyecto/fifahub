@@ -67,6 +67,9 @@
                         <button class="btn btn-outline-secondary d-none" id="downloadCodesBtn">
                             Download recovery codes
                         </button>
+                        <button class="btn btn-outline-danger" id="disable2faBtn" data-bs-toggle="modal" data-bs-target="#disableTwoFactorModal">
+                            Disable 2FA
+                        </button>
                     </div>
                     <div id="recoveryList" class="d-none">
                         <h6>Recovery codes</h6>
@@ -76,6 +79,39 @@
                         <ul class="list-group" id="codesContainer"></ul>
                     </div>
                 </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="disableTwoFactorModal" tabindex="-1" aria-labelledby="disableTwoFactorLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="disableTwoFactorLabel">Disable Two-Factor Authentication</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p class="text-muted">
+                    To turn off 2FA, confirm your identity by entering either your account password or a 6-digit code from your authenticator app.
+                </p>
+                <form id="disableTwoFactorForm">
+                    <div class="mb-3">
+                        <label class="form-label" for="disablePasswordInput">Password</label>
+                        <input type="password" id="disablePasswordInput" class="form-control" placeholder="Enter password">
+                        <div class="form-text">Leave blank if you prefer to use a code instead.</div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label" for="disableCodeInput">6-digit code</label>
+                        <input type="text" id="disableCodeInput" maxlength="6" inputmode="numeric" pattern="[0-9]*" class="form-control" placeholder="123456">
+                        <div class="form-text">Enter a current authenticator code if you did not enter the password.</div>
+                    </div>
+                    <div class="text-danger small" id="disableError"></div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-danger" id="confirmDisableBtn" data-loading-text="Disabling...">Disable 2FA</button>
             </div>
         </div>
     </div>
@@ -108,6 +144,20 @@ document.addEventListener("DOMContentLoaded", () => {
     const secretField = document.getElementById("secretField");
     const copySecretBtn = document.getElementById("copySecretBtn");
     const totpInput = document.getElementById("totpInput");
+    const disableModalEl = document.getElementById("disableTwoFactorModal");
+    const disablePasswordInput = document.getElementById("disablePasswordInput");
+    const disableCodeInput = document.getElementById("disableCodeInput");
+    const disableError = document.getElementById("disableError");
+    const confirmDisableBtn = document.getElementById("confirmDisableBtn");
+    let disableModalInstance = null;
+    if (disableModalEl && window.bootstrap && window.bootstrap.Modal) {
+        disableModalInstance = bootstrap.Modal.getOrCreateInstance(disableModalEl);
+        disableModalEl.addEventListener("hidden.bs.modal", () => {
+            if (disablePasswordInput) disablePasswordInput.value = "";
+            if (disableCodeInput) disableCodeInput.value = "";
+            if (disableError) disableError.textContent = "";
+        });
+    }
 
     const setStatus = (enabled) => {
         state.enabled = enabled;
@@ -117,9 +167,15 @@ document.addEventListener("DOMContentLoaded", () => {
             introSection.classList.add("d-none");
             successSection.classList.remove("d-none");
             setupSection.classList.add("d-none");
+            statusMessage.textContent = "Two-factor authentication is enabled for your account.";
         } else {
             introSection.classList.remove("d-none");
             successSection.classList.add("d-none");
+            setupSection.classList.add("d-none");
+            state.codes = [];
+            if (recoveryList) recoveryList.classList.add("d-none");
+            if (downloadBtn) downloadBtn.classList.add("d-none");
+            statusMessage.textContent = "Two-factor authentication is disabled.";
         }
     };
 
@@ -250,12 +306,45 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     };
 
+    const disableTwoFactor = async () => {
+        if (!confirmDisableBtn) return;
+        if (disableError) disableError.textContent = "";
+        const password = (disablePasswordInput?.value || "").trim();
+        const code = (disableCodeInput?.value || "").trim();
+        if (!password && !code) {
+            if (disableError) disableError.textContent = "Enter your password or a 6-digit code.";
+            return;
+        }
+        if (code && (code.length !== 6 || !/^[0-9]+$/.test(code))) {
+            if (disableError) disableError.textContent = "Enter a valid 6-digit code.";
+            return;
+        }
+        toggleLoading(confirmDisableBtn, true, "Disabling...");
+        try {
+            const payload = {};
+            if (password) payload.password = password;
+            if (code) payload.code = code;
+            await fetchJSON("{{ url_for('auth.disable_two_factor') }}", { body: payload });
+            if (disableModalInstance) disableModalInstance.hide();
+            if (disablePasswordInput) disablePasswordInput.value = "";
+            if (disableCodeInput) disableCodeInput.value = "";
+            statusMessage.textContent = "Two-factor authentication is disabled.";
+            showAlert("info", "Two-factor authentication has been disabled.");
+            setStatus(false);
+        } catch (error) {
+            if (disableError) disableError.textContent = error.message || "Unable to disable 2FA.";
+        } finally {
+            toggleLoading(confirmDisableBtn, false);
+        }
+    };
+
     startBtn?.addEventListener("click", startSetup);
     verifyBtn?.addEventListener("click", verifyCode);
     cancelBtn?.addEventListener("click", cancelSetup);
     regenerateBtn?.addEventListener("click", regenerateCodes);
     downloadBtn?.addEventListener("click", downloadCodes);
     copySecretBtn?.addEventListener("click", copySecret);
+    confirmDisableBtn?.addEventListener("click", disableTwoFactor);
 
     setStatus(state.enabled);
 });

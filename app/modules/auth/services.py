@@ -30,10 +30,12 @@ class AuthenticationService(BaseService):
 
     def login(self, email, password, remember=True):
         user = self.repository.get_by_email(email)
-        if user is not None and user.check_password(password):
-            login_user(user, remember=remember)
-            return True
-        return False
+        if user is None or not user.check_password(password):
+            return {"status": "invalid", "user": None}
+        if user.two_factor_enabled:
+            return {"status": "two_factor_required", "user": user}
+        login_user(user, remember=remember)
+        return {"status": "authenticated", "user": user}
 
     def is_email_available(self, email: str) -> bool:
         return self.repository.get_by_email(email) is None
@@ -128,6 +130,10 @@ class AuthenticationService(BaseService):
     def regenerate_recovery_codes(self, user: User) -> list[str]:
         if user is None:
             raise ValueError("User required")
+        persisted = self.repository.get_by_id(user.id)
+        if persisted is None:
+            raise ValueError("User required")
+        user = persisted
         if not user.two_factor_enabled:
             raise ValueError("2FA no activada")
         codes = self._generate_recovery_codes(user)
@@ -160,12 +166,7 @@ class AuthenticationService(BaseService):
         trimmed = (code or "").strip()
         if len(trimmed) != 6 or not trimmed.isdigit():
             raise ValueError("Código inválido")
-        if not user.two_factor_secret:
-            raise ValueError("No hay secreto configurado")
-        try:
-            secret = decrypt_text(user.two_factor_secret)
-        except InvalidToken as exc:
-            raise RuntimeError("Secreto inválido") from exc
+        secret = self._get_user_secret(user)
         totp = pyotp.TOTP(secret)
         if not totp.verify(trimmed, valid_window=1):
             raise ValueError("Código inválido")
@@ -174,6 +175,63 @@ class AuthenticationService(BaseService):
         codes = self._generate_recovery_codes(user)
         self.repository.session.commit()
         return codes
+
+    def complete_two_factor_login(self, user: User, code: str, remember: bool = True):
+        if user is None:
+            raise ValueError("User required")
+        persisted = self.repository.get_by_id(user.id)
+        if persisted is None:
+            raise ValueError("User required")
+        user = persisted
+        if not user.two_factor_enabled:
+            raise ValueError("2FA no activada")
+        trimmed = (code or "").strip()
+        if len(trimmed) != 6 or not trimmed.isdigit():
+            raise ValueError("Código inválido")
+        secret = self._get_user_secret(user)
+        totp = pyotp.TOTP(secret)
+        if not totp.verify(trimmed, valid_window=1):
+            raise ValueError("Código inválido")
+        login_user(user, remember=remember)
+        return True
+
+    def _get_user_secret(self, user: User) -> str:
+        if not user.two_factor_secret:
+            raise ValueError("No hay secreto configurado")
+        try:
+            return decrypt_text(user.two_factor_secret)
+        except InvalidToken as exc:
+            raise RuntimeError("Secreto inválido") from exc
+
+    def disable_two_factor(self, user: User, password: str | None = None, totp_code: str | None = None) -> str:
+        if user is None:
+            raise ValueError("User required")
+        if not user.two_factor_enabled:
+            raise ValueError("2FA no activada")
+        password_candidate = (password or "").strip()
+        totp_candidate = (totp_code or "").strip()
+        if not password_candidate and not totp_candidate:
+            raise ValueError("Contraseña o código requerido")
+
+        method_used = None
+        if password_candidate:
+            if not user.check_password(password_candidate):
+                raise ValueError("Contraseña inválida")
+            method_used = "password"
+        elif totp_candidate:
+            if len(totp_candidate) != 6 or not totp_candidate.isdigit():
+                raise ValueError("Código inválido")
+            secret = self._get_user_secret(user)
+            totp = pyotp.TOTP(secret)
+            if not totp.verify(totp_candidate, valid_window=1):
+                raise ValueError("Código inválido")
+            method_used = "totp"
+
+        user.two_factor_enabled = False
+        user.two_factor_secret = None
+        self._recovery_codes_query(user).delete()
+        self.repository.session.commit()
+        return method_used or "totp"
 
 
 class FollowService(BaseService):

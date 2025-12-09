@@ -3,7 +3,7 @@ from datetime import datetime, timedelta, timezone
 from unittest.mock import MagicMock, patch
 
 from app.modules.dataset.models import Author, DataSet, DSMetaData
-from app.modules.dataset.services.recommendation_service import RecommendationService
+from app.modules.recommendation.service import RecommendationService
 
 
 class TestRecommendationService(unittest.TestCase):
@@ -15,13 +15,13 @@ class TestRecommendationService(unittest.TestCase):
     def create_mock_dataset(
         self, ds_id, title="Test", tags="", authors=None, downloads=0, days_ago=0, community_id=None
     ):
-        ds = MagicMock(spec=DataSet)
+        ds = MagicMock()
         ds.id = ds_id
         ds.download_count = downloads
         ds.created_at = self.base_time - timedelta(days=days_ago)
         ds.community_id = community_id
 
-        meta = MagicMock(spec=DSMetaData)
+        meta = MagicMock()
         meta.title = title
         meta.tags = tags
         meta.description = "Description"
@@ -30,7 +30,7 @@ class TestRecommendationService(unittest.TestCase):
         author_objs = []
         if authors:
             for name in authors:
-                a = MagicMock(spec=Author)
+                a = MagicMock()
                 a.name = name
                 a.orcid = ""
                 author_objs.append(a)
@@ -40,13 +40,7 @@ class TestRecommendationService(unittest.TestCase):
         ds.communities = []
         return ds
 
-    # --- TESTS DE SCORING ---
-
     def test_scoring_weights_logic(self):
-        """
-        Prueba que los pesos se aplican bien:
-        Un dataset con el mismo TAG (peso 0.4) debe ganar a uno con el mismo AUTOR (peso 0.2).
-        """
         base = self.create_mock_dataset(1, tags="ultimate team", authors=["EA_Sports"])
         base_profile = self.service._collect_profile(base)
 
@@ -75,12 +69,7 @@ class TestRecommendationService(unittest.TestCase):
         self.assertGreater(score_new, score_old)
 
     def test_edge_case_empty_metadata_strict(self):
-        """
-        Test corregido: Hacemos que el candidato sea muy viejo (400 días)
-        para que la Recencia sea 0.0 y podamos probar que sin tags/autores da 0 total.
-        """
         base = self.create_mock_dataset(1, tags="", authors=[])
-        # days_ago=400 asegura recencia = 0.0
         candidate = self.create_mock_dataset(2, tags=None, authors=None, days_ago=400)
         candidate.ds_meta_data.tags = None
         candidate.ds_meta_data.authors = None
@@ -91,63 +80,48 @@ class TestRecommendationService(unittest.TestCase):
 
         self.assertEqual(score, 0.0)
 
-    # --- TESTS DE INTEGRACIÓN MOCKEADA (Main flow) ---
-
-    @patch("app.modules.dataset.services.recommendation_service.db.session.query")
-    def test_get_related_datasets_sorting_and_limit(self, mock_query):
-        """
-        Prueba que el sistema ordena bien:
-        Un dataset de FIFA (stats) debe salir antes que uno de otro tema (ej. clima),
-        simulando la respuesta de la base de datos.
-        """
+    @patch.object(RecommendationService, "_fallback_recommendations", return_value=[])
+    @patch.object(RecommendationService, "_fetch_candidates")
+    @patch.object(RecommendationService, "_load_dataset")
+    def test_get_related_datasets_sorting_and_limit(self, mock_load_dataset, mock_fetch_candidates, mock_fallback):
         base_ds = self.create_mock_dataset(99, tags="player stats, pace", authors=["FifaAnalyst"])
-
         c1 = self.create_mock_dataset(1, tags="player stats, shooting", authors=["FifaAnalyst"])
-
         c2 = self.create_mock_dataset(2, tags="global warming", authors=["Scientist"])
 
-        self.service._load_dataset = MagicMock(return_value=base_ds)
-        self.service._fetch_candidates = MagicMock(return_value=[c1, c2])
+        mock_load_dataset.return_value = base_ds
+        mock_fetch_candidates.return_value = [c1, c2]
 
-        results = self.service.get_related_datasets(99)
+        results = RecommendationService.get_related_datasets(99)
 
         self.assertTrue(len(results) > 0)
         self.assertEqual(results[0].id, 1, "El dataset de FIFA (ID 1) debería ser el primero recomendado")
 
     def test_get_related_datasets_returns_empty_if_not_found(self):
-        # Caso: Dataset ID no existe en DB
-        with patch.object(self.service, "_load_dataset", return_value=None):
-            self.assertEqual(self.service.get_related_datasets(999), [])
+        with patch.object(RecommendationService, "_load_dataset", return_value=None):
+            self.assertEqual(RecommendationService.get_related_datasets(999), [])
 
     def test_get_related_datasets_returns_empty_if_no_preferences(self):
-        # Caso: Dataset existe pero no tiene tags ni autores ni nada
         empty_ds = self.create_mock_dataset(1, tags="", authors=[])
         empty_ds.ds_meta_data.tags = None
         empty_ds.ds_meta_data.authors = []
         empty_ds.communities = []
 
-        with patch.object(self.service, "_load_dataset", return_value=empty_ds):
-            self.assertEqual(self.service.get_related_datasets(1), [])
+        with patch.object(RecommendationService, "_load_dataset", return_value=empty_ds):
+            self.assertEqual(RecommendationService.get_related_datasets(1), [])
 
-    # --- TESTS UNITARIOS DE FUNCIONES DE EXTRACCIÓN ----
     def test_extract_tags(self):
-        """Prueba directa de _extract_tags para cubrir la lógica de limpieza."""
-        # Caso normal
         meta = MagicMock()
         meta.tags = " AI,  Machine Learning , python "
         tags = self.service._extract_tags(meta)
         self.assertEqual(tags, {"ai", "machine learning", "python"})
-
-        # Caso vacío
         self.assertEqual(self.service._extract_tags(None), set())
 
     def test_extract_authors(self):
-        """Prueba directa de _extract_authors."""
         meta = MagicMock()
-        a1 = MagicMock(spec=Author)
+        a1 = MagicMock()
         a1.name = "John Doe "
         a1.orcid = " 0000-1111 "
-        a2 = MagicMock(spec=Author)
+        a2 = MagicMock()
         a2.name = " Jane "
         a2.orcid = None
         meta.authors = [a1, a2]
@@ -159,12 +133,10 @@ class TestRecommendationService(unittest.TestCase):
         self.assertIn("0000-1111", orcids)
 
     def test_community_raw_value_logic(self):
-        """Prueba la extracción de identificadores de comunidad."""
-        # Objeto simulando una comunidad con atributo 'slug'
         comm = MagicMock()
         comm.slug = "   my-community  "
         comm.id = 123
-        del comm.code  # Asegurar que prueba el loop
+        del comm.code
 
         val = self.service._community_raw_value(comm)
         self.assertEqual(val, "my-community")

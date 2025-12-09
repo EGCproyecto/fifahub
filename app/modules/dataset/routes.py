@@ -26,8 +26,8 @@ from app.modules.dataset.services import (
     DSViewRecordService,
 )
 from app.modules.dataset.services.notification_utils import get_dataset_community_id
-from app.modules.dataset.services.recommendation_service import RecommendationService
 from app.modules.dataset.services.resolvers import render_detail
+from app.modules.recommendation.service import RecommendationService
 from app.modules.zenodo.services import ZenodoService
 
 logger = logging.getLogger(__name__)
@@ -41,7 +41,6 @@ doi_mapping_service = DOIMappingService()
 ds_view_record_service = DSViewRecordService()
 ds_download_record_service = DSDownloadRecordService()
 ds_download_record_service = DSDownloadRecordService()
-recommendation_service = RecommendationService()
 follow_service = FollowService()
 
 # Simple in-memory cache for trending datasets
@@ -298,7 +297,7 @@ def view_dataset(dataset_id: int):
     dataset = BaseDataset.query.get_or_404(dataset_id)
 
     detail_template, detail_ctx = render_detail(dataset.type, dataset)
-    detail_ctx["related_datasets"] = recommendation_service.get_related_datasets(dataset.id)
+    detail_ctx["related_datasets"] = RecommendationService.get_related_datasets(dataset.id)
     versions = DatasetVersion.query.filter_by(dataset_id=dataset.id).order_by(DatasetVersion.created_at.desc()).all()
 
     return render_template(
@@ -332,7 +331,7 @@ def subdomain_index(doi):
 
     # resolver de detalle (tu flujo original)
     detail_template, detail_ctx = render_detail(dataset.type, dataset)
-    detail_ctx["related_datasets"] = recommendation_service.get_related_datasets(dataset.id)
+    detail_ctx["related_datasets"] = RecommendationService.get_related_datasets(dataset.id)
 
     # 🔹 NUEVO: versiones ordenadas (últimas primero) y pasadas a la plantilla
     versions = DatasetVersion.query.filter_by(dataset_id=dataset.id).order_by(DatasetVersion.created_at.desc()).all()
@@ -360,7 +359,7 @@ def get_unsynchronized_dataset(dataset_id):
         abort(404)
 
     detail_template, detail_ctx = render_detail(dataset.type, dataset)
-    detail_ctx["related_datasets"] = recommendation_service.get_related_datasets(dataset.id)
+    detail_ctx["related_datasets"] = RecommendationService.get_related_datasets(dataset.id)
 
     # 🔹 NUEVO: versiones también para no sincronizados (si existen)
     versions = DatasetVersion.query.filter_by(dataset_id=dataset.id).order_by(DatasetVersion.created_at.desc()).all()

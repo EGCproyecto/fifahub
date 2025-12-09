@@ -50,39 +50,38 @@ class RecommendationService:
         self._community_attribute = getattr(BaseDataset, "communities", None)
         self._community_identifier_column = self._resolve_community_identifier_column()
 
-    def get_related_datasets(self, dataset_id: int) -> list[BaseDataset]:
-        """Return up to five datasets related to the provided dataset."""
+    @staticmethod
+    def get_related_datasets(dataset_id: int, limit: int = 5) -> list[BaseDataset]:
+        service = RecommendationService()
+        return service._get_related_datasets_internal(dataset_id, limit=limit or MAX_RESULTS)
+
+    def _get_related_datasets_internal(self, dataset_id: int, limit: int) -> list[BaseDataset]:
         base_dataset = self._load_dataset(dataset_id)
         if base_dataset is None:
             return []
 
         base_profile = self._collect_profile(base_dataset)
         if not base_profile.has_preferences():
-            # Sin preferencias (tags/autores/comunidades) no se consulta BD
-            # y se devuelve vacío para escenarios de test sin esquema.
             return []
 
-        # 1. Fetch candidates (Subissue 1)
         candidates = self._fetch_candidates(base_dataset, base_profile)
         if not candidates:
             return self._fallback_recommendations(base_dataset, exclude_ids={base_dataset.id})
 
-        # 2. Score and Sort (Subissue 2 - Implementado aquí)
         scored_candidates = self._score_candidates(base_profile, candidates)
         if not scored_candidates:
             return self._fallback_recommendations(base_dataset, exclude_ids={base_dataset.id})
 
-        # Devolvemos solo los datasets, ya ordenados por relevancia
-        results = [dataset for dataset, _ in scored_candidates[:MAX_RESULTS]]
+        desired_limit = max(1, limit)
+        results = [dataset for dataset, _ in scored_candidates[:desired_limit]]
 
-        # Completar con fallback si faltan slots (manteniendo pool común entre tipos)
-        if len(results) < MAX_RESULTS:
+        if len(results) < desired_limit:
             used_ids = {base_dataset.id} | {ds.id for ds in results if ds and ds.id}
-            missing = MAX_RESULTS - len(results)
+            missing = desired_limit - len(results)
             fallback = self._fallback_recommendations(base_dataset, exclude_ids=used_ids, limit=missing)
             results.extend(fallback)
 
-        return results[:MAX_RESULTS]
+        return results[:desired_limit]
 
     def _fallback_recommendations(
         self, base_dataset: BaseDataset, exclude_ids: set[int] | None = None, limit: int | None = None
@@ -158,13 +157,12 @@ class RecommendationService:
             options.append(joinedload(self._community_attribute))
         return options
 
-    def _collect_profile(self, dataset: DataSet) -> _DatasetProfile:
+    def _collect_profile(self, dataset: BaseDataset) -> _DatasetProfile:
         metadata = getattr(dataset, "ds_meta_data", None)
         tags = self._extract_tags(metadata)
         author_names, author_orcids = self._extract_authors(metadata)
         communities, lookup_values = self._extract_communities(dataset)
 
-        # Nuevos campos extraídos para Subissue 2
         download_count = getattr(dataset, "download_count", 0) or 0
         created_at_ts = self._timestamp(getattr(dataset, "created_at", None))
 
@@ -178,7 +176,7 @@ class RecommendationService:
             created_at_ts=created_at_ts,
         )
 
-    # --- INICIO LÓGICA DE SCORING (SUBISSUE 2) ---
+    # --- INICIO LÓGICA DE SCORING ---
 
     def _score_candidates(
         self,
@@ -192,28 +190,22 @@ class RecommendationService:
             score = self._compute_score(base_profile, candidate_profile)
             scored.append((candidate, score))
 
-        # Ordenar: Mayor score primero. Desempates por descargas, fecha e ID.
         scored.sort(key=self._sort_key)
         return scored
 
     def _compute_score(self, base_profile: _DatasetProfile, candidate_profile: _DatasetProfile) -> float:
         score = 0.0
 
-        # 1. Tags: Jaccard Similarity
         score += self._score_jaccard(base_profile.tags, candidate_profile.tags) * WEIGHTS["tags"]
 
-        # 2. Autores: Jaccard combinando nombres y orcids
         base_authors = base_profile.author_names | base_profile.author_orcids
         cand_authors = candidate_profile.author_names | candidate_profile.author_orcids
         score += self._score_jaccard(base_authors, cand_authors) * WEIGHTS["authors"]
 
-        # 3. Comunidades: Jaccard
         score += self._score_jaccard(base_profile.communities, candidate_profile.communities) * WEIGHTS["communities"]
 
-        # 4. Descargas: Normalización Logarítmica
         score += self._score_downloads(candidate_profile)
 
-        # 5. Recencia: Decaimiento lineal
         score += self._score_recency(candidate_profile)
 
         return score
@@ -231,9 +223,6 @@ class RecommendationService:
         count = max(profile.download_count, 0)
         if count == 0:
             return 0.0
-        # log10(count + 1) para evitar log(0).
-        # Asumiendo 100k descargas como "popularidad máxima" para normalizar a aprox 1.0
-        # log10(100000) = 5. Dividimos por 5 para normalizar.
         log_score = math.log10(count + 1)
         normalized = min(log_score / 5.0, 1.0)
         return normalized * WEIGHTS["downloads"]
@@ -247,7 +236,6 @@ class RecommendationService:
         age_seconds = max(now_ts - profile.created_at_ts, 0)
         days_old = age_seconds / 86400.0
 
-        # Decaimiento lineal sobre 1 año
         freshness = max(1.0 - (days_old / 365.0), 0.0)
         return freshness * WEIGHTS["recency"]
 
@@ -256,7 +244,6 @@ class RecommendationService:
         dataset, score = item
         download_count = getattr(dataset, "download_count", 0) or 0
         created_ts = self._timestamp(getattr(dataset, "created_at", None))
-        # Prioridad: Score -> Descargas -> Fecha -> ID
         return (-score, -float(download_count), -created_ts, dataset.id or 0)
 
     @staticmethod
@@ -287,7 +274,7 @@ class RecommendationService:
                     orcids.add(cleaned_orcid)
         return names, orcids
 
-    def _extract_communities(self, dataset: DataSet) -> tuple[Set[str], Set[object]]:
+    def _extract_communities(self, dataset: BaseDataset) -> tuple[Set[str], Set[object]]:
         normalized: Set[str] = set()
         lookup_values: Set[object] = set()
         communities = getattr(dataset, "communities", None)

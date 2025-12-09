@@ -1,22 +1,4 @@
-2025-12-05 16:48:10,379 - app - ERROR - Exception on /favicon.ico [GET]
-Traceback (most recent call last):
-  File "/home/practica/Escritorio/EGC/proyecto/fifahub/venv/lib/python3.12/site-packages/flask/app.py", line 917, in full_dispatch_request
-    rv = self.dispatch_request()
-         ^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/practica/Escritorio/EGC/proyecto/fifahub/venv/lib/python3.12/site-packages/flask/app.py", line 891, in dispatch_request
-    self.raise_routing_exception(req)
-  File "/home/practica/Escritorio/EGC/proyecto/fifahub/venv/lib/python3.12/site-packages/flask/app.py", line 500, in raise_routing_exception
-    raise request.routing_exception  # type: ignore[misc]
-    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/practica/Escritorio/EGC/proyecto/fifahub/venv/lib/python3.12/site-packages/flask/ctx.py", line 362, in match_request
-    result = self.url_adapter.match(return_rule=True)  # type: ignore
-             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/practica/Escritorio/EGC/proyecto/fifahub/venv/lib/python3.12/site-packages/werkzeug/routing/map.py", line 629, in match
-    raise NotFound() from None
-werkzeug.exceptions.NotFound: 404 Not Found: The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
-
-During handling of the above exception, another exception occurred:
-
+2025-12-01 13:43:22,473 - app - ERROR - Exception on / [GET]
 Traceback (most recent call last):
   File "/home/practica/Escritorio/EGC/proyecto/fifahub/venv/lib/python3.12/site-packages/sqlalchemy/engine/base.py", line 1961, in _exec_single_context
     self.dialect.do_execute(
@@ -41,7 +23,7 @@ Traceback (most recent call last):
     err.raise_mysql_exception(self._data)
   File "/home/practica/Escritorio/EGC/proyecto/fifahub/venv/lib/python3.12/site-packages/pymysql/err.py", line 150, in raise_mysql_exception
     raise errorclass(errno, errval)
-pymysql.err.ProgrammingError: (1146, "Table 'fifahubdb.user' doesn't exist")
+pymysql.err.ProgrammingError: (1146, "Table 'fifahubdb.data_set' doesn't exist")
 
 The above exception was the direct cause of the following exception:
 
@@ -55,49 +37,32 @@ Traceback (most recent call last):
   File "/home/practica/Escritorio/EGC/proyecto/fifahub/venv/lib/python3.12/site-packages/flask_restful/__init__.py", line 298, in error_router
     return original_handler(e)
            ^^^^^^^^^^^^^^^^^^^
-  File "/home/practica/Escritorio/EGC/proyecto/fifahub/venv/lib/python3.12/site-packages/flask/app.py", line 802, in handle_user_exception
-    return self.handle_http_exception(e)
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/practica/Escritorio/EGC/proyecto/fifahub/venv/lib/python3.12/site-packages/flask/app.py", line 777, in handle_http_exception
-    return self.ensure_sync(handler)(e)  # type: ignore[no-any-return]
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/practica/Escritorio/EGC/proyecto/fifahub/core/managers/error_handler_manager.py", line 17, in not_found_error
-    return render_template("404.html"), 404
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/practica/Escritorio/EGC/proyecto/fifahub/venv/lib/python3.12/site-packages/flask/templating.py", line 150, in render_template
-    return _render(app, template, context)
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/practica/Escritorio/EGC/proyecto/fifahub/venv/lib/python3.12/site-packages/flask/templating.py", line 127, in _render
-    app.update_template_context(context)
-  File "/home/practica/Escritorio/EGC/proyecto/fifahub/venv/lib/python3.12/site-packages/flask/app.py", line 530, in update_template_context
-    context.update(self.ensure_sync(func)())
-                   ^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/practica/Escritorio/EGC/proyecto/fifahub/venv/lib/python3.12/site-packages/flask_login/utils.py", line 405, in _user_context_processor
-    return dict(current_user=_get_user())
-                             ^^^^^^^^^^^
-  File "/home/practica/Escritorio/EGC/proyecto/fifahub/venv/lib/python3.12/site-packages/flask_login/utils.py", line 370, in _get_user
-    current_app.login_manager._load_user()
-  File "/home/practica/Escritorio/EGC/proyecto/fifahub/venv/lib/python3.12/site-packages/flask_login/login_manager.py", line 364, in _load_user
-    user = self._user_callback(user_id)
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/practica/Escritorio/EGC/proyecto/fifahub/app/__init__.py", line 51, in load_user
-    return User.query.get(int(user_id))
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "<string>", line 2, in get
-  File "/home/practica/Escritorio/EGC/proyecto/fifahub/venv/lib/python3.12/site-packages/sqlalchemy/util/deprecations.py", line 386, in warned
-    return fn(*args, **kwargs)  # type: ignore[no-any-return]
-           ^^^^^^^^^^^^^^^^^^^
-  File "/home/practica/Escritorio/EGC/proyecto/fifahub/venv/lib/python3.12/site-packages/sqlalchemy/orm/query.py", line 1126, in get
-    return self._get_impl(ident, loading.load_on_pk_identity)
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/practica/Escritorio/EGC/proyecto/fifahub/venv/lib/python3.12/site-packages/sqlalchemy/orm/query.py", line 1135, in _get_impl
-    return self.session._get_impl(
-           ^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/practica/Escritorio/EGC/proyecto/fifahub/venv/lib/python3.12/site-packages/sqlalchemy/orm/session.py", line 3873, in _get_impl
-    return db_load_fn(
-           ^^^^^^^^^^^
-  File "/home/practica/Escritorio/EGC/proyecto/fifahub/venv/lib/python3.12/site-packages/sqlalchemy/orm/loading.py", line 694, in load_on_pk_identity
-    session.execute(
+  File "/home/practica/Escritorio/EGC/proyecto/fifahub/venv/lib/python3.12/site-packages/flask/app.py", line 917, in full_dispatch_request
+    rv = self.dispatch_request()
+         ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/practica/Escritorio/EGC/proyecto/fifahub/venv/lib/python3.12/site-packages/flask/app.py", line 902, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/practica/Escritorio/EGC/proyecto/fifahub/app/modules/public/routes.py", line 19, in index
+    datasets_counter = dataset_service.count_synchronized_datasets()
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/practica/Escritorio/EGC/proyecto/fifahub/app/modules/dataset/services/services.py", line 81, in count_synchronized_datasets
+    return self.repository.count_synchronized_datasets()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/practica/Escritorio/EGC/proyecto/fifahub/app/modules/dataset/repositories.py", line 95, in count_synchronized_datasets
+    return self.model.query.join(DSMetaData).filter(DSMetaData.dataset_doi.isnot(None)).count()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/practica/Escritorio/EGC/proyecto/fifahub/venv/lib/python3.12/site-packages/sqlalchemy/orm/query.py", line 3146, in count
+    self._legacy_from_self(col).enable_eagerloads(False).scalar()
+  File "/home/practica/Escritorio/EGC/proyecto/fifahub/venv/lib/python3.12/site-packages/sqlalchemy/orm/query.py", line 2835, in scalar
+    ret = self.one()
+          ^^^^^^^^^^
+  File "/home/practica/Escritorio/EGC/proyecto/fifahub/venv/lib/python3.12/site-packages/sqlalchemy/orm/query.py", line 2808, in one
+    return self._iter().one()  # type: ignore
+           ^^^^^^^^^^^^
+  File "/home/practica/Escritorio/EGC/proyecto/fifahub/venv/lib/python3.12/site-packages/sqlalchemy/orm/query.py", line 2857, in _iter
+    result: Union[ScalarResult[_T], Result[_T]] = self.session.execute(
+                                                  ^^^^^^^^^^^^^^^^^^^^^
   File "/home/practica/Escritorio/EGC/proyecto/fifahub/venv/lib/python3.12/site-packages/sqlalchemy/orm/session.py", line 2365, in execute
     return self._execute_internal(
            ^^^^^^^^^^^^^^^^^^^^^^^
@@ -146,9 +111,11 @@ Traceback (most recent call last):
     err.raise_mysql_exception(self._data)
   File "/home/practica/Escritorio/EGC/proyecto/fifahub/venv/lib/python3.12/site-packages/pymysql/err.py", line 150, in raise_mysql_exception
     raise errorclass(errno, errval)
-sqlalchemy.exc.ProgrammingError: (pymysql.err.ProgrammingError) (1146, "Table 'fifahubdb.user' doesn't exist")
-[SQL: SELECT user.id AS user_id, user.email AS user_email, user.password AS user_password, user.created_at AS user_created_at, user.two_factor_enabled AS user_two_factor_enabled, user.two_factor_secret AS user_two_factor_secret 
-FROM user 
-WHERE user.id = %(pk_1)s]
-[parameters: {'pk_1': 3}]
+sqlalchemy.exc.ProgrammingError: (pymysql.err.ProgrammingError) (1146, "Table 'fifahubdb.data_set' doesn't exist")
+[SQL: SELECT count(*) AS count_1 
+FROM (SELECT data_set.id AS data_set_id, data_set.user_id AS data_set_user_id, data_set.ds_meta_data_id AS data_set_ds_meta_data_id, data_set.created_at AS data_set_created_at, data_set.type AS data_set_type, data_set.download_count AS data_set_download_count 
+FROM data_set INNER JOIN ds_meta_data ON ds_meta_data.id = data_set.ds_meta_data_id 
+WHERE ds_meta_data.dataset_doi IS NOT NULL AND data_set.type IN (%(type_1_1)s)) AS anon_1]
+[parameters: {'type_1_1': 'uvl'}]
 (Background on this error at: https://sqlalche.me/e/20/f405)
+2025-12-01 13:43:22,480 - app - ERROR - Internal Server Error: 500 Internal Server Error: The server encountered an internal error and was unable to complete your request. Either the server is overloaded or there is an error in the application.
