@@ -46,6 +46,8 @@ else
             echo "Empty alembic_version, stamping..."
             unset MYSQL_PWD
             flask db stamp head
+            echo "Applying missing migrations..."
+            flask db upgrade
         else
             echo "Current version: $CURRENT_VERSION"
             
@@ -58,6 +60,8 @@ else
                 unset MYSQL_PWD
                 echo "Repairing with stamp head..."
                 flask db stamp head
+                echo "Applying missing migrations..."
+                flask db upgrade
             else
                 unset MYSQL_PWD
             fi
