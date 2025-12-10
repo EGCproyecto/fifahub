@@ -209,46 +209,50 @@
         </div>
         {% endif %}
 
-        {% if tabular_recommendations %}
         <div class="card mt-3 mb-5">
             <div class="card-header">
                 <h4 class="mb-0">Related Datasets</h4>
             </div>
             <div class="list-group list-group-flush">
-                {% for related in tabular_recommendations %}
-                    {% set related_url = related.get_uvlhub_doi() if related.ds_meta_data and related.ds_meta_data.dataset_doi else (url_for('tabular.detail', dataset_id=related.id) if related.type == 'tabular' else url_for('dataset.view_dataset', dataset_id=related.id)) %}
-                    <a href="{{ related_url }}" class="list-group-item list-group-item-action flex-column align-items-start">
-                        <div class="d-flex w-100 justify-content-between">
-                            <h5 class="mb-1 text-primary">{{ related.ds_meta_data.title }}</h5>
-                            <small class="text-muted">
-                                {% if related.created_at %}
-                                    {{ related.created_at.strftime('%Y-%m-%d') }}
+                {% if tabular_recommendations %}
+                    {% for related in tabular_recommendations %}
+                        {% set related_url = related.get_uvlhub_doi() if related.ds_meta_data and related.ds_meta_data.dataset_doi else (url_for('tabular.detail', dataset_id=related.id) if related.type == 'tabular' else url_for('dataset.view_dataset', dataset_id=related.id)) %}
+                        <a href="{{ related_url }}" class="list-group-item list-group-item-action flex-column align-items-start">
+                            <div class="d-flex w-100 justify-content-between">
+                                <h5 class="mb-1 text-primary">{{ related.ds_meta_data.title }}</h5>
+                                <small class="text-muted">
+                                    {% if related.created_at %}
+                                        {{ related.created_at.strftime('%Y-%m-%d') }}
+                                    {% else %}
+                                        N/A
+                                    {% endif %}
+                                </small>
+                            </div>
+                            <p class="mb-1 text-secondary">
+                                {% if related.ds_meta_data.description %}
+                                    {{ related.ds_meta_data.description[:150] }}...
                                 {% else %}
-                                    N/A
+                                    No description available.
                                 {% endif %}
-                            </small>
-                        </div>
-                        <p class="mb-1 text-secondary">
-                            {% if related.ds_meta_data.description %}
-                                {{ related.ds_meta_data.description[:150] }}...
-                            {% else %}
-                                No description available.
-                            {% endif %}
-                        </p>
-                        <div class="mt-2">
-                            <span class="badge badge-info">{{ related.ds_meta_data.publication_type.name }}</span>
-                            <small class="ml-2 text-muted">
-                                <i data-feather="download" style="width: 16px; height: 16px;"></i> {{ related.download_count or 0 }} downloads
-                            </small>
-                            <small class="ml-2 text-muted">
-                                <i data-feather="tag" style="width: 16px; height: 16px;"></i> {{ related.ds_meta_data.tags.split(',')|length if related.ds_meta_data.tags else 0 }} tags
-                            </small>
-                        </div>
-                    </a>
-                {% endfor %}
+                            </p>
+                            <div class="mt-2">
+                                <span class="badge badge-info">{{ related.ds_meta_data.publication_type.name }}</span>
+                                <small class="ml-2 text-muted">
+                                    <i data-feather="download" style="width: 16px; height: 16px;"></i> {{ related.download_count or 0 }} downloads
+                                </small>
+                                <small class="ml-2 text-muted">
+                                    <i data-feather="tag" style="width: 16px; height: 16px;"></i> {{ related.ds_meta_data.tags.split(',')|length if related.ds_meta_data.tags else 0 }} tags
+                                </small>
+                            </div>
+                        </a>
+                    {% endfor %}
+                {% else %}
+                    <div class="list-group-item text-center text-muted p-4">
+                        <em>No related datasets found based on current metadata.</em>
+                    </div>
+                {% endif %}
             </div>
         </div>
-        {% endif %}
     </div>
 
     <div class="col-xl-4 col-lg-12 col-md-12 col-sm-12">
