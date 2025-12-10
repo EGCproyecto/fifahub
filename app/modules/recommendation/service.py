@@ -62,7 +62,7 @@ class RecommendationService:
 
         base_profile = self._collect_profile(base_dataset)
         if not base_profile.has_preferences():
-            return []
+            return self._fallback_recommendations(base_dataset, exclude_ids={base_dataset.id}, limit=limit)
 
         candidates = self._fetch_candidates(base_dataset, base_profile)
         if not candidates:
