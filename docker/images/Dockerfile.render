@@ -46,6 +46,12 @@ RUN pip install --no-cache-dir --upgrade pip
 # Install any needed packages specified in requirements.txt
 RUN pip install -r requirements.txt
 
+# Add an argument for version tag
+ARG VERSION_TAG
+
+# Create the .version file with the content of VERSION_TAG
+RUN echo $VERSION_TAG > /app/.version
+
 # Expose port 80
 EXPOSE 80
 
