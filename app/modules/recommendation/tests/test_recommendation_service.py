@@ -106,7 +106,10 @@ class TestRecommendationService(unittest.TestCase):
         empty_ds.ds_meta_data.authors = []
         empty_ds.communities = []
 
-        with patch.object(RecommendationService, "_load_dataset", return_value=empty_ds):
+        with (
+            patch.object(RecommendationService, "_load_dataset", return_value=empty_ds),
+            patch.object(RecommendationService, "_fallback_recommendations", return_value=[]),
+        ):
             self.assertEqual(RecommendationService.get_related_datasets(1), [])
 
     def test_extract_tags(self):
