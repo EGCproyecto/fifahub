@@ -192,7 +192,9 @@ def set_two_factor_key(monkeypatch):
 def test_two_factor_secret_is_encrypted(test_app, clean_database):
     with test_app.app_context():
         service = AuthenticationService()
-        user = service.create_with_profile(name="Secret", surname="User", email="secret@example.com", password="secret123")
+        user = service.create_with_profile(
+            name="Secret", surname="User", email="secret@example.com", password="secret123"
+        )
         setup = service.generate_two_factor_setup(user)
         assert user.two_factor_secret is not None
         assert user.two_factor_secret != setup["secret"]

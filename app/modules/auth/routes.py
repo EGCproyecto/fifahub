@@ -2,7 +2,7 @@ import logging
 import secrets
 import time
 
-from flask import current_app, jsonify, redirect, render_template, request, session, url_for, make_response
+from flask import current_app, jsonify, make_response, redirect, render_template, request, session, url_for
 from flask_login import current_user, login_required, login_user, logout_user
 
 from app.modules.auth import auth_bp
