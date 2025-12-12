@@ -209,3 +209,24 @@ def test_recovery_codes_are_encrypted_at_rest(test_app, clean_database):
         for stored, plain in zip(stored_codes, codes):
             assert stored != plain
             assert decrypt_text(stored) == plain
+
+
+def test_disable_two_factor_service_requires_code_or_password(test_app, clean_database):
+    with test_app.app_context():
+        service, user, _ = _prepare_user_with_two_factor("disable-require@example.com")
+        with pytest.raises(ValueError):
+            service.disable_two_factor(user)
+
+
+def test_disable_two_factor_service_invalid_totp(test_app, clean_database):
+    with test_app.app_context():
+        service, user, _ = _prepare_user_with_two_factor("disable-invalid@example.com")
+        with pytest.raises(ValueError):
+            service.disable_two_factor(user, totp_code="111111")
+
+
+def test_disable_two_factor_service_wrong_password(test_app, clean_database):
+    with test_app.app_context():
+        service, user, _ = _prepare_user_with_two_factor("disable-pwd@example.com")
+        with pytest.raises(ValueError):
+            service.disable_two_factor(user, password="wrong-password")
