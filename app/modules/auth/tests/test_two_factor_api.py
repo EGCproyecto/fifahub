@@ -139,6 +139,23 @@ def test_api_two_factor_invalid_token(test_app, test_client, clean_database):
     assert resp.get_json()["message"] == "Invalid or expired 2FA session"
 
 
+def test_api_two_factor_missing_code_returns_error(test_app, test_client, clean_database):
+    user_info = _create_two_factor_user(test_app, "api-missing-code@example.com")
+
+    test_client.post(
+        "/login",
+        data={"email": user_info["email"], "password": "secret123"},
+        follow_redirects=False,
+    )
+
+    with test_client.session_transaction() as session:
+        token = session[PENDING_SESSION_KEY]["token"]
+
+    resp = test_client.post("/auth/2fa/verify", json={"token": token})
+    assert resp.status_code == 400
+    assert resp.get_json()["message"] == "Code is required"
+
+
 def test_api_two_factor_rate_limit_blocks_requests(test_app, test_client, clean_database):
     previous_limit = test_app.config.get("TWO_FACTOR_RATE_LIMIT", 10)
     test_app.config["TWO_FACTOR_RATE_LIMIT"] = 2

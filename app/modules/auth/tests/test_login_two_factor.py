@@ -1,7 +1,10 @@
+import time
+
 import pyotp
 import pytest
 from flask import url_for
 
+from app.modules.auth.routes import PENDING_TWO_FACTOR_SESSION_KEY, PENDING_TWO_FACTOR_MAX_AGE
 from app.modules.auth.services import AuthenticationService
 
 PENDING_SESSION_KEY = "pending_two_factor_login"
@@ -118,3 +121,26 @@ def test_login_two_factor_rate_limit_blocks_requests(test_app, test_client, clea
         assert b"Too many attempts. Please wait and try again." in verify.data
     finally:
         test_app.config["TWO_FACTOR_RATE_LIMIT"] = previous_limit
+
+
+def test_login_two_factor_session_expired_shows_error(test_app, test_client, clean_database):
+    secret, email = _prepare_two_factor_user(test_app, "login-2fa-expired@example.com")
+
+    response = test_client.post(
+        "/login",
+        data={"email": email, "password": "secret123"},
+        follow_redirects=False,
+    )
+    assert response.status_code == 200
+
+    with test_client.session_transaction() as session:
+        pending = session.get(PENDING_SESSION_KEY)
+        token = pending["token"]
+        pending["created_at"] = time.time() - (PENDING_TWO_FACTOR_MAX_AGE + 10)
+        session[PENDING_SESSION_KEY] = pending
+
+    verify = test_client.post("/login/2fa", data={"token": token, "code": "000000"}, follow_redirects=False)
+    assert verify.status_code == 302
+    assert verify.headers["Location"].endswith("/login")
+    with test_client.session_transaction() as session:
+        assert PENDING_SESSION_KEY not in session
