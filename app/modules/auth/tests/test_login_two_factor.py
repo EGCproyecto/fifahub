@@ -73,7 +73,7 @@ def test_login_two_factor_invalid_code_keeps_challenge(test_app, test_client, cl
     )
 
     assert verify.status_code == 200
-    assert "C\u00f3digo inv\u00e1lido".encode("utf-8") in verify.data
+    assert b"Unable to verify the authentication code." in verify.data
 
     with test_client.session_transaction() as session:
         pending = session.get(PENDING_SESSION_KEY)
@@ -89,3 +89,32 @@ def test_login_two_factor_invalid_code_keeps_challenge(test_app, test_client, cl
 
     assert verify.status_code in (302, 303)
     test_client.get("/logout", follow_redirects=True)
+
+
+def test_login_two_factor_rate_limit_blocks_requests(test_app, test_client, clean_database):
+    previous_limit = test_app.config.get("TWO_FACTOR_RATE_LIMIT", 10)
+    test_app.config["TWO_FACTOR_RATE_LIMIT"] = 1
+    try:
+        _, email = _prepare_two_factor_user(test_app, "login-2fa-rate@example.com")
+
+        response = test_client.post(
+            "/login",
+            data={"email": email, "password": "secret123"},
+            follow_redirects=False,
+        )
+        assert response.status_code == 200
+
+        with test_client.session_transaction() as session:
+            pending = session.get(PENDING_SESSION_KEY)
+            token = pending["token"]
+
+        # First invalid attempt allowed
+        verify = test_client.post("/login/2fa", data={"token": token, "code": "000000"}, follow_redirects=False)
+        assert verify.status_code == 200
+
+        # Second attempt should hit rate limit independent of lock threshold
+        verify = test_client.post("/login/2fa", data={"token": token, "code": "111111"}, follow_redirects=False)
+        assert verify.status_code == 429
+        assert b"Too many attempts. Please wait and try again." in verify.data
+    finally:
+        test_app.config["TWO_FACTOR_RATE_LIMIT"] = previous_limit

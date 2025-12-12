@@ -5,6 +5,7 @@ from flask import url_for
 from app.modules.auth.repositories import UserRepository
 from app.modules.auth.services import AuthenticationService
 from app.modules.profile.repositories import UserProfileRepository
+from core.services.encryption import decrypt_text
 
 
 @pytest.fixture(scope="module")
@@ -186,3 +187,23 @@ def test_recovery_code_invalid_value(test_app, clean_database):
 @pytest.fixture(autouse=True)
 def set_two_factor_key(monkeypatch):
     monkeypatch.setenv("TWO_FACTOR_ENCRYPTION_KEY", "test-two-factor-key")
+
+
+def test_two_factor_secret_is_encrypted(test_app, clean_database):
+    with test_app.app_context():
+        service = AuthenticationService()
+        user = service.create_with_profile(name="Secret", surname="User", email="secret@example.com", password="secret123")
+        setup = service.generate_two_factor_setup(user)
+        assert user.two_factor_secret is not None
+        assert user.two_factor_secret != setup["secret"]
+        assert decrypt_text(user.two_factor_secret) == setup["secret"]
+
+
+def test_recovery_codes_are_encrypted_at_rest(test_app, clean_database):
+    with test_app.app_context():
+        service, user, codes = _prepare_user_with_two_factor("recover-encrypted@example.com")
+        stored_codes = [record.encrypted_code for record in user.recovery_codes]
+        assert stored_codes
+        for stored, plain in zip(stored_codes, codes):
+            assert stored != plain
+            assert decrypt_text(stored) == plain
