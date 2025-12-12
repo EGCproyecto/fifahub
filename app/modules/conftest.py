@@ -2,6 +2,7 @@ import pytest
 
 from app import create_app, db
 from app.modules.auth.models import User
+from core.security.rate_limiter import reset_rate_limits
 
 
 @pytest.fixture(scope="session")
@@ -50,6 +51,13 @@ def clean_database():
     db.session.remove()
     db.drop_all()
     db.create_all()
+
+
+@pytest.fixture(autouse=True)
+def reset_rate_limiter_state():
+    reset_rate_limits()
+    yield
+    reset_rate_limits()
 
 
 def login(test_client, email, password):

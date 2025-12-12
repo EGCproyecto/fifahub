@@ -137,3 +137,23 @@ def test_api_two_factor_invalid_token(test_app, test_client, clean_database):
 
     assert resp.status_code == 400
     assert resp.get_json()["message"] == "Invalid or expired 2FA session"
+
+
+def test_api_two_factor_rate_limit_blocks_requests(test_app, test_client, clean_database):
+    previous_limit = test_app.config.get("TWO_FACTOR_RATE_LIMIT", 10)
+    test_app.config["TWO_FACTOR_RATE_LIMIT"] = 2
+    try:
+        user_info = _create_two_factor_user(test_app, "api-rate-limit@example.com")
+        test_client.post("/login", data={"email": user_info["email"], "password": "secret123"}, follow_redirects=False)
+        with test_client.session_transaction() as session:
+            token = session[PENDING_SESSION_KEY]["token"]
+
+        for _ in range(2):
+            resp = test_client.post("/auth/2fa/verify", json={"token": token, "code": "000000"})
+            assert resp.status_code == 400
+
+        resp = test_client.post("/auth/2fa/verify", json={"token": token, "code": "000000"})
+        assert resp.status_code == 429
+        assert resp.get_json()["message"] == "Too many attempts. Please wait and try again."
+    finally:
+        test_app.config["TWO_FACTOR_RATE_LIMIT"] = previous_limit

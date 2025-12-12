@@ -2,7 +2,7 @@ import logging
 import secrets
 import time
 
-from flask import jsonify, redirect, render_template, request, session, url_for
+from flask import current_app, jsonify, make_response, redirect, render_template, request, session, url_for
 from flask_login import current_user, login_required, login_user, logout_user
 
 from app.modules.auth import auth_bp
@@ -10,6 +10,7 @@ from app.modules.auth.forms import LoginForm, SignupForm, TwoFactorLoginForm, Tw
 from app.modules.auth.services import AuthenticationService, FollowService
 from app.modules.dataset.models import Author
 from app.modules.profile.services import UserProfileService
+from core.security.rate_limiter import check_rate_limit
 
 authentication_service = AuthenticationService()
 user_profile_service = UserProfileService()
@@ -20,6 +21,8 @@ PENDING_TWO_FACTOR_SESSION_KEY = "pending_two_factor_login"
 PENDING_TWO_FACTOR_MAX_AGE = 300
 PENDING_TWO_FACTOR_MAX_ATTEMPTS = 5
 TWO_FACTOR_PROMPT = "Enter the 6-digit code from your authenticator app."
+GENERIC_TWO_FACTOR_ERROR = "Unable to verify the authentication code."
+RATE_LIMIT_MESSAGE = "Too many attempts. Please wait and try again."
 
 
 def _get_pending_two_factor():
@@ -43,10 +46,45 @@ def _increment_two_factor_attempts(pending: dict | None):
     locked = attempts >= PENDING_TWO_FACTOR_MAX_ATTEMPTS
     if locked:
         session.pop(PENDING_TWO_FACTOR_SESSION_KEY, None)
+        logger.warning("2FA locked for user %s after %s attempts", pending.get("user_id"), attempts)
     else:
         pending["attempts"] = attempts
         session[PENDING_TWO_FACTOR_SESSION_KEY] = pending
     return attempts, locked
+
+
+def _client_identifier() -> str:
+    forwarded = request.headers.get("X-Forwarded-For", "").split(",")[0].strip()
+    if forwarded:
+        return forwarded
+    return request.remote_addr or "unknown"
+
+
+def _enforce_two_factor_rate_limit(scope: str, *, api: bool, **kwargs):
+    limit = current_app.config.get("TWO_FACTOR_RATE_LIMIT", 10)
+    window = current_app.config.get("TWO_FACTOR_RATE_WINDOW", 60)
+    limited, retry_after = check_rate_limit(scope, _client_identifier(), limit, window)
+    if not limited:
+        return None
+    logger.warning("Rate limit exceeded for %s from %s", scope, _client_identifier())
+    if api:
+        response = jsonify({"message": RATE_LIMIT_MESSAGE})
+        response.status_code = 429
+        response.headers["Retry-After"] = str(retry_after)
+        return response
+    totp_form = kwargs.get("totp_form")
+    recovery_form = kwargs.get("recovery_form")
+    email = kwargs.get("email")
+    rendered = _render_two_factor_challenge(
+        totp_form,
+        recovery_form,
+        email,
+        TWO_FACTOR_PROMPT,
+        error=RATE_LIMIT_MESSAGE,
+        recovery_error=RATE_LIMIT_MESSAGE,
+        locked=False,
+    )
+    return make_response(rendered, 429)
 
 
 def _render_two_factor_challenge(
@@ -159,19 +197,28 @@ def login_two_factor():
 
     totp_form = TwoFactorLoginForm()
     recovery_form = TwoFactorRecoveryForm()
+    totp_form.token.data = pending.get("token")
+    recovery_form.token.data = pending.get("token")
+    rate_limited = _enforce_two_factor_rate_limit(
+        "login_two_factor",
+        api=False,
+        totp_form=totp_form,
+        recovery_form=recovery_form,
+        email=pending_user.email,
+    )
+    if rate_limited:
+        return rate_limited
     use_recovery = "recovery_code" in request.form
     active_form = recovery_form if use_recovery else totp_form
 
     if not active_form.validate_on_submit():
-        totp_form.token.data = pending.get("token")
-        recovery_form.token.data = pending.get("token")
         return _render_two_factor_challenge(
             totp_form,
             recovery_form,
             pending_user.email,
             TWO_FACTOR_PROMPT,
-            error="Código inválido" if not use_recovery else None,
-            recovery_error="Código inválido" if use_recovery else None,
+            error=GENERIC_TWO_FACTOR_ERROR if not use_recovery else None,
+            recovery_error=GENERIC_TWO_FACTOR_ERROR if use_recovery else None,
         )
 
     if active_form.token.data != pending.get("token"):
@@ -209,7 +256,7 @@ def login_two_factor():
             challenge_recovery = recovery_form
             challenge_totp.token.data = pending.get("token")
             challenge_recovery.token.data = pending.get("token")
-        message = "Too many invalid codes. Please login again." if locked else str(exc)
+        message = "Too many invalid codes. Please login again." if locked else GENERIC_TWO_FACTOR_ERROR
         return _render_two_factor_challenge(
             challenge_totp,
             challenge_recovery,
@@ -246,13 +293,17 @@ def verify_two_factor_api():
     def _error_response(message, status=400):
         return jsonify({"message": message}), status
 
+    rate_limited = _enforce_two_factor_rate_limit("api_two_factor", api=True)
+    if rate_limited:
+        return rate_limited
+
     if recovery_code:
         try:
             authentication_service.use_recovery_code(pending_user, recovery_code)
             login_user(pending_user, remember=pending.get("remember", False))
         except ValueError as exc:
             attempts, locked = _increment_two_factor_attempts(pending)
-            message = "Too many invalid codes. Please login again." if locked else str(exc)
+            message = "Too many invalid codes. Please login again." if locked else GENERIC_TWO_FACTOR_ERROR
             return jsonify({"message": message, "locked": locked, "attempts": attempts}), 429 if locked else 400
         except Exception:
             attempts, locked = _increment_two_factor_attempts(pending)
@@ -281,7 +332,7 @@ def verify_two_factor_api():
         )
     except ValueError as exc:
         attempts, locked = _increment_two_factor_attempts(pending)
-        message = "Too many invalid codes. Please login again." if locked else str(exc)
+        message = "Too many invalid codes. Please login again." if locked else GENERIC_TWO_FACTOR_ERROR
         return jsonify({"message": message, "locked": locked, "attempts": attempts}), 429 if locked else 400
     except Exception:
         attempts, locked = _increment_two_factor_attempts(pending)
@@ -328,10 +379,13 @@ def two_factor_setup():
 def verify_two_factor_setup():
     payload = request.get_json(silent=True) or {}
     code = payload.get("code", "")
+    rate_limited = _enforce_two_factor_rate_limit("setup_two_factor", api=True)
+    if rate_limited:
+        return rate_limited
     try:
         codes = authentication_service.verify_two_factor_setup(current_user, code)
     except ValueError as exc:
-        return jsonify({"message": str(exc)}), 400
+        return jsonify({"message": GENERIC_TWO_FACTOR_ERROR}), 400
     except Exception:
         return jsonify({"message": "Unable to verify 2FA setup"}), 500
     return jsonify({"recovery_codes": codes})
@@ -375,8 +429,9 @@ def disable_two_factor():
             password=password,
             totp_code=totp_code,
         )
-    except ValueError as exc:
-        return jsonify({"message": str(exc)}), 400
+    except ValueError:
+        logger.warning("Failed 2FA disable attempt for user %s", current_user.id)
+        return jsonify({"message": "Unable to disable two-factor authentication with the provided credentials."}), 400
     except Exception:
         logger.exception("Unable to disable 2FA for user %s", current_user.id)
         return jsonify({"message": "Unable to disable 2FA"}), 500
