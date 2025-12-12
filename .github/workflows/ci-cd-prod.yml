@@ -1,4 +1,4 @@
-name: CD-main
+name: CI-CD Prod
 
 on:
   push:
