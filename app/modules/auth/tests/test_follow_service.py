@@ -151,3 +151,86 @@ def test_get_followers_for_author(test_app, clean_database):
         followers = service.get_followers_for_author(author)
 
         assert {u.id for u in followers} == {user1.id, user2.id}
+
+
+def test_get_followed_communities_for_user(test_app, clean_database):
+    with test_app.app_context():
+        user = _create_user("community-list@example.com")
+        service = FollowService()
+        service.follow_community(user, "community-alpha")
+        service.follow_community(user, "community-beta")
+
+        followed = service.get_followed_communities_for_user(user)
+
+        assert set(followed) == {"community-alpha", "community-beta"}
+
+
+def test_get_followers_for_community(test_app, clean_database):
+    with test_app.app_context():
+        community_id = "community-followers"
+        user1 = _create_user("community-f1@example.com")
+        user2 = _create_user("community-f2@example.com")
+        service = FollowService()
+        service.follow_community(user1, community_id)
+        service.follow_community(user2, community_id)
+
+        followers = service.get_followers_for_community(community_id)
+
+        assert {u.id for u in followers} == {user1.id, user2.id}
+
+
+def test_follow_community_accepts_object_identifier(test_app, clean_database):
+    class DummyCommunity:
+        def __init__(self, identifier):
+            self.name = identifier
+
+    with test_app.app_context():
+        user = _create_user("community-object@example.com")
+        service = FollowService()
+        follow = service.follow_community(user, DummyCommunity("obj-community"))
+        assert follow.community_id == "obj-community"
+
+
+def test_follow_community_requires_identifier(test_app, clean_database):
+    class InvalidCommunity:
+        pass
+
+    with test_app.app_context():
+        user = _create_user("community-error@example.com")
+        service = FollowService()
+        with pytest.raises(ValueError):
+            service.follow_community(user, InvalidCommunity())
+
+
+def test_follow_author_requires_persisted_user(test_app, clean_database):
+    with test_app.app_context():
+        user = User(email="transient@example.com")
+        author = _create_author("Transient Author", author_id=9998)
+        with pytest.raises(ValueError):
+            FollowService().follow_author(user, author)
+
+
+def test_follow_author_requires_persisted_author(test_app, clean_database):
+    with test_app.app_context():
+        user = _create_user("persisted@example.com")
+        author = Author(name="NoID", affiliation="Aff", orcid=None)
+        with pytest.raises(ValueError):
+            FollowService().follow_author(user, author)
+
+
+def test_follow_community_accepts_object_with_id_property(test_app, clean_database):
+    class CommunityObj:
+        def __init__(self, identifier):
+            self.id = identifier
+
+    with test_app.app_context():
+        user = _create_user("community-id@example.com")
+        service = FollowService()
+        follow = service.follow_community(user, CommunityObj("community-id-123"))
+        assert follow.community_id == "community-id-123"
+
+
+def test_get_followers_for_community_empty(test_app, clean_database):
+    with test_app.app_context():
+        followers = FollowService().get_followers_for_community("non-existent")
+        assert followers == []
