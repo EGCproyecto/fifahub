@@ -4,7 +4,7 @@ import pyotp
 import pytest
 from flask import url_for
 
-from app.modules.auth.routes import PENDING_TWO_FACTOR_SESSION_KEY, PENDING_TWO_FACTOR_MAX_AGE
+from app.modules.auth.routes import PENDING_TWO_FACTOR_MAX_AGE, PENDING_TWO_FACTOR_SESSION_KEY
 from app.modules.auth.services import AuthenticationService
 
 PENDING_SESSION_KEY = "pending_two_factor_login"

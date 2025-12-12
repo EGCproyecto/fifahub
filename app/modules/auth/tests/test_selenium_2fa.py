@@ -126,9 +126,7 @@ def test_enable_two_factor_from_settings(driver):
     totp_input.clear()
     totp_input.send_keys(pyotp.TOTP(secret_value).now())
     driver.find_element(By.ID, "verifyCodeBtn").click()
-    badge = WebDriverWait(driver, 10).until(
-        EC.text_to_be_present_in_element((By.ID, "twoFactorStatus"), "Enabled")
-    )
+    badge = WebDriverWait(driver, 10).until(EC.text_to_be_present_in_element((By.ID, "twoFactorStatus"), "Enabled"))
     assert badge is True
 
 
