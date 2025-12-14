@@ -66,12 +66,16 @@ function send_query() {
                     console.log(data);
                     document.getElementById('results').innerHTML = '';
 
-                    // results counter
-                    const resultCount = data.length;
-                    const resultText = resultCount === 1 ? 'dataset' : 'datasets';
-                    document.getElementById('results_number').textContent = `${resultCount} ${resultText} found`;
+                    // Get the tabular count from the hidden field (server-rendered datasets)
+                    const tabularCount = parseInt(document.getElementById('tabular_count')?.value || '0', 10);
 
-                    if (resultCount === 0) {
+                    // results counter - include both fetched results and tabular datasets
+                    const fetchedCount = data.length;
+                    const totalCount = fetchedCount + tabularCount;
+                    const resultText = totalCount === 1 ? 'dataset' : 'datasets';
+                    document.getElementById('results_number').textContent = `${totalCount} ${resultText} found`;
+
+                    if (fetchedCount === 0 && tabularCount === 0) {
                         console.log("show not found icon");
                         document.getElementById("results_not_found").style.display = "block";
                     } else {
@@ -165,7 +169,7 @@ function send_query() {
 }
 
 function formatDate(dateString) {
-    const options = {day: 'numeric', month: 'long', year: 'numeric', hour: 'numeric', minute: 'numeric'};
+    const options = { day: 'numeric', month: 'long', year: 'numeric', hour: 'numeric', minute: 'numeric' };
     const date = new Date(dateString);
     return date.toLocaleString('en-US', options);
 }
@@ -173,7 +177,7 @@ function formatDate(dateString) {
 function set_tag_as_query(tagName) {
     const queryInput = document.getElementById('query');
     queryInput.value = tagName.trim();
-    queryInput.dispatchEvent(new Event('input', {bubbles: true}));
+    queryInput.dispatchEvent(new Event('input', { bubbles: true }));
 }
 
 function set_publication_type_as_query(publicationType) {
@@ -185,7 +189,7 @@ function set_publication_type_as_query(publicationType) {
             break;
         }
     }
-    publicationTypeSelect.dispatchEvent(new Event('input', {bubbles: true}));
+    publicationTypeSelect.dispatchEvent(new Event('input', { bubbles: true }));
 }
 
 document.getElementById('clear-filters').addEventListener('click', clearFilters);
@@ -214,7 +218,7 @@ function clearFilters() {
     });
 
     // Perform a new search with the reset filters
-    queryInput.dispatchEvent(new Event('input', {bubbles: true}));
+    queryInput.dispatchEvent(new Event('input', { bubbles: true }));
 }
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -229,11 +233,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const queryInput = document.getElementById('query');
         queryInput.value = queryParam
-        queryInput.dispatchEvent(new Event('input', {bubbles: true}));
+        queryInput.dispatchEvent(new Event('input', { bubbles: true }));
         console.log("throw event");
 
     } else {
         const queryInput = document.getElementById('query');
-        queryInput.dispatchEvent(new Event('input', {bubbles: true}));
+        queryInput.dispatchEvent(new Event('input', { bubbles: true }));
     }
 });
