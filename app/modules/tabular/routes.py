@@ -51,10 +51,11 @@ def _save_uploaded_file(file_storage) -> str:
 @login_required
 def upload():
     form = TabularDatasetForm()
-    authors = Author.query.order_by(Author.name.asc()).all()
-    form.author_id.choices = [(0, "Sin autor")] + [(author.id, author.name) for author in authors]
 
     if request.method == "GET":
+        # Pre-fill author name with current user's name
+        if current_user.profile:
+            form.author_name.data = f"{current_user.profile.name} {current_user.profile.surname}".strip()
         return render_template("upload_tabular.html", form=form)
 
     if not form.validate_on_submit():
@@ -102,23 +103,17 @@ def upload():
         ds_md = dataset.ds_meta_data
 
     if ds_md is not None:
-        selected_author_id = form.author_id.data or 0
-        if selected_author_id:
-            author = Author.query.get(selected_author_id)
-            if author:
-                if author.ds_meta_data_id and author.ds_meta_data_id != ds_md.id:
-                    current_app.logger.info(
-                        "Reasignando autor existente %s desde ds_meta_data_id=%s a ds_meta_data_id=%s",
-                        author.id,
-                        author.ds_meta_data_id,
-                        ds_md.id,
-                    )
-                current_authors = [a for a in ds_md.authors] if getattr(ds_md, "authors", None) else []
-                ds_md.authors = [author] + [a for a in current_authors if a.id != author.id]
-            else:
-                current_app.logger.info(
-                    "Author with id %s not found when uploading tabular dataset", selected_author_id
-                )
+        # Handle author from name input
+        author_name_input = (form.author_name.data or "").strip()
+        if author_name_input:
+            # Create new Author for this dataset
+            author = Author(name=author_name_input, ds_meta_data_id=ds_md.id)
+            db.session.add(author)
+            current_app.logger.info(
+                "Created new author '%s' for dataset ds_meta_data_id=%s",
+                author_name_input,
+                ds_md.id,
+            )
 
         community_id = (form.community_id.data or "").strip()
         if community_id:
