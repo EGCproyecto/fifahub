@@ -3,7 +3,7 @@ import logging
 import os
 import shutil
 import uuid
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from typing import Optional
 
 from flask import request
@@ -80,6 +80,12 @@ class DataSetService(BaseService):
     def count_synchronized_datasets(self):
         return self.repository.count_synchronized_datasets()
 
+    def count_all_datasets(self):
+        return self.repository.count_all_datasets()
+
+    def latest_datasets(self):
+        return self.repository.latest_datasets()
+
     def count_feature_models(self):
         return self.feature_model_service.count_feature_models()
 
@@ -95,6 +101,20 @@ class DataSetService(BaseService):
 
     def total_dataset_views(self) -> int:
         return self.dsviewrecord_repostory.total_dataset_views()
+
+    def get_trending_datasets(self, limit: int = 5):
+        """
+        Datasets de los últimos 30 días ordenados por descargas; si no hay, top descargas global.
+        """
+        recent = self.repository.trending_recent(days=7, limit=limit)
+        if recent:
+            return sorted(recent, key=lambda ds: ds.download_count or 0, reverse=True)
+        fallback = self.repository.top_downloaded(limit=limit)
+        return sorted(fallback, key=lambda ds: ds.download_count or 0, reverse=True)
+
+    # Alias con el nombre solicitado en criterios
+    def getTrendingDatasets(self, limit: int = 5):
+        return self.get_trending_datasets(limit=limit)
 
     def create_from_form(self, form, current_user) -> DataSet:
         main_author = {

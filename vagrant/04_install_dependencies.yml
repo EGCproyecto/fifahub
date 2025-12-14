@@ -36,10 +36,9 @@
 
     - name: Activate the virtual environment and install dependencies
       shell: |
-        source {{ working_dir }}/vagrant_venv/bin/activate
-        pip install --upgrade pip
-        cd {{ working_dir }}
-        pip install -r requirements.txt
-        pip install -e ./
+        set -e
+        {{ working_dir }}vagrant_venv/bin/python -m pip install --upgrade pip
+        {{ working_dir }}vagrant_venv/bin/python -m pip install -r {{ working_dir }}requirements.txt
+        {{ working_dir }}vagrant_venv/bin/python -m pip install -e {{ working_dir }}
       args:
         executable: /bin/bash

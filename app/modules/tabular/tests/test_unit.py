@@ -1,7 +1,13 @@
 import csv
+import io
 import os
 import tempfile
 
+import pytest
+from werkzeug.datastructures import FileStorage
+from wtforms.validators import ValidationError
+
+from app.modules.tabular.forms import FIFA_REQUIRED_COLUMNS, validate_fifa_schema
 from app.modules.tabular.utils.parser import parse_csv_metadata
 
 
@@ -182,6 +188,92 @@ def test_empty_file():
 
     finally:
         os.unlink(csv_path)
+
+
+def _build_form(delimiter=",", encoding="utf-8"):
+    class DummyField:
+        def __init__(self, value):
+            self.data = value
+
+    class DummyForm:
+        def __init__(self):
+            self.delimiter = DummyField(delimiter)
+            self.encoding = DummyField(encoding)
+
+    return DummyForm()
+
+
+def _build_file_storage(header, rows=None):
+    rows = rows or []
+    lines = [",".join(header)] + [",".join(r) for r in rows]
+    payload = "\n".join(lines) + ("\n" if lines else "")
+    stream = io.BytesIO(payload.encode("utf-8"))
+    return FileStorage(stream=stream, filename="upload.csv")
+
+
+def _sample_row():
+    return [
+        "1",
+        "Lionel Messi",
+        "36",
+        "Argentina",
+        "91",
+        "93",
+        "Inter Miami",
+        "80000000",
+        "500000",
+        "Left",
+        "4",
+        "4",
+        "CF",
+        "170",
+        "72",
+    ]
+
+
+def test_validate_fifa_schema_accepts_valid_columns():
+    storage = _build_file_storage(FIFA_REQUIRED_COLUMNS, [_sample_row()])
+    field = type("Field", (), {"data": storage})()
+    form = _build_form()
+
+    validate_fifa_schema(form, field)
+
+    assert storage.stream.tell() == 0
+
+
+def test_validate_fifa_schema_allows_extra_columns():
+    header = FIFA_REQUIRED_COLUMNS + ["Photo", "Club Logo"]
+    row = _sample_row() + ["photo.png", "logo.png"]
+    storage = _build_file_storage(header, [row])
+    field = type("Field", (), {"data": storage})()
+    form = _build_form()
+
+    validate_fifa_schema(form, field)
+
+    assert storage.stream.tell() == 0
+
+
+def test_validate_fifa_schema_missing_columns_triggers_error():
+    header = FIFA_REQUIRED_COLUMNS[:-1]
+    storage = _build_file_storage(header)
+    field = type("Field", (), {"data": storage})()
+    form = _build_form()
+
+    with pytest.raises(ValidationError):
+        validate_fifa_schema(form, field)
+
+    assert storage.stream.tell() == 0
+
+
+def test_validate_fifa_schema_empty_csv_triggers_error():
+    storage = FileStorage(stream=io.BytesIO(b""), filename="empty.csv")
+    field = type("Field", (), {"data": storage})()
+    form = _build_form()
+
+    with pytest.raises(ValidationError):
+        validate_fifa_schema(form, field)
+
+    assert storage.stream.tell() == 0
 
 
 if __name__ == "__main__":

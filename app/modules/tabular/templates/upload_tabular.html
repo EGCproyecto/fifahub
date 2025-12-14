@@ -12,10 +12,33 @@
       {% for e in form.name.errors %}<div class="text-danger small">{{ e }}</div>{% endfor %}
     </div>
 
+    <div class="row">
+      <div class="col-md-6 mb-3">
+        <label class="form-label">{{ form.author_name.label }}</label>
+        {{ form.author_name(class="form-control", placeholder="Tu nombre") }}
+        <div class="form-text">Opcional. Nombre del autor del dataset.</div>
+        {% for e in form.author_name.errors %}<div class="text-danger small">{{ e }}</div>{% endfor %}
+      </div>
+
+      <div class="col-md-6 mb-3">
+        <label class="form-label">{{ form.community_id.label }}</label>
+        {{ form.community_id(class="form-control", placeholder="community-123") }}
+        <div class="form-text">Opcional. Comunidad a la que pertenece el dataset.</div>
+        {% for e in form.community_id.errors %}<div class="text-danger small">{{ e }}</div>{% endfor %}
+      </div>
+    </div>
+
     <div class="mb-3">
       <label class="form-label">{{ form.csv_file.label }}</label>
       {{ form.csv_file(class="form-control") }}
-      {% for e in form.csv_file.errors %}<div class="text-danger small">{{ e }}</div>{% endfor %}
+      <div class="form-text">Only official FIFA CSV datasets are accepted.</div>
+      {% if form.csv_file.errors %}
+      <div class="alert alert-danger mt-2" role="alert">
+        {% for e in form.csv_file.errors %}
+        <div>{{ e }}</div>
+        {% endfor %}
+      </div>
+      {% endif %}
     </div>
 
     <div class="row">

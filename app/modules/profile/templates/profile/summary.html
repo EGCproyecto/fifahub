@@ -35,6 +35,54 @@
     </div>
 
 </div>
+
+<div class="row mt-4">
+    <div class="col-12 col-md-6">
+        <div class="card shadow-sm h-100">
+            <div class="card-header card-dark">
+                <h5 class="card-title mb-0" style="color: white; font-size: 15px;">Following Authors</h5>
+            </div>
+            <div class="card-body">
+                {% if followed_authors %}
+                    <ul class="list-unstyled mb-0">
+                        {% for author in followed_authors %}
+                            <li class="mb-2">
+                                <a href="{{ url_for('dataset.author_detail', author_id=author.id) }}">
+                                    {{ author.name }}
+                                </a>
+                                {% if author.affiliation %}<small class="text-muted">({{ author.affiliation }})</small>{% endif %}
+                            </li>
+                        {% endfor %}
+                    </ul>
+                {% else %}
+                    <p class="text-muted mb-0">You are not following any authors yet.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    <div class="col-12 col-md-6">
+        <div class="card shadow-sm h-100">
+            <div class="card-header card-dark">
+                <h5 class="card-title mb-0" style="color: white; font-size: 15px;">Following Communities</h5>
+            </div>
+            <div class="card-body">
+                {% if followed_communities %}
+                    <ul class="list-unstyled mb-0">
+                        {% for community_id in followed_communities %}
+                            <li class="mb-2">
+                                <a href="{{ url_for('dataset.community_detail', community_id=community_id) }}">
+                                    {{ community_id }}
+                                </a>
+                            </li>
+                        {% endfor %}
+                    </ul>
+                {% else %}
+                    <p class="text-muted mb-0">You are not following any communities yet.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
 <h1 class="h3 mb-3">User datasets</h1>
 
     {% if datasets %}

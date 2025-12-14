@@ -34,6 +34,24 @@ class Config:
     TEMPLATES_AUTO_RELOAD = True
     UPLOAD_FOLDER = "uploads"
 
+    MAIL_SERVER = os.getenv("MAIL_SERVER")
+    MAIL_PORT = int(os.getenv("MAIL_PORT", "25"))
+    MAIL_USERNAME = os.getenv("MAIL_USERNAME")
+    MAIL_PASSWORD = os.getenv("MAIL_PASSWORD")
+
+    MAIL_USE_TLS = os.getenv("MAIL_USE_TLS", "false").lower() == "true"
+    MAIL_USE_SSL = os.getenv("MAIL_USE_SSL", "false").lower() == "true"
+
+    MAIL_DEFAULT_SENDER = os.getenv("MAIL_DEFAULT_SENDER")
+    TWO_FACTOR_RATE_LIMIT = int(os.getenv("TWO_FACTOR_RATE_LIMIT", "10"))
+    TWO_FACTOR_RATE_WINDOW = int(os.getenv("TWO_FACTOR_RATE_WINDOW", "60"))
+    PREFERRED_URL_SCHEME = os.getenv("PREFERRED_URL_SCHEME", "https")
+    SESSION_COOKIE_SECURE = os.getenv("SESSION_COOKIE_SECURE", "false").lower() == "true"
+    REMEMBER_COOKIE_SECURE = os.getenv("REMEMBER_COOKIE_SECURE", "false").lower() == "true"
+    SESSION_COOKIE_HTTPONLY = True
+    REMEMBER_COOKIE_HTTPONLY = True
+    SESSION_COOKIE_SAMESITE = os.getenv("SESSION_COOKIE_SAMESITE", "Lax")
+
 
 class DevelopmentConfig(Config):
     DEBUG = True
@@ -41,15 +59,16 @@ class DevelopmentConfig(Config):
 
 class TestingConfig(Config):
     TESTING = True
-    SQLALCHEMY_DATABASE_URI = (
-        f"mysql+pymysql://{os.getenv('MARIADB_USER', 'default_user')}:"
-        f"{os.getenv('MARIADB_PASSWORD', 'default_password')}@"
-        f"{os.getenv('MARIADB_HOSTNAME', 'localhost')}:"
-        f"{os.getenv('MARIADB_PORT', '3306')}/"
-        f"{os.getenv('MARIADB_TEST_DATABASE', 'default_db')}"
+    SQLALCHEMY_DATABASE_URI = os.getenv(
+        "TEST_DATABASE_URI",
+        "sqlite:///test_app.db",
     )
     WTF_CSRF_ENABLED = False
+    SESSION_COOKIE_SECURE = False
+    REMEMBER_COOKIE_SECURE = False
 
 
 class ProductionConfig(Config):
     DEBUG = False
+    SESSION_COOKIE_SECURE = True
+    REMEMBER_COOKIE_SECURE = True

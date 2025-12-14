@@ -74,15 +74,16 @@
 
                         </div>
 
-                        <div class="row mb-2">
-
-                            <div class="col-12">
-                                {% for tag in dataset.ds_meta_data.tags.split(',') %}
-                                    <span class="badge bg-secondary">{{ tag.strip() }}</span>
-                                {% endfor %}
+                        {% set tags = dataset.ds_meta_data.tags if dataset.ds_meta_data else None %}
+                        {% if tags %}
+                            <div class="row mb-2">
+                                <div class="col-12">
+                                    {% for tag in tags.split(',') %}
+                                        <span class="badge bg-secondary">{{ tag.strip() }}</span>
+                                    {% endfor %}
+                                </div>
                             </div>
-
-                        </div>
+                        {% endif %}
 
                         <div class="row  mt-4">
                             <div class="col-12">
@@ -156,6 +157,21 @@
 
                 </div>
             </div>
+
+                <div class="col-12">
+
+                    <div class="card" id="trending-card">
+
+                        <div class="card-body">
+                            <h2><b>Trending Datasets</b></h2>
+                            <div class="list-group list-group-flush" id="trending-list">
+                                <div class="list-group-item px-0 text-muted small" id="trending-loading">
+                                    Loading trending datasets...
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
 
                 <div class="col-12">
 
@@ -254,4 +270,67 @@
 
 {% block scripts %}
     <script src="{{ url_for('public.scripts') }}"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            const list = document.getElementById("trending-list");
+            const loading = document.getElementById("trending-loading");
+            const card = document.getElementById("trending-card");
+
+            const buildUrl = (item) => {
+                if (item.doi) {
+                    return `/doi/${item.doi}/`;
+                }
+                if (item.id) {
+                    return `/dataset/view/${item.id}`;
+                }
+                return "#";
+            };
+
+            const renderItems = (items) => {
+                list.innerHTML = "";
+                if (!items || items.length === 0) {
+                    list.innerHTML = '<div class="list-group-item px-0 text-muted small">No trending datasets yet.</div>';
+                    return;
+                }
+                items.forEach((item) => {
+                    const wrapper = document.createElement("div");
+                    wrapper.className = "list-group-item px-0";
+                    wrapper.innerHTML = `
+                        <a href="${buildUrl(item)}" class="d-flex flex-column flex-sm-row align-items-sm-center justify-content-between gap-1 text-decoration-none">
+                            <div class="text-truncate">
+                                <div class="fw-bold text-truncate">${item.title ?? "Untitled dataset"}</div>
+                                <div class="text-muted small text-truncate">
+                                    ${item.author ?? "Unknown author"}${item.community ? " · " + item.community : ""}
+                                </div>
+                            </div>
+                            <div class="text-primary fw-semibold ms-sm-3">
+                                ${(item.metric_count ?? item.download_count ?? item.downloads ?? 0)} downloads
+                            </div>
+                        </a>
+                    `;
+                    list.appendChild(wrapper);
+                });
+            };
+
+            const handleError = () => {
+                if (card) {
+                    card.style.display = "none";
+                }
+            };
+
+            fetch("/datasets/trending")
+                .then((res) => {
+                    if (!res.ok) throw new Error("Network response was not ok");
+                    return res.json();
+                })
+                .then(renderItems)
+                .catch((err) => {
+                    console.error(err);
+                    handleError();
+                })
+                .finally(() => {
+                    if (loading) loading.remove();
+                });
+        });
+    </script>
 {% endblock %}

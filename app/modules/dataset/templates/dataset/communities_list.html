@@ -1,0 +1,52 @@
+{% extends "base_template.html" %}
+
+{% block title %}Communities{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h1 class="h4 m-0">Communities</h1>
+</div>
+
+<div class="card shadow-sm">
+  <div class="card-body p-0">
+    <div class="table-responsive">
+      <table class="table table-hover mb-0">
+        <thead class="table-light">
+          <tr>
+            <th>Community</th>
+            <th class="text-center">Datasets</th>
+            <th class="text-center">Followers</th>
+            <th class="text-center">Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% if communities %}
+            {% for row in communities %}
+              <tr>
+                <td>
+                  <a href="{{ url_for('dataset.community_detail', community_id=row.community_id) }}" class="fw-semibold">
+                    {{ row.community_id }}
+                  </a>
+                </td>
+                <td class="text-center">{{ row.dataset_count }}</td>
+                <td class="text-center">{{ row.followers_count }}</td>
+                <td class="text-center">
+                  {% if row.is_followed %}
+                    <span class="badge bg-primary">Following</span>
+                  {% else %}
+                    <span class="text-muted small">—</span>
+                  {% endif %}
+                </td>
+              </tr>
+            {% endfor %}
+          {% else %}
+            <tr>
+              <td colspan="4" class="text-center text-muted py-4">No communities found.</td>
+            </tr>
+          {% endif %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}

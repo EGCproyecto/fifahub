@@ -1,5 +1,5 @@
 from flask_wtf import FlaskForm
-from wtforms import BooleanField, PasswordField, StringField, SubmitField
+from wtforms import BooleanField, HiddenField, PasswordField, StringField, SubmitField
 from wtforms.validators import DataRequired, Email, Length
 
 
@@ -16,3 +16,18 @@ class LoginForm(FlaskForm):
     password = PasswordField("Password", validators=[DataRequired()])
     remember_me = BooleanField("Remember me")
     submit = SubmitField("Login")
+
+
+class TwoFactorLoginForm(FlaskForm):
+    token = HiddenField(validators=[DataRequired()])
+    code = StringField("Authentication code", validators=[DataRequired(), Length(min=6, max=6)])
+    submit = SubmitField("Verify code")
+
+
+class TwoFactorRecoveryForm(FlaskForm):
+    token = HiddenField(validators=[DataRequired()])
+    recovery_code = StringField(
+        "Recovery code",
+        validators=[DataRequired(), Length(min=6, max=32)],
+    )
+    submit = SubmitField("Use recovery code")

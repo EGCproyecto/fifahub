@@ -4,15 +4,19 @@ import os
 import shutil
 import tempfile
 import uuid
+from datetime import datetime, timedelta, timezone
 from zipfile import ZipFile
 
 from flask import abort, jsonify, make_response, redirect, render_template, request, send_from_directory, url_for
 from flask_login import current_user, login_required
+from sqlalchemy import func
+from sqlalchemy.orm import joinedload
 
 from app import db
+from app.modules.auth.services import FollowService
 from app.modules.dataset import dataset_bp
 from app.modules.dataset.forms import DataSetForm
-from app.modules.dataset.models import BaseDataset, DatasetVersion
+from app.modules.dataset.models import Author, BaseDataset, DatasetVersion, DSMetaData
 from app.modules.dataset.services import (
     AuthorService,
     DataSetService,
@@ -21,7 +25,9 @@ from app.modules.dataset.services import (
     DSMetaDataService,
     DSViewRecordService,
 )
+from app.modules.dataset.services.notification_utils import get_dataset_community_id
 from app.modules.dataset.services.resolvers import render_detail
+from app.modules.recommendation.service import RecommendationService
 from app.modules.zenodo.services import ZenodoService
 
 logger = logging.getLogger(__name__)
@@ -35,6 +41,54 @@ doi_mapping_service = DOIMappingService()
 ds_view_record_service = DSViewRecordService()
 ds_download_record_service = DSDownloadRecordService()
 ds_download_record_service = DSDownloadRecordService()
+follow_service = FollowService()
+
+# Simple in-memory cache for trending datasets
+_TRENDING_CACHE = None
+_TRENDING_CACHE_AT = None
+_TRENDING_CACHE_TTL = timedelta(hours=1)
+
+
+@dataset_bp.route("/datasets/trending", methods=["GET"])
+def trending_datasets():
+    global _TRENDING_CACHE, _TRENDING_CACHE_AT
+
+    now = datetime.now(timezone.utc)
+    if _TRENDING_CACHE and _TRENDING_CACHE_AT and now - _TRENDING_CACHE_AT < _TRENDING_CACHE_TTL:
+        return jsonify(_TRENDING_CACHE)
+
+    datasets = dataset_service.getTrendingDatasets()
+    payload = [
+        {
+            "id": ds.id,
+            "title": getattr(getattr(ds, "ds_meta_data", None), "title", None),
+            "author": (
+                getattr(getattr(ds, "ds_meta_data", None), "authors", None)[0].name
+                if getattr(getattr(ds, "ds_meta_data", None), "authors", None)
+                else None
+            ),
+            "community": (
+                getattr(getattr(ds, "communities", [None])[0], "slug", None)
+                if getattr(ds, "communities", None)
+                else None
+            )
+            or (
+                getattr(getattr(ds, "communities", [None])[0], "name", None)
+                if getattr(ds, "communities", None)
+                else None
+            ),
+            "doi": getattr(getattr(ds, "ds_meta_data", None), "dataset_doi", None),
+            "download_count": ds.download_count or 0,
+            "metric_count": ds.download_count or 0,
+            "created_at": ds.created_at.isoformat() if getattr(ds, "created_at", None) else None,
+        }
+        for ds in datasets
+    ]
+
+    _TRENDING_CACHE = payload
+    _TRENDING_CACHE_AT = now
+
+    return jsonify(payload)
 
 
 @dataset_bp.route("/dataset/upload", methods=["GET", "POST"])
@@ -242,10 +296,8 @@ def dataset_stats(dataset_id):
 def view_dataset(dataset_id: int):
     dataset = BaseDataset.query.get_or_404(dataset_id)
 
-    if dataset.user_id != current_user.id:
-        abort(403)
-
     detail_template, detail_ctx = render_detail(dataset.type, dataset)
+    detail_ctx["related_datasets"] = RecommendationService.get_related_datasets(dataset.id)
     versions = DatasetVersion.query.filter_by(dataset_id=dataset.id).order_by(DatasetVersion.created_at.desc()).all()
 
     return render_template(
@@ -279,6 +331,7 @@ def subdomain_index(doi):
 
     # resolver de detalle (tu flujo original)
     detail_template, detail_ctx = render_detail(dataset.type, dataset)
+    detail_ctx["related_datasets"] = RecommendationService.get_related_datasets(dataset.id)
 
     # 🔹 NUEVO: versiones ordenadas (últimas primero) y pasadas a la plantilla
     versions = DatasetVersion.query.filter_by(dataset_id=dataset.id).order_by(DatasetVersion.created_at.desc()).all()
@@ -300,12 +353,13 @@ def subdomain_index(doi):
 @login_required
 def get_unsynchronized_dataset(dataset_id):
 
-    dataset = dataset_service.get_unsynchronized_dataset(current_user.id, dataset_id)
+    dataset = BaseDataset.query.get_or_404(dataset_id)
 
-    if not dataset:
+    if dataset is None:
         abort(404)
 
     detail_template, detail_ctx = render_detail(dataset.type, dataset)
+    detail_ctx["related_datasets"] = RecommendationService.get_related_datasets(dataset.id)
 
     # 🔹 NUEVO: versiones también para no sincronizados (si existen)
     versions = DatasetVersion.query.filter_by(dataset_id=dataset.id).order_by(DatasetVersion.created_at.desc()).all()
@@ -315,4 +369,123 @@ def get_unsynchronized_dataset(dataset_id):
         detail_template=detail_template,
         versions=versions,  # <- aquí van las versiones
         **detail_ctx,  # meta=..., dataset=..., etc.
+    )
+
+
+@dataset_bp.route("/datasets/authors", methods=["GET"])
+def authors_list():
+    authors = (
+        db.session.query(Author, func.count(BaseDataset.id).label("dataset_count"))
+        .outerjoin(DSMetaData, DSMetaData.id == Author.ds_meta_data_id)
+        .outerjoin(BaseDataset, BaseDataset.ds_meta_data_id == DSMetaData.id)
+        .group_by(Author.id)
+        .order_by(Author.name.asc())
+        .all()
+    )
+
+    followed_author_ids = set()
+    if current_user.is_authenticated:
+        followed_author_ids = {a.id for a in follow_service.get_followed_authors_for_user(current_user)}
+
+    author_rows = []
+    for author, dataset_count in authors:
+        followers = follow_service.get_followers_for_author(author)
+        author_rows.append(
+            {
+                "author": author,
+                "dataset_count": dataset_count or 0,
+                "followers_count": len(followers),
+                "is_followed": author.id in followed_author_ids,
+            }
+        )
+
+    return render_template("dataset/authors_list.html", authors=author_rows)
+
+
+@dataset_bp.route("/datasets/communities", methods=["GET"])
+def communities_list():
+    datasets = BaseDataset.query.options(joinedload(BaseDataset.ds_meta_data)).order_by(BaseDataset.id.desc()).all()
+
+    communities: dict[str, dict] = {}
+    for ds in datasets:
+        community_id = get_dataset_community_id(ds)
+        if not community_id:
+            continue
+        if community_id not in communities:
+            communities[community_id] = {"count": 0, "datasets": []}
+        communities[community_id]["count"] += 1
+        communities[community_id]["datasets"].append(ds)
+
+    rows = []
+    followed_communities = set()
+    if current_user.is_authenticated:
+        followed_communities = set(follow_service.get_followed_communities_for_user(current_user))
+
+    for community_id, data in sorted(communities.items()):
+        followers = follow_service.get_followers_for_community(community_id) or []
+        rows.append(
+            {
+                "community_id": community_id,
+                "dataset_count": data["count"],
+                "followers_count": len(followers),
+                "is_followed": community_id in followed_communities,
+            }
+        )
+
+    return render_template("dataset/communities_list.html", communities=rows)
+
+
+@dataset_bp.route("/authors/<int:author_id>", methods=["GET"])
+def author_detail(author_id: int):
+    author = Author.query.get_or_404(author_id)
+
+    followers = follow_service.get_followers_for_author(author)
+    author_follower_count = len(followers)
+
+    is_following_author = False
+    if current_user.is_authenticated:
+        followed_authors = follow_service.get_followed_authors_for_user(current_user)
+        is_following_author = any(a.id == author.id for a in followed_authors)
+
+    datasets = (
+        BaseDataset.query.join(DSMetaData, BaseDataset.ds_meta_data_id == DSMetaData.id)
+        .join(Author, Author.ds_meta_data_id == DSMetaData.id)
+        .options(joinedload(BaseDataset.ds_meta_data))
+        .filter(Author.id == author.id)
+        .order_by(BaseDataset.id.desc())
+        .all()
+    )
+
+    return render_template(
+        "dataset/author_detail.html",
+        author=author,
+        author_follower_count=author_follower_count,
+        is_following_author=is_following_author,
+        datasets=datasets,
+    )
+
+
+@dataset_bp.route("/communities/<string:community_id>", methods=["GET"])
+def community_detail(community_id: str):
+    community_identifier = (community_id or "").strip()
+    if not community_identifier:
+        abort(404)
+
+    followers = follow_service.get_followers_for_community(community_identifier)
+    community_follower_count = len(followers)
+
+    is_following_community = False
+    if current_user.is_authenticated:
+        followed_communities = follow_service.get_followed_communities_for_user(current_user)
+        is_following_community = community_identifier in followed_communities
+
+    datasets = BaseDataset.query.options(joinedload(BaseDataset.ds_meta_data)).order_by(BaseDataset.id.desc()).all()
+    community_datasets = [ds for ds in datasets if get_dataset_community_id(ds) == community_identifier]
+
+    return render_template(
+        "dataset/community_detail.html",
+        community_id=community_identifier,
+        community_follower_count=community_follower_count,
+        is_following_community=is_following_community,
+        datasets=community_datasets,
     )

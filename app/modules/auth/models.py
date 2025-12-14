@@ -13,9 +13,29 @@ class User(db.Model, UserMixin):
     email = db.Column(db.String(256), unique=True, nullable=False)
     password = db.Column(db.String(256), nullable=False)
     created_at = db.Column(db.DateTime, nullable=False, default=lambda: datetime.now(timezone.utc))
+    two_factor_enabled = db.Column(db.Boolean, nullable=False, default=False)
+    two_factor_secret = db.Column(db.String(512), nullable=True)
 
     data_sets = db.relationship("BaseDataset", backref="user", lazy=True)
     profile = db.relationship("UserProfile", backref="user", uselist=False)
+    recovery_codes = db.relationship(
+        "UserTwoFactorRecoveryCode",
+        backref="user",
+        cascade="all, delete-orphan",
+        lazy=True,
+    )
+    followed_authors = db.relationship(
+        "UserFollowAuthor",
+        backref="user",
+        lazy="dynamic",
+        cascade="all, delete-orphan",
+    )
+    followed_communities = db.relationship(
+        "UserFollowCommunity",
+        backref="user",
+        lazy="dynamic",
+        cascade="all, delete-orphan",
+    )
 
     def __init__(self, **kwargs):
         super(User, self).__init__(**kwargs)
@@ -35,3 +55,66 @@ class User(db.Model, UserMixin):
         from app.modules.auth.services import AuthenticationService
 
         return AuthenticationService().temp_folder_by_user(self)
+
+
+class UserTwoFactorRecoveryCode(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False, index=True)
+    encrypted_code = db.Column(db.String(512), nullable=False)
+
+
+class UserFollowAuthor(db.Model):
+    __tablename__ = "user_follow_author"
+
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(
+        db.Integer,
+        db.ForeignKey("user.id"),
+        nullable=False,
+        index=True,
+    )
+    author_id = db.Column(
+        db.Integer,
+        db.ForeignKey("author.id"),
+        nullable=False,
+        index=True,
+    )
+    created_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+
+    __table_args__ = (
+        db.UniqueConstraint(
+            "user_id",
+            "author_id",
+            name="uq_user_follow_author_user_author",
+        ),
+    )
+
+    def __repr__(self) -> str:
+        return f"<UserFollowAuthor user_id={self.user_id} author_id={self.author_id}>"
+
+
+class UserFollowCommunity(db.Model):
+    __tablename__ = "user_follow_community"
+
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(
+        db.Integer,
+        db.ForeignKey("user.id"),
+        nullable=False,
+        index=True,
+    )
+    # NOTE: There is currently NO Community model/table in this project.
+    # For now we store an external community identifier here.
+    community_id = db.Column(db.String(255), nullable=False, index=True)
+    created_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+
+    __table_args__ = (
+        db.UniqueConstraint(
+            "user_id",
+            "community_id",
+            name="uq_user_follow_community_user_community",
+        ),
+    )
+
+    def __repr__(self) -> str:
+        return f"<UserFollowCommunity user_id={self.user_id} community_id={self.community_id}>"

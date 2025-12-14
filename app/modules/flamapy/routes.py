@@ -11,9 +11,28 @@ from uvl.UVLCustomLexer import UVLCustomLexer
 from uvl.UVLPythonParser import UVLPythonParser
 
 from app.modules.flamapy import flamapy_bp
+from app.modules.flamapy.services import FlamapyService
 from app.modules.hubfile.services import HubfileService
 
 logger = logging.getLogger(__name__)
+
+flamapy_service = FlamapyService()
+hubfile_service = HubfileService()
+
+
+def _csv_skip_response(file_name: str | None):
+    return (
+        jsonify(
+            {
+                "message": (
+                    f"CSV file '{file_name}' detected. Flamapy operations are skipped for tabular datasets."
+                    if file_name
+                    else "CSV file detected. Flamapy operations are skipped for tabular datasets."
+                )
+            }
+        ),
+        200,
+    )
 
 
 @flamapy_bp.route("/flamapy/check_uvl/<int:file_id>", methods=["GET"])
@@ -36,7 +55,9 @@ def check_uvl(file_id):
                 self.errors.append(error_message)
 
     try:
-        hubfile = HubfileService().get_by_id(file_id)
+        hubfile = hubfile_service.get_by_id(file_id)
+        if flamapy_service.should_skip_file(getattr(hubfile, "name", "")):
+            return _csv_skip_response(hubfile.name)
         input_stream = FileStream(hubfile.get_path())
         lexer = UVLCustomLexer(input_stream)
 
@@ -74,7 +95,9 @@ def valid(file_id):
 def to_glencoe(file_id):
     temp_file = tempfile.NamedTemporaryFile(suffix=".json", delete=False)
     try:
-        hubfile = HubfileService().get_or_404(file_id)
+        hubfile = hubfile_service.get_or_404(file_id)
+        if flamapy_service.should_skip_file(getattr(hubfile, "name", "")):
+            return _csv_skip_response(hubfile.name)
         fm = UVLReader(hubfile.get_path()).transform()
         GlencoeWriter(temp_file.name, fm).transform()
 
@@ -93,7 +116,9 @@ def to_glencoe(file_id):
 def to_splot(file_id):
     temp_file = tempfile.NamedTemporaryFile(suffix=".splx", delete=False)
     try:
-        hubfile = HubfileService().get_by_id(file_id)
+        hubfile = hubfile_service.get_by_id(file_id)
+        if flamapy_service.should_skip_file(getattr(hubfile, "name", "")):
+            return _csv_skip_response(hubfile.name)
         fm = UVLReader(hubfile.get_path()).transform()
         SPLOTWriter(temp_file.name, fm).transform()
 
@@ -112,7 +137,9 @@ def to_splot(file_id):
 def to_cnf(file_id):
     temp_file = tempfile.NamedTemporaryFile(suffix=".cnf", delete=False)
     try:
-        hubfile = HubfileService().get_by_id(file_id)
+        hubfile = hubfile_service.get_by_id(file_id)
+        if flamapy_service.should_skip_file(getattr(hubfile, "name", "")):
+            return _csv_skip_response(hubfile.name)
         fm = UVLReader(hubfile.get_path()).transform()
         sat = FmToPysat(fm).transform()
         DimacsWriter(temp_file.name, sat).transform()

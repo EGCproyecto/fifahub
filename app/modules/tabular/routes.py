@@ -6,7 +6,9 @@ from flask_login import current_user, login_required
 from werkzeug.utils import secure_filename
 
 from app import db
-from app.modules.dataset.models import DSMetaData, PublicationType
+from app.modules.dataset.models import Author, DSMetaData, PublicationType
+from app.modules.dataset.services.notification_service import notification_service
+from app.modules.recommendation.service import RecommendationService
 
 from . import tabular_bp
 from .forms import TabularDatasetForm
@@ -29,7 +31,11 @@ def _uploads_dir() -> str:
 
 
 def _save_uploaded_file(file_storage) -> str:
-    filename = secure_filename(file_storage.filename or f"upload-{uuid.uuid4().hex}.csv")
+    original = secure_filename(file_storage.filename or "")
+    base, ext = os.path.splitext(original)
+    base = base or "upload"
+    ext = ext or ".csv"
+    filename = f"{base}-{uuid.uuid4().hex}{ext}"
     path = os.path.join(_uploads_dir(), filename)
     file_storage.save(path)
     if os.path.getsize(path) == 0:
@@ -47,6 +53,9 @@ def upload():
     form = TabularDatasetForm()
 
     if request.method == "GET":
+        # Pre-fill author name with current user's name
+        if current_user.profile:
+            form.author_name.data = f"{current_user.profile.name} {current_user.profile.surname}".strip()
         return render_template("upload_tabular.html", form=form)
 
     if not form.validate_on_submit():
@@ -64,24 +73,25 @@ def upload():
         return render_template("upload_tabular.html", form=form), 400
 
     name = (form.name.data or "").strip()
-
-    ds_md = DSMetaData(
-        title=name or "Tabular dataset",
-        description="CSV importado",
-        publication_type=PublicationType.OTHER,
-    )
-    db.session.add(ds_md)
-    db.session.flush()
+    title_value = name or "Tabular dataset"
 
     dataset = (
         TabularDataset.query.filter_by(user_id=current_user.id)
         .join(DSMetaData, TabularDataset.ds_meta_data_id == DSMetaData.id)
-        .filter(DSMetaData.title == ds_md.title)
+        .filter(DSMetaData.title == title_value)
         .first()
     )
     is_resubida = dataset is not None
 
     if dataset is None:
+        ds_md = DSMetaData(
+            title=title_value,
+            description="CSV importado",
+            publication_type=PublicationType.OTHER,
+        )
+        db.session.add(ds_md)
+        db.session.flush()
+
         dataset = TabularDataset(
             user_id=current_user.id,
             ds_meta_data_id=ds_md.id,
@@ -89,6 +99,29 @@ def upload():
         )
         db.session.add(dataset)
         db.session.flush()
+    else:
+        ds_md = dataset.ds_meta_data
+
+    if ds_md is not None:
+        # Handle author from name input
+        author_name_input = (form.author_name.data or "").strip()
+        if author_name_input:
+            # Create new Author for this dataset
+            author = Author(name=author_name_input, ds_meta_data_id=ds_md.id)
+            db.session.add(author)
+            current_app.logger.info(
+                "Created new author '%s' for dataset ds_meta_data_id=%s",
+                author_name_input,
+                ds_md.id,
+            )
+
+        community_id = (form.community_id.data or "").strip()
+        if community_id:
+            existing_tags = [tag.strip() for tag in (ds_md.tags or "").split(",") if tag.strip()]
+            community_tag = f"community:{community_id}"
+            if community_tag not in existing_tags:
+                existing_tags.append(community_tag)
+            ds_md.tags = ",".join(existing_tags) if existing_tags else None
 
     ingestor = TabularIngestor(resolve_path=lambda hubfile_id: hubfile_id)
     try:
@@ -113,6 +146,8 @@ def upload():
 
     db.session.commit()
 
+    notification_service.trigger_new_dataset_notifications_async(dataset)
+
     return redirect(url_for("tabular.detail", dataset_id=dataset.id))
 
 
@@ -126,7 +161,8 @@ def my_tabular():
 @tabular_bp.route("/<int:dataset_id>", methods=["GET"])
 @login_required
 def detail(dataset_id: int):
-    dataset = TabularDataset.query.filter_by(id=dataset_id, user_id=current_user.id).first()
+    dataset = TabularDataset.query.filter_by(id=dataset_id).first()
     if not dataset:
         abort(404)
-    return render_template("view_tabular.html", dataset=dataset)
+    tabular_recommendations = RecommendationService.get_related_datasets(dataset.id)
+    return render_template("view_tabular.html", dataset=dataset, tabular_recommendations=tabular_recommendations)
