@@ -20,5 +20,20 @@ while ! mariadb -h "$MARIADB_HOSTNAME" -P "$MARIADB_PORT" -u"$MARIADB_USER" -p"$
   sleep 1
 done
 
-echo "MariaDB is up - executing command"
+echo "MariaDB is up"
+
+# Check if the database has tables
+TABLE_COUNT=$(mariadb -u "$MARIADB_USER" -p"$MARIADB_PASSWORD" -h "$MARIADB_HOSTNAME" -P "$MARIADB_PORT" -D "$MARIADB_DATABASE" -sse "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = '$MARIADB_DATABASE';" 2>/dev/null || echo "0")
+
+if [ "$TABLE_COUNT" -eq 0 ]; then
+    echo "Empty database, running migrations..."
+    flask db upgrade
+    echo "Seeding database..."
+    rosemary db:seed -y || echo "Seeding skipped (rosemary not available or already seeded)"
+else
+    echo "Database already has tables, checking for pending migrations..."
+    flask db upgrade || echo "Migrations up to date"
+fi
+
+echo "Executing command: $@"
 exec "$@"

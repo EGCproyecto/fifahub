@@ -32,6 +32,11 @@ COPY app ./app
 COPY core ./core
 COPY migrations ./migrations
 COPY scripts ./scripts
+COPY rosemary ./rosemary
+COPY pyproject.toml .
+
+# Install rosemary CLI tool
+RUN pip install --no-cache-dir -e .
 
 # Ensure wait-for-db is executable when present
 RUN if [ -f ./scripts/wait-for-db.sh ]; then chmod +x ./scripts/wait-for-db.sh; fi
