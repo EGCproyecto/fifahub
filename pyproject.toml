@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "rosemary"
 version = "1.0.0"
-description = "Rosemary is a CLI to be able to work on UVLHub development more easily."
+description = "Rosemary is a CLI to be able to work on FIFAHub development more easily."
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
