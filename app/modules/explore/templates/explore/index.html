@@ -12,8 +12,14 @@
 
     <div class="row">
 
+        <!-- Store tabular count for JavaScript -->
+        <input type="hidden" id="tabular_count" value="{{ tabular_results|length }}">
         <h3 class="h3 mb-3">
-                <span id="results_number"></span>
+                <span id="results_number">
+                    {% if tabular_results %}
+                        {{ tabular_results|length }} dataset{{ 's' if tabular_results|length != 1 else '' }} found
+                    {% endif %}
+                </span>
             </h3>
 
         <div class="col-lg-7 scrollable-column">
