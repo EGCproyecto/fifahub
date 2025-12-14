@@ -16,7 +16,7 @@ def index():
     feature_model_service = FeatureModelService()
 
     # Statistics: total datasets and feature models
-    datasets_counter = dataset_service.count_synchronized_datasets()
+    datasets_counter = dataset_service.count_all_datasets()
     feature_models_counter = feature_model_service.count_feature_models()
 
     # Statistics: total downloads
@@ -29,7 +29,7 @@ def index():
 
     return render_template(
         "public/index.html",
-        datasets=dataset_service.latest_synchronized(),
+        datasets=dataset_service.latest_datasets(),
         datasets_counter=datasets_counter,
         feature_models_counter=feature_models_counter,
         total_dataset_downloads=total_dataset_downloads,
