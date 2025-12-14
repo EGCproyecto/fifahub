@@ -80,6 +80,12 @@ class DataSetService(BaseService):
     def count_synchronized_datasets(self):
         return self.repository.count_synchronized_datasets()
 
+    def count_all_datasets(self):
+        return self.repository.count_all_datasets()
+
+    def latest_datasets(self):
+        return self.repository.latest_datasets()
+
     def count_feature_models(self):
         return self.feature_model_service.count_feature_models()
 

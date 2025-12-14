@@ -106,6 +106,14 @@ class DataSetRepository(BaseRepository):
             .all()
         )
 
+    def count_all_datasets(self):
+        """Count all datasets regardless of DOI status."""
+        return self.model.query.count()
+
+    def latest_datasets(self):
+        """Get the 5 most recent datasets regardless of DOI status."""
+        return self.model.query.join(DSMetaData).order_by(desc(self.model.id)).limit(5).all()
+
     def trending_recent(self, days: int = 7, limit: int = 5):
         cutoff = datetime.now(timezone.utc) - timedelta(days=days)
         return (
