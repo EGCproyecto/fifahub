@@ -26,19 +26,18 @@
 
     - name: Set database with Rosemary
       shell: |
-        source {{ working_dir }}vagrant_venv/bin/activate
+        set -e
         cd {{ working_dir }}
-        flask db upgrade
-        rosemary db:seed -y --reset
+        {{ working_dir }}vagrant_venv/bin/python -m flask db upgrade
+        {{ working_dir }}vagrant_venv/bin/rosemary db:seed -y --reset
       args:
         executable: /bin/bash
       environment: "{{ common_environment }}"
 
     - name: Run Flask application
       shell: |
-        source {{ working_dir }}vagrant_venv/bin/activate
         cd {{ working_dir }}
-        nohup flask run --host=0.0.0.0 --port=5000 --reload --debug > app.log 2>&1 &
+        nohup {{ working_dir }}vagrant_venv/bin/python -m flask run --host=0.0.0.0 --port=5000 --reload --debug > app.log 2>&1 &
       args:
         executable: /bin/bash
       environment: "{{ common_environment }}"
