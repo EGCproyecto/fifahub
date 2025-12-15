@@ -1,4 +1,5 @@
 import os
+import shutil
 import uuid
 
 from flask import abort, current_app, flash, redirect, render_template, request, url_for
@@ -135,6 +136,17 @@ def upload():
     except Exception as e:
         current_app.logger.exception("Falló la ingesta tabular")
         flash(f"Error al procesar el CSV: {e}", "danger")
+        db.session.rollback()
+        return render_template("upload_tabular.html", form=form), 400
+
+    storage_dir = os.path.join(_uploads_dir(), f"user_{dataset.user_id}", f"dataset_{dataset.id}")
+    os.makedirs(storage_dir, exist_ok=True)
+    dest_path = os.path.join(storage_dir, os.path.basename(file_path))
+    try:
+        shutil.move(file_path, dest_path)
+    except Exception as exc:
+        current_app.logger.exception("No se pudo preparar el archivo para su descarga")
+        flash(f"Error al guardar el CSV definitivo: {exc}", "danger")
         db.session.rollback()
         return render_template("upload_tabular.html", form=form), 400
 
