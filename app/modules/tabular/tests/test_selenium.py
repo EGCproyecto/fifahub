@@ -111,6 +111,7 @@ test_tabular_upload_rejects_generic_csv()
 test_tabular_upload_accepts_valid_fifa_dataset()
 test_dataset_detail_has_no_flamapy_error_for_csv()
 
+
 def test_author_follow_toggle():
     driver = initialize_driver()
     try:
