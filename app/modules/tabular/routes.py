@@ -53,6 +53,12 @@ def _save_uploaded_file(file_storage) -> str:
 def upload():
     form = TabularDatasetForm()
 
+    # Populate existing authors dropdown
+    existing_authors = Author.query.order_by(Author.name).all()
+    form.existing_author_id.choices = [("", "-- Seleccionar autor existente --")] + [
+        (str(a.id), a.name) for a in existing_authors
+    ]
+
     if request.method == "GET":
         # Pre-fill author name with current user's name
         if current_user.profile:
@@ -104,17 +110,39 @@ def upload():
         ds_md = dataset.ds_meta_data
 
     if ds_md is not None:
-        # Handle author from name input
+        # Handle author: prefer existing selection, then create new if name provided
+        selected_author_id = form.existing_author_id.data
         author_name_input = (form.author_name.data or "").strip()
-        if author_name_input:
-            # Create new Author for this dataset
-            author = Author(name=author_name_input, ds_meta_data_id=ds_md.id)
-            db.session.add(author)
-            current_app.logger.info(
-                "Created new author '%s' for dataset ds_meta_data_id=%s",
-                author_name_input,
-                ds_md.id,
-            )
+
+        if selected_author_id:
+            # Use existing author - add to this dataset's metadata
+            existing_author = Author.query.get(selected_author_id)
+            if existing_author and existing_author not in ds_md.authors:
+                # Create association by setting ds_meta_data_id
+                # Note: this author may already belong to another dataset
+                new_author = Author(
+                    name=existing_author.name,
+                    affiliation=existing_author.affiliation,
+                    orcid=existing_author.orcid,
+                    ds_meta_data_id=ds_md.id,
+                )
+                db.session.add(new_author)
+                current_app.logger.info(
+                    "Added existing author '%s' to dataset ds_meta_data_id=%s",
+                    existing_author.name,
+                    ds_md.id,
+                )
+        elif author_name_input:
+            # Create new author only if name provided and not already exists for this dataset
+            existing_author = Author.query.filter_by(name=author_name_input, ds_meta_data_id=ds_md.id).first()
+            if not existing_author:
+                author = Author(name=author_name_input, ds_meta_data_id=ds_md.id)
+                db.session.add(author)
+                current_app.logger.info(
+                    "Created new author '%s' for dataset ds_meta_data_id=%s",
+                    author_name_input,
+                    ds_md.id,
+                )
 
         community_id = (form.community_id.data or "").strip()
         if community_id:

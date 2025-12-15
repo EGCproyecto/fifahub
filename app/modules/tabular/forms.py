@@ -1,7 +1,7 @@
 import csv
 
 from flask_wtf import FlaskForm
-from wtforms import BooleanField, FileField, IntegerField, StringField
+from wtforms import BooleanField, FileField, IntegerField, SelectField, StringField
 from wtforms.validators import DataRequired, NumberRange, Optional, Regexp, ValidationError
 
 FIFA_REQUIRED_COLUMNS = [
@@ -100,7 +100,13 @@ class TabularDatasetForm(FlaskForm):
         validators=[Optional(), NumberRange(min=0, max=200, message="0–200 filas.")],
     )
 
-    author_name = StringField("Autor", validators=[Optional()])
+    existing_author_id = SelectField(
+        "Autor existente",
+        coerce=lambda x: int(x) if x and x != "" else None,
+        validators=[Optional()],
+    )
+
+    author_name = StringField("O crear nuevo autor", validators=[Optional()])
 
     community_id = StringField("Comunidad", validators=[Optional()])
 

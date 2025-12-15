@@ -14,9 +14,14 @@
 
     <div class="row">
       <div class="col-md-6 mb-3">
-        <label class="form-label">{{ form.author_name.label }}</label>
+        <label class="form-label">{{ form.existing_author_id.label }}</label>
+        {{ form.existing_author_id(class="form-control") }}
+        <div class="form-text">Selecciona un autor existente...</div>
+        {% for e in form.existing_author_id.errors %}<div class="text-danger small">{{ e }}</div>{% endfor %}
+
+        <label class="form-label mt-2">{{ form.author_name.label }}</label>
         {{ form.author_name(class="form-control", placeholder="Tu nombre") }}
-        <div class="form-text">Opcional. Nombre del autor del dataset.</div>
+        <div class="form-text">...o escribe un nuevo nombre de autor.</div>
         {% for e in form.author_name.errors %}<div class="text-danger small">{{ e }}</div>{% endfor %}
       </div>
 
