@@ -110,3 +110,35 @@ def test_dataset_detail_has_no_flamapy_error_for_csv():
 test_tabular_upload_rejects_generic_csv()
 test_tabular_upload_accepts_valid_fifa_dataset()
 test_dataset_detail_has_no_flamapy_error_for_csv()
+
+
+def test_author_follow_toggle():
+    driver = initialize_driver()
+    try:
+        host = get_host_for_selenium_testing()
+        _login(driver, host)
+
+        author_id = 1
+        driver.get(f"{host}/dataset/authors/{author_id}")
+        time.sleep(3)
+
+        btn = driver.find_element(By.ID, "author-follow-toggle")
+        initial_text = btn.text.strip()
+
+        btn.click()
+        time.sleep(3)
+        first_toggle_text = btn.text.strip()
+
+        btn.click()
+        time.sleep(3)
+        second_toggle_text = btn.text.strip()
+
+        if first_toggle_text == initial_text:
+            raise AssertionError("Follow toggle did not change state on first click.")
+        if second_toggle_text == first_toggle_text:
+            raise AssertionError("Follow toggle did not revert on second click.")
+    finally:
+        close_driver(driver)
+
+
+test_author_follow_toggle()
