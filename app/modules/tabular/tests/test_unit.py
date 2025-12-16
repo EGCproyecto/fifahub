@@ -49,10 +49,10 @@ def test_column_type_inference():
     y calcula estadísticas para los tipos numéricos.
     """
     csv_data = [
-        ["Name", "Rating", "Position", "Active", "Value", "Age"],
-        ["Messi", "9.5", "RW", "False", "90M", "38"],
-        ["Ronaldo", "9.0", "ST", "NULL", "85M", "40"],
-        ["Neymar", "8.5", "NA", "True", "80M", "35"],
+        ["Name", "Rating", "Position", "Active", "Value", "Age", "Juan"],
+        ["Messi", "9.5", "RW", "False", "90M", "38", "Pepe"],
+        ["Ronaldo", "9.0", "ST", "NULL", "85M", "40", "Luis"],
+        ["Neymar", "8.5", "NA", "True", "80M", "35", "Carlos"],
     ]
 
     with tempfile.NamedTemporaryFile(mode="w", delete=False, newline="") as f:
@@ -228,6 +228,7 @@ def _sample_row():
         "CF",
         "170",
         "72",
+        "",
     ]
 
 

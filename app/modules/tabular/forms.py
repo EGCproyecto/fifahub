@@ -20,6 +20,7 @@ FIFA_REQUIRED_COLUMNS = [
     "Position",
     "Height",
     "Weight",
+    "Description",
 ]
 
 
